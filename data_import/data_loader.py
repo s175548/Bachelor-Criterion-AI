@@ -37,6 +37,9 @@ class DataLoader():
         return binary_dict
 
     def get_image_and_labels(self,images_idx):
+        """ Input: List of indices of the images one wants
+            output: list of images, and list of corresponding masks
+        """
         images = []
         segmentation_masks = []
         if type(images_idx) == list:
@@ -53,6 +56,8 @@ class DataLoader():
     # segmentation = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
 
     def read_segmentation_file(self,filename):
+        """helping function, that opens annotation file, converts it to a cv2 contour and returns contour/segmentation
+        """
         fh = open(filename, "r")
         try:
             file_content = fh.read()
@@ -63,6 +68,9 @@ class DataLoader():
             fh.close()
 
     def get_empty_segmentations(self):
+        """
+        Filtering function. It opens the meta csv file and returns a list of indices with valid annotation/segmentations (the indices of the 10 files without valid segmentation are not included
+        """
         empty = []
         for i in range(len(self.metadata_csv)):
             file_path = os.path.join(self.data_path, self.metadata_csv[i, 3])
@@ -146,4 +154,6 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
-save_pictures_locally(data_loader)
+#save_pictures_locally(data_loader)
+if __name__ == '__main__':
+    pass
