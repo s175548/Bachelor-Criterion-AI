@@ -25,7 +25,7 @@ class LeatherData(data.Dataset):
     """
 
     def __init__(self,
-                 path_mask,path_img
+                 path_mask,path_img,
                  transform=None):
 
 
