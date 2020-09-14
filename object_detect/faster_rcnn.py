@@ -1,19 +1,13 @@
 from tqdm import tqdm
 import torchvision
-#import utils
-import random
+from torchvision import datasets, transforms, utils
 import argparse
-import numpy as np
-from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
-from object_detect.data_for_object_detection import DataLoader
-
+import os
 from torch.utils import data
-
+from PIL import Image
 import torch
-import torch.nn as nn
 from torchvision.models.vgg import vgg16
 from torchvision.models.detection import FasterRCNN
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
 
 def initialize_model(num_classes,backbone,out_channels):
@@ -28,7 +22,6 @@ def initialize_model(num_classes,backbone,out_channels):
     for param in model.parameters():
         param.requires_grad = False
     return model
-
 
 def get_argparser():
     parser = argparse.ArgumentParser()
@@ -112,12 +105,56 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
         print(score)
     return score, ret_samples
 
+
+class LeatherData(data.Dataset):
+    """`Pascal VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ Segmentation Dataset.
+    Args:
+        root (string): Root directory of the VOC Dataset.
+        year (string, optional): The dataset year, supports years 2007 to 2012.
+        image_set (string, optional): Select the image_set to use, ``train``, ``trainval`` or ``val``
+        download (bool, optional): If true, downloads the dataset from the internet and
+            puts it in root directory. If dataset is already downloaded, it is not
+            downloaded again.
+        transform (callable, optional): A function/transform that  takes in an PIL image
+            and returns a transformed version. E.g, ``transforms.RandomCrop``
+    """
+
+    def __init__(self,
+                 path,path_mask,path_img,
+                 transform=None):
+
+
+        self.path_mask = path_mask
+        self.path_img = path_img
+        self.transform = transform
+
+        file_names=os.listdir(path)
+
+        self.images = [os.path.join(self.path_img, x + ".jpg") for x[:-4] in file_names]
+        self.masks = [os.path.join(self.path_mask, x + ".png") for x[:-4] in file_names]
+        assert (len(self.images) == len(self.masks))
+
+    def __getitem__(self, index):
+        """
+        Args:
+            index (int): Index
+        Returns:
+            tuple: (image, target) where target is the image segmentation.
+        """
+        img = Image.open(self.images[index]).convert('RGB')
+        target = Image.open(self.masks[index])
+        if self.transform is not None:
+            img, target = self.transform(img, target)
+        return img, target
+
+    def __len__(self):
+        return len(self.images)
+
+
 if __name__ == '__main__':
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print("Device: %s" % device)
-
-    initialize_model(num_classes=2,backbone=vgg16(pretrained=True).features,out_channels=512)
 
     output_stride = 16
     save_val_results = False
@@ -135,17 +172,30 @@ if __name__ == '__main__':
     vis_num_samples = 2
     enable_vis = True
 
-    path_mask = 'C:\Users\johan\OneDrive\Skrivebord\leather_patches\.annotations'
-    path_img = 'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
-    data.DataLoader()
+    path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_mask'
+    path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_img'
 
+    model = initialize_model(num_classes=2,backbone=vgg16(pretrained=True).features,out_channels=512)
+    model.eval()
 
-    train_dst = LeatherData(path_mask,path_img,transform)
-    val_dst = train_dst = LeatherData(path_mask,path_img,transform)
+    train_dst = LeatherData(path_mask,path_img,transform=transforms)
+    val_dst = LeatherData(path_mask,path_img,transform=transforms)
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
+       train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=True, num_workers=2)
-    print("Train set: %d, Val set: %d" %
-          (len(train_dst), len(val_dst)))
+    print("Train set: %d, Val set: %d" % (len(train_dst), len(val_dst)))
 
+
+
+#path_test = r'C:/Users/johan/iCloudDrive/DTU/KID/BA/Kode/brevetti/'
+#    img = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00001.png').convert("RGB")
+#    img2 = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00002.png').convert("RGB")
+##    img = np.array(img)
+ #   img2 = np.array(img2)
+ #   image_transform = transforms.Compose([
+ #       transforms.ToTensor(), transforms.Normalize([0, 0, 0], [1, 1, 1]),
+ #       transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+ ##   image = image_transform(img)
+  #  image2 = image_transform(img2)
+  #  images = [image, image2]
