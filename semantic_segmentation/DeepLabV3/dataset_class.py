@@ -14,7 +14,7 @@ from torchvision.datasets.utils import download_url, check_integrity
 class LeatherData(data.Dataset):
 
     def __init__(self,
-                 path_mask=None,path_img=None,
+                 path_mask,path_img,
                  transform=None):
 
 
