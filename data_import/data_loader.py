@@ -102,6 +102,8 @@ class DataLoader():
                     cv2.imshow('image', masks[idx])
                     cv2.waitKey(0)
 
+
+
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -132,14 +134,6 @@ def test_transforms_mask(mask):
 
 
 
-data_loader = DataLoader()
-#img_test,label_test = data_loader.get_image_and_labels(0)
-
-#test_transforms(img_test)
-#test_transforms_mask(label_test)
-#img_tests,label_tests = data_loader.get_image_and_labels(data_loader.valid_annotations)
-
-#data_loader.plot_function(img_test,label_test)
 
 def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder'):
     os.chdir(directory_path)
@@ -154,6 +148,48 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
+
+def generate_patches(img, msk,patch_size=256,print_=False):
+    images = []
+    masks = []
+    crop_count_height = int(np.floor(img.shape[0] / patch_size))
+    crop_count_width =  int(np.floor(img.shape[1] / patch_size))
+
+    if print_:
+        cv2.imshow('',img)
+        cv2.waitKey(0)
+    if (img.shape[0] > patch_size and img.shape[1] > patch_size):
+        for i in range(crop_count_height):
+            for j in range(crop_count_width):
+                image = img[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+                mask = msk[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+
+                if print_:
+                    cv2.imshow('image', image)
+                    cv2.waitKey(0)
+
+                images.append(image)
+                masks.append(mask)
+    return images,masks
+
+
 #save_pictures_locally(data_loader)
 if __name__ == '__main__':
+    data_loader = DataLoader()
+    img, mask = data_loader.get_image_and_labels(0)
+    images, masks = generate_patches(img, mask)
+
+    for i in data_loader.valid_annotations[1:50]:
+        img_test,label_test = data_loader.get_image_and_labels(i)
+        image, mask = generate_patches(img_test,label_test)
+
+        images = np.vstack((images,image))
+        masks = np.vstack((masks,mask))
+
     pass
+    a = 2
+    # test_transforms(img_test)
+    # test_transforms_mask(label_test)
+    # img_tests,label_tests = data_loader.get_image_and_labels(data_loader.valid_annotations)
+
+    # data_loader.plot_function(img_test,label_test)
