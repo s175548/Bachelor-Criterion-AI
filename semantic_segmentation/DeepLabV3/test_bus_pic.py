@@ -5,7 +5,7 @@ bus=PIL.Image.open('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelo
 bus=np.array(bus)
 
 image_transform = transforms.Compose([
-          transforms.ToTensor(), transforms.Normalize([0, 0, 0],[255, 255, 255])]
+          transforms.ToTensor(),
           transforms.Normalize([0.485, 0.456, 0.406],[0.229, 0.224, 0.225])])
 image=image_transform(bus)
 

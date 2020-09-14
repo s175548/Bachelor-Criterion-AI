@@ -45,7 +45,7 @@ class DataLoader():
                 segmentation_masks.append( self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[image_idx,3]) ) )
             return (images,segmentation_masks)
         else:
-            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3]))
+            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3][1:]))
         return
 
     # #seg = json.loads(read_file(segmentation_path).decode("utf-8"))
@@ -65,7 +65,7 @@ class DataLoader():
     def get_empty_segmentations(self):
         empty = []
         for i in range(len(self.metadata_csv)):
-            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3])
+            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3][1:])
             with open(file_path) as file:
                 content = file.read()
                 seg = json.loads(content)
@@ -124,7 +124,6 @@ def test_transforms_mask(mask):
 
 
 
-data_loader = DataLoader()
 #img_test,label_test = data_loader.get_image_and_labels(0)
 
 #test_transforms(img_test)
@@ -134,16 +133,17 @@ data_loader = DataLoader()
 #data_loader.plot_function(img_test,label_test)
 
 def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder'):
-    os.chdir(directory_path)
     for i in data_loader.valid_annotations:
         img,mask = data_loader.get_image_and_labels(i)
-
+        os.chdir(directory_path)
         img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
         im_pil = Image.fromarray(img2)
-        im_pil.save(str(i)+".png")
-
+        im_pil.save(str(i)+".jpg")
+        os.chdir(r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_mask')
         _, binary = cv2.threshold(mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
-save_pictures_locally(data_loader)
+
+data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')

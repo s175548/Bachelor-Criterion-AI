@@ -1,15 +1,18 @@
-import torchvision
+
 import torch
 import torchvision.transforms.functional as F
 import random 
 import numbers
 import numpy as np
 from PIL import Image
+from PIL import ImageOps
 
 
 #
 #  Extended Transforms for Semantic Segmentation
 #
+
+
 class ExtRandomHorizontalFlip(object):
     """Horizontally flip the given PIL Image randomly with a given probability.
 
@@ -64,6 +67,33 @@ class ExtCompose(object):
         format_string += '\n)'
         return format_string
 
+class ExtCompose(object):
+    """Composes several transforms together.
+    Args:
+        transforms (list of ``Transform`` objects): list of transforms to compose.
+    Example:
+        >>> transforms.Compose([
+        >>>     transforms.CenterCrop(10),
+        >>>     transforms.ToTensor(),
+        >>> ])
+    """
+
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, lbl):
+        for t in self.transforms:
+            img, lbl = t(img, lbl)
+        return img, lbl
+
+    def __repr__(self):
+        format_string = self.__class__.__name__ + '('
+        for t in self.transforms:
+            format_string += '\n'
+            format_string += '    {0}'.format(t)
+        format_string += '\n)'
+        return format_string
+
 
 class ExtCenterCrop(object):
     """Crops the given PIL Image at the center.
@@ -73,7 +103,8 @@ class ExtCenterCrop(object):
             made.
     """
 
-    def __init__(self, size):
+    def __init__(self, size,square=True):
+
         if isinstance(size, numbers.Number):
             self.size = (int(size), int(size))
         else:
@@ -86,10 +117,32 @@ class ExtCenterCrop(object):
         Returns:
             PIL Image: Cropped image.
         """
+        self.size=(min(img.height,img.width),min(img.height,img.width))
         return F.center_crop(img, self.size), F.center_crop(lbl, self.size)
 
     def __repr__(self):
         return self.__class__.__name__ + '(size={0})'.format(self.size)
+
+class ExtTransformLabel(object):
+    """Returns label in "P" format and inverts colors of label.
+
+    """
+
+    def __init__(self):
+        pass
+
+    def __call__(self,img, lbl):
+        """
+        Args:
+            img (PIL Image): Image to be cropped.
+        Returns:
+            PIL Image: Cropped image.
+        """
+        return img,ImageOps.invert(lbl).convert('P')
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(size={0})'.format(self.size)
+
 
 
 class ExtRandomScale(object):
@@ -137,7 +190,7 @@ class ExtScale(object):
             PIL Image: Rescaled label.
         """
         assert img.size == lbl.size
-        target_size = ( int(img.size[1]*self.scale), int(img.size[0]*self.scale) ) # (H, W)
+        target_size = (self.scale,self.scale) # (H, W)
         return F.resize(img, target_size, self.interpolation), F.resize(lbl, target_size, Image.NEAREST)
 
     def __repr__(self):
@@ -289,9 +342,9 @@ class ExtToTensor(object):
             Tensor: Converted image and label
         """
         if self.normalize:
-            return F.to_tensor(pic), torch.from_numpy( np.array( lbl, dtype=self.target_type) )
+            return F.to_tensor(pic), torch.from_numpy( np.array( lbl, dtype=self.target_type)/225 )
         else:
-            return torch.from_numpy( np.array( pic, dtype=np.float32).transpose(2, 0, 1) ), torch.from_numpy( np.array( lbl, dtype=self.target_type) )
+            return torch.from_numpy( np.array( pic, dtype=np.float32).transpose(2, 0, 1) ), torch.from_numpy( np.array( lbl, dtype=self.target_type)/255 )
 
     def __repr__(self):
         return self.__class__.__name__ + '()'
