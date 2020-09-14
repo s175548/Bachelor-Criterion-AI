@@ -165,7 +165,31 @@ def save_masks_locally(data_loader,
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i) + '_mask.png')
 
+def generate_patches(img, msk,patch_size=256,print_=False):
+    images = []
+    masks = []
+    crop_count_height = int(np.floor(img.shape[0] / patch_size))
+    crop_count_width =  int(np.floor(img.shape[1] / patch_size))
+
+    if print_:
+        cv2.imshow('',img)
+        cv2.waitKey(0)
+    if (img.shape[0] > patch_size and img.shape[1] > patch_size):
+        for i in range(crop_count_height):
+            for j in range(crop_count_width):
+                image = img[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+                mask = msk[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+
+                if print_:
+                    cv2.imshow('image', image)
+                    cv2.waitKey(0)
+
+                images.append(image)
+                masks.append(mask)
+    return images,masks
+
 if __name__ == '__main__':
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',metadata_path=r'.samples\model_comparison.csv')
     save_pictures_locally(data_loader,r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_img')
+    save_masks_locally(data_loader,r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_mask')
     pass
