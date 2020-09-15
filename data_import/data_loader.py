@@ -97,7 +97,7 @@ class DataLoader():
                 self.simple_plot_cv2(image)
                 if len(masks)>0:
                     self.simple_plot_cv2(masks[idx])
-    def generate_patches(self,img, msk,patch_size=256,print_=False):
+    def generate_patches(self,img, msk,patch_size=360,print_=False):
         images = []
         masks = []
         crop_count_height = int(np.floor(img.shape[0] / patch_size))
@@ -179,6 +179,8 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 if __name__ == '__main__':
     dataloader = DataLoader()
     pass
+    images, masks = dataloader.get_image_and_labels(20)
+    dataloader.plot_function(images,masks)
 
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)
