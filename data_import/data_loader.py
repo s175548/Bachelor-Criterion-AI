@@ -83,21 +83,42 @@ class DataLoader():
         cv2.imshow(title,cv2.resize(object,(512,512)))
         cv2.waitKey(0)
 
-    def plot_function(self,images, masks = None):
+    def plot_function(self,images, masks = np.array([])):
         """input: image(s) and mask(s)
             The function will plot image(s), and mask(s) (if given)
         """
-        if isinstance(images,np.ndarray):
+        if len(images.shape)<4:
             self.simple_plot_cv2(images)
-            if isinstance(masks,np.ndarray):
+            if len(masks)>0:
                 self.simple_plot_cv2(masks)
 
         else:
             for idx,image in enumerate(images):
                 self.simple_plot_cv2(image)
-                if masks != None:
+                if len(masks)>0:
                     self.simple_plot_cv2(masks[idx])
+    def generate_patches(self,img, msk,patch_size=256,print_=False):
+        images = []
+        masks = []
+        crop_count_height = int(np.floor(img.shape[0] / patch_size))
+        crop_count_width =  int(np.floor(img.shape[1] / patch_size))
 
+        if print_:
+            cv2.imshow('',img)
+            cv2.waitKey(0)
+        if (img.shape[0] > patch_size and img.shape[1] > patch_size):
+            for i in range(crop_count_height):
+                for j in range(crop_count_width):
+                    image = img[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+                    mask = msk[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
+
+                    if print_:
+                        cv2.imshow('image', image)
+                        cv2.waitKey(0)
+
+                    images.append(image)
+                    masks.append(mask)
+        return images,masks
 
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
@@ -132,6 +153,16 @@ def test_transforms_mask(mask):
 #img_tests,label_tests = data_loader.get_image_and_labels(data_loader.valid_annotations)
 
 #data_loader.plot_function(img_test,label_test)
+def get_patches(images_idx,data_loader):
+    img, mask = data_loader.get_image_and_labels(images_idx[0])
+    images, masks = data_loader.generate_patches(img, mask)
+    for i in images_idx[1:]:
+        img_test, label_test = data_loader.get_image_and_labels(i)
+        image, mask = data_loader.generate_patches(img_test, label_test)
+
+        images = np.vstack((images, image))
+        masks = np.vstack((masks, mask))
+    return images,masks
 
 def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder'):
     for i in data_loader.valid_annotations:
@@ -147,10 +178,10 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 
 if __name__ == '__main__':
     dataloader = DataLoader()
-    categories = dataloader.metadata_csv[:,0]
     pass
 
-
+    #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
+    #dataloader.plot_function(images,masks)
     # pass
     # print(dataloader.visibility_score[:50])
     # pass
