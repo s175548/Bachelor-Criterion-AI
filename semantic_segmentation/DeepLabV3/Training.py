@@ -1,3 +1,8 @@
+"""
+Made with heavy inspiration from
+https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
+"""
+
 from tqdm import tqdm
 import random
 import numpy as np
