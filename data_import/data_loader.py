@@ -45,12 +45,9 @@ class DataLoader():
                 segmentation_masks.append( self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[image_idx,3]) ) )
             return (images,segmentation_masks)
         else:
-            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3][1:]))
+            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3]))
         return
 
-    # #seg = json.loads(read_file(segmentation_path).decode("utf-8"))
-    # seg = json.loads(read_file(segmentation_path))
-    # segmentation = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
 
     def read_segmentation_file(self,filename):
         fh = open(filename, "r")
@@ -63,36 +60,37 @@ class DataLoader():
             fh.close()
 
     def get_empty_segmentations(self):
+        """Some pictures in the dataset does not have proper segmentations. A list of all the indices of the images with correct segmentations are extracted and retunrned here.
+        """
         empty = []
         for i in range(len(self.metadata_csv)):
-            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3][1:])
+            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3])
             with open(file_path) as file:
                 content = file.read()
                 seg = json.loads(content)
-                #content = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
                 if seg['annotations'] == list():
                     empty.append((i,self.metadata_csv[i, 3]))
         return [i for i in range(len(self.metadata_csv)) if i not in [anno[0] for anno in empty]]
-        #return empty
 
+    def simple_plot_cv2(self,object,title=""):
+        cv2.imshow(title,object)
+        cv2.waitKey(0)
 
     def plot_function(self,images, masks = None):
         """input: image_idx
             The function will plot image, and masks (if given)
         """
         if isinstance(images,np.ndarray):
-            cv2.imshow('image', images)
-            cv2.waitKey(0)
+            self.simple_plot_cv2(images)
             if isinstance(masks,np.ndarray):
-                cv2.imshow('image', masks)
-                cv2.waitKey(0)
+                self.simple_plot_cv2(masks)
+
         else:
             for idx,image in enumerate(images):
-                cv2.imshow('image', image)
-                cv2.waitKey(0)
+                self.simple_plot_cv2(image)
                 if masks != None:
-                    cv2.imshow('image', masks[idx])
-                    cv2.waitKey(0)
+                    self.simple_plot_cv2(masks[idx])
+
 
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
@@ -122,10 +120,6 @@ def test_transforms_mask(mask):
     im_pil.show()
     transforms.ToPILImage()(transformed_sample).show()
 
-
-
-#img_test,label_test = data_loader.get_image_and_labels(0)
-
 #test_transforms(img_test)
 #test_transforms_mask(label_test)
 #img_tests,label_tests = data_loader.get_image_and_labels(data_loader.valid_annotations)
@@ -144,6 +138,9 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
-
-data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')
+if __name__ == '__main__':
+    dataloader = DataLoader()
+    img1, mask1 = dataloader.get_image_and_labels([0,1])
+    dataloader.plot_function(img1,mask1)
+    #data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+    #save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')
