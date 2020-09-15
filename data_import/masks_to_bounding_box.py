@@ -38,7 +38,7 @@ def get_background_mask(image):
     #cv2.waitKey(0)
     return (~median/255)
 
-def combine_seg_and_back_mask(mask_idx):
+def combine_seg_and_back_mask(mask_idx,data_loader=DataLoader()):
     for i in mask_idx:
         img_, seg_mask = data_loader.get_image_and_labels(i)
         back_mask = get_background_mask(img_)
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     img_test, mask = data_loader.get_image_and_labels(1)
     background_idx = [1,39,41,42,56,99,102,121,153,157]
     # find_background(img_test)
-    test = combine_seg_and_back_mask(background_idx)
+    test = combine_seg_and_back_mask(background_idx,data_loader)
 
     #test_mask,test_box_coord = convert_mask_to_bounding_box(mask)
     #cv2.imshow('',test_mask)
