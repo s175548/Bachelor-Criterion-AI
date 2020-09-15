@@ -11,11 +11,10 @@ class DataLoader():
         self.metadata_path = os.path.join(data_path,metadata_path)
         self.metadata_csv = self.get_metadata(self.metadata_path)
         self.valid_annotations = self.get_empty_segmentations()
-        self.binary_class_dictionary = self.generate_binary_class_dictionary()
+        self.visibility_score = [self.get_visibility_score( os.path.join(self.data_path,self.metadata_csv[img_idx,3] ) ) for img_idx in range(len(self.metadata_csv))]
 
     def get_metadata(self,metadata_path):
-        """
-        Collect the metadata_csv file containing 7 datapoints:
+        """     Collect the metadata_csv file containing 7 datapoints:
                 0: category; 1: path; 2: etag; 3: segmentation_path; 4: segmentation_etag; 5: model_segmentation_path; 6: model_segmentation_etag
                 (All categories can for example be retrieved by self.metadata_csv[:,0])
         """
@@ -23,20 +22,24 @@ class DataLoader():
         metadata_csv.to_numpy()
         return metadata_csv.to_numpy()
 
-    def generate_binary_class_dictionary(self):
-        """
-        All categories found in metadata_csv are turned into dictionary, such that that can get a binary output (0: good, 1: defect) by parsing the category to the dict
-        self.binary_class_dictionary[ self.metadata_csv[0,0] ] will return the binary value of the first datapoint.
-        """
-        binary_dict = {}
-        for ele in np.unique(self.metadata_csv[:,0]):
-            if "good" in ele.lower():
-                binary_dict[ele] = 0
-            else:
-                binary_dict[ele] = 1
-        return binary_dict
+    def get_visibility_score(self,filepath):
+        visibility = -1
+        ann = self.get_json_file_content(filepath)
+        for a in ann["annotations"]:
+            try:
+                visibility = a["visibility"]
+                break
+            except KeyError:
+                pass
+            if a["label"].startswith("visibility_"):
+                visibility = a["label"].split("_")[-1]
+                break
+        return int(visibility)
 
     def get_image_and_labels(self,images_idx):
+        """     input: give index/indices of the wanted images in the dataset
+                output: image(s) and mask(s) of the given index/indices
+        """
         images = []
         segmentation_masks = []
         if type(images_idx) == list:
@@ -45,54 +48,56 @@ class DataLoader():
                 segmentation_masks.append( self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[image_idx,3]) ) )
             return (images,segmentation_masks)
         else:
-            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3][1:]))
-        return
+            return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3]))
 
-    # #seg = json.loads(read_file(segmentation_path).decode("utf-8"))
-    # seg = json.loads(read_file(segmentation_path))
-    # segmentation = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
 
-    def read_segmentation_file(self,filename):
-        fh = open(filename, "r")
-        try:
+    def read_segmentation_file(self,filepath):
+        """     Helper function, that simply opens segmentation file, draws a contour from this.
+                Output: Segmentation retrieved from filename
+        """
+        seg = self.get_json_file_content(filepath)
+        segmentation = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
+        return segmentation
+
+    def get_json_file_content(self,filename):
+        with open(filename,'r') as fh:
             file_content = fh.read()
             seg = json.loads(file_content)
-            segmentation = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
-            return segmentation
-        finally:
-            fh.close()
+        return seg
 
     def get_empty_segmentations(self):
+        """     Some pictures in the dataset does not have proper segmentations.
+                A list of all the indices of the images with correct segmentations are extracted and retunrned here.
+        """
         empty = []
         for i in range(len(self.metadata_csv)):
-            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3][1:])
+            file_path = os.path.join(self.data_path, self.metadata_csv[i, 3])
             with open(file_path) as file:
                 content = file.read()
                 seg = json.loads(content)
-                #content = draw_contours2(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
                 if seg['annotations'] == list():
                     empty.append((i,self.metadata_csv[i, 3]))
         return [i for i in range(len(self.metadata_csv)) if i not in [anno[0] for anno in empty]]
-        #return empty
 
+    def simple_plot_cv2(self,object,title=""):
+        cv2.imshow(title,object)
+        cv2.waitKey(0)
 
     def plot_function(self,images, masks = None):
-        """input: image_idx
-            The function will plot image, and masks (if given)
+        """input: image(s) and mask(s)
+            The function will plot image(s), and mask(s) (if given)
         """
         if isinstance(images,np.ndarray):
-            cv2.imshow('image', images)
-            cv2.waitKey(0)
+            self.simple_plot_cv2(images)
             if isinstance(masks,np.ndarray):
-                cv2.imshow('image', masks)
-                cv2.waitKey(0)
+                self.simple_plot_cv2(masks)
+
         else:
             for idx,image in enumerate(images):
-                cv2.imshow('image', image)
-                cv2.waitKey(0)
+                self.simple_plot_cv2(image)
                 if masks != None:
-                    cv2.imshow('image', masks[idx])
-                    cv2.waitKey(0)
+                    self.simple_plot_cv2(masks[idx])
+
 
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
@@ -122,10 +127,6 @@ def test_transforms_mask(mask):
     im_pil.show()
     transforms.ToPILImage()(transformed_sample).show()
 
-
-
-#img_test,label_test = data_loader.get_image_and_labels(0)
-
 #test_transforms(img_test)
 #test_transforms_mask(label_test)
 #img_tests,label_tests = data_loader.get_image_and_labels(data_loader.valid_annotations)
@@ -144,6 +145,12 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
         mask_pil = Image.fromarray(binary)
         mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
-
-data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')
+if __name__ == '__main__':
+    dataloader = DataLoader()
+    img1, mask1 = dataloader.get_image_and_labels([0,1])
+    dataloader.plot_function(img1,mask1)
+    pass
+    print(dataloader.visibility_score[:50])
+    pass
+    #data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+    #save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')

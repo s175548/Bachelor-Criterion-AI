@@ -21,8 +21,7 @@ def convert_mask_to_bounding_box(mask):
     return bounding_box_mask,bounding_box_coordinates
 
 def find_background(image):
-    resized_img = cv2.resize(image,(512,512))
-    cv2.imshow('image',resized_img)
+    cv2.imshow('image',cv2.resize(image,(512,512))
     cv2.waitKey(0)
 
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
