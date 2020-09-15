@@ -16,7 +16,6 @@ def generate_binary_class_dictionary(self):
 
 
 
-
     def read_segmentation_file(self,filename):
         """     Helper function, that simply opens segmentation file, draws a contour from this.
                 Output: Segmentation retrieved from filename
@@ -29,3 +28,6 @@ def generate_binary_class_dictionary(self):
             return segmentation
         finally:
             fh.close()
+
+            np.where(np.array([numb in dataloader.valid_annotations for numb in list(range(691))]) == False)[0] # Get index of invalid masks
+            np.where(np.array(dataloader.visibility_score) == 3)[0] #

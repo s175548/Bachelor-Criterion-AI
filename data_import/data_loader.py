@@ -80,7 +80,7 @@ class DataLoader():
         return [i for i in range(len(self.metadata_csv)) if i not in [anno[0] for anno in empty]]
 
     def simple_plot_cv2(self,object,title=""):
-        cv2.imshow(title,object)
+        cv2.imshow(title,cv2.resize(object,(512,512)))
         cv2.waitKey(0)
 
     def plot_function(self,images, masks = None):
@@ -147,10 +147,12 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 
 if __name__ == '__main__':
     dataloader = DataLoader()
-    img1, mask1 = dataloader.get_image_and_labels([0,1])
-    dataloader.plot_function(img1,mask1)
+    categories = dataloader.metadata_csv[:,0]
     pass
-    print(dataloader.visibility_score[:50])
-    pass
+
+
+    # pass
+    # print(dataloader.visibility_score[:50])
+    # pass
     #data_loader=DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
     #save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')
