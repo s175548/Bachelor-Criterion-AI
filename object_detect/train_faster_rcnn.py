@@ -132,7 +132,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
     for images, labels in (data_loader):
         images = list(img.to(device, dtype=torch.float32) for img in images)
-        labels = labels.to(device, dtype=torch.long)        #t
+        targets = [({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)]         #t
 
         loss_dict = model(images, targets)
 
