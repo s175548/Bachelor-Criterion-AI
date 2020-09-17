@@ -5,26 +5,24 @@ import torch
 
 import torchvision.models.detection.mask_rcnn
 
-from coco_utils import get_coco_api_from_dataset
-from coco_eval import CocoEvaluator
+from object_detect.helper.coco_utils import get_coco_api_from_dataset
+from object_detect.helper.coco_eval import CocoEvaluator
 import object_detect.helper.utils as utils
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     model.train()
-    metric_logger = utils.MetricLogger(delimiter="  ")
-    metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    header = 'Epoch: [{}]'.format(epoch)
-    for images, labels in metric_logger.log_every(data_loader, print_freq, header):
+    lr_scheduler = None
+    for (images, labels) in data_loader:
         images = list(img.to(device, dtype=torch.float32) for img in images)
-        targets = [({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)]
+        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
         loss_dict = model(images, targets)
 
         losses = sum(loss for loss in loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
-        loss_dict_reduced = utils_p.reduce_dict(loss_dict)
+        loss_dict_reduced = utils.reduce_dict(loss_dict)
         losses_reduced = sum(loss for loss in loss_dict_reduced.values())
 
         loss_value = losses_reduced.item()
@@ -40,9 +38,6 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
 
         if lr_scheduler is not None:
             lr_scheduler.step()
-
-        metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
-        metric_logger.update(lr=optimizer.param_groups[0]["lr"])
 
 
 def _get_iou_types(model):
@@ -64,16 +59,14 @@ def evaluate(model, data_loader, device):
     torch.set_num_threads(1)
     cpu_device = torch.device("cpu")
     model.eval()
-    metric_logger = utils.MetricLogger(delimiter="  ")
-    header = 'Test:'
 
     coco = get_coco_api_from_dataset(data_loader.dataset)
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
-    for image, targets in metric_logger.log_every(data_loader, 100, header):
+    for (image, labels) in data_loader:
         image = list(img.to(device) for img in image)
-        targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
         torch.cuda.synchronize()
         model_time = time.time()
@@ -86,11 +79,11 @@ def evaluate(model, data_loader, device):
         evaluator_time = time.time()
         coco_evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
-        metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+       # metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
     # gather the stats from all processes
-    metric_logger.synchronize_between_processes()
-    print("Averaged stats:", metric_logger)
+   # metric_logger.synchronize_between_processes()
+   # print("Averaged stats:", metric_logger)
     coco_evaluator.synchronize_between_processes()
 
     # accumulate predictions from all images
