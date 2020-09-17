@@ -14,6 +14,7 @@ from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 import torch
 import torch.nn as nn
 from torchvision.models.segmentation import deeplabv3_resnet101
+import os
 
 
 
@@ -32,7 +33,7 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=5
+total_itrs=100
 lr=0.01
 lr_policy='step'
 step_size=10000
@@ -42,14 +43,14 @@ loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 print_interval=10
-val_interval=1
+val_interval=20
 vis_num_samples=2
 enable_vis=True
 
-training_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_mask'
-training_img = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img'
-val_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/validation_mask'
-val_img = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/validation_img'
+
+path_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask'
+path_img = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img'
+
 
 
 def save_ckpt(path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /DeepLabV3_finetuned.pt',cur_itrs=None, optimizer=None,scheduler=None,best_score=None):
@@ -102,10 +103,15 @@ def main(model=None):
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
-
     # Setup dataloader
-    train_dst = LeatherData(path_mask=training_mask,path_img=training_img,transform=transform_function)
-    val_dst = LeatherData(path_mask=val_mask, path_img=val_img,transform=transform_function)
+    file_names = np.array([img[:-4] for img in os.listdir(path_img)])
+    N_files=len(file_names)
+    shuffled_index=np.random.permutation(len(file_names))
+    file_names_img=file_names[shuffled_index]
+    file_names=file_names[file_names != ".DS_S"]
+
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names_img[:round(N_files*0.80)], transform=transform_function)
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names_img[round(N_files*0.80):], transform=transform_function)
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = data.DataLoader(

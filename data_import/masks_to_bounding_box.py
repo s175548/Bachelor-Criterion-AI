@@ -1,6 +1,6 @@
 import numpy as np,os
 import pandas as pd
-from PIL import Image
+#from skimage.data import imread
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import cv2
@@ -25,7 +25,10 @@ def convert_mask_to_bounding_box(mask):
     cv2.waitKey(0)
     return bounding_box_mask,bounding_box_coordinates
 
-def get_background_mask(image):
+def find_background(image):
+    cv2.imshow('image',cv2.resize(image,(512,512)))
+    cv2.waitKey(0)
+
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
     lower_red = np.array([0, 120, 70])
     upper_red = np.array([10, 255, 255])
@@ -36,23 +39,36 @@ def get_background_mask(image):
     mask2 = cv2.inRange(hsv, lower_red, upper_red)
 
     mask1 = mask1 + mask2
-    median = cv2.medianBlur(mask1, 5)
+    # cv2.imshow('mask1 and 2',mask1)
+    # cv2.waitKey(0)
 
-    #resized_mask = cv2.resize(median,(512,512))
-    #cv2.imshow('median mask',resized_mask)
-    #cv2.waitKey(0)
-    return (~median/255)
+    test = mask1
 
-def combine_seg_and_back_mask(mask_idx,data_loader=DataLoader()):
-    for i in mask_idx:
-        img_, seg_mask = data_loader.get_image_and_labels(i)
-        back_mask = get_background_mask(img_)
-        new_mask =  np.squeeze(seg_mask) + back_mask*2
-        #_, binary = cv2.threshold(new_mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
-        # mask_pil = Image.fromarray(new_mask)
-        # mask_pil.convert('RGB').save(str(i)+'_mask.png')
-        pass
-    return new_mask
+    # blur = cv2.blur(test, (5, 5))
+    # cv2.imshow('blur mask',blur)
+    # cv2.waitKey(0)
+
+    median = cv2.medianBlur(test, 5)
+    resized_mask = cv2.resize(median,(512,512))
+
+    cv2.imshow('median mask',resized_mask)
+    cv2.waitKey(0)
+
+    # blur1 = cv2.bilateralFilter(test, 9, 75, 75)
+    # cv2.imshow('blur1 mask',blur1)
+    # cv2.waitKey(0)
+
+
+    # cv2.imshow('original',image)
+    # cv2.imshow('hsv',hsv)
+    # cv2.imshow('mask',mask)
+
+    cv2.waitKey(0)
+
+def test_find_backgrounds(list):
+    for i in list:
+        img_test, mask = data_loader.get_image_and_labels(i)
+        find_background(img_test)
 
 
 if __name__ == '__main__':
@@ -66,7 +82,7 @@ if __name__ == '__main__':
         bounding_boxes.append(bounding_box)
     pass
     # find_background(img_test)
-    #test = combine_seg_and_back_mask(background_idx,data_loader)
+    test_find_backgrounds(background_idx)
 
     test_mask,test_box_coord = convert_mask_to_bounding_box(mask)
     pass

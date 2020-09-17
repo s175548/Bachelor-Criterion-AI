@@ -1,5 +1,6 @@
 from tqdm import tqdm
 import torchvision
+import numpy as np
 from torchvision import datasets, transforms, utils
 import argparse
 import os
@@ -8,7 +9,9 @@ from PIL import Image
 import torch
 from torchvision.models.vgg import vgg16
 from torchvision.models.detection import FasterRCNN
+from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from torchvision.models.detection.rpn import AnchorGenerator
+from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 
 def initialize_model(num_classes,backbone,out_channels):
     anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),), aspect_ratios=((0.5, 1.0, 2.0),))
@@ -21,6 +24,18 @@ def initialize_model(num_classes,backbone,out_channels):
                        box_roi_pool=roi_pooler)
     for param in model.parameters():
         param.requires_grad = False
+    return model
+
+def init_model(num_classes):
+    #load a model pre-trained pre-trained on COCO
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    # replace the classifier with a new one, that has
+    # num_classes which is user-defined
+    num_classes = num_classes  # 1 class (person) + background
+    # get number of input features for the classifier
+    in_features = model.roi_heads.box_predictor.cls_score.in_features
+    # replace the pre-trained head with a new one
+    model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
 def get_argparser():
@@ -105,22 +120,15 @@ def validate(model, loader, device, metrics, ret_samples_ids=None):
         print(score)
     return score, ret_samples
 
+transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512),et.ExtScale(300),
+                et.ExtToTensor(),
+                et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225]),])
 
 class LeatherData(data.Dataset):
-    """`Pascal VOC <http://host.robots.ox.ac.uk/pascal/VOC/>`_ Segmentation Dataset.
-    Args:
-        root (string): Root directory of the VOC Dataset.
-        year (string, optional): The dataset year, supports years 2007 to 2012.
-        image_set (string, optional): Select the image_set to use, ``train``, ``trainval`` or ``val``
-        download (bool, optional): If true, downloads the dataset from the internet and
-            puts it in root directory. If dataset is already downloaded, it is not
-            downloaded again.
-        transform (callable, optional): A function/transform that  takes in an PIL image
-            and returns a transformed version. E.g, ``transforms.RandomCrop``
-    """
 
     def __init__(self,
-                 path,path_mask,path_img,
+                 path_mask,path_img,
                  transform=None):
 
 
@@ -128,10 +136,12 @@ class LeatherData(data.Dataset):
         self.path_img = path_img
         self.transform = transform
 
-        file_names=os.listdir(path)
 
-        self.images = [os.path.join(self.path_img, x + ".jpg") for x[:-4] in file_names]
-        self.masks = [os.path.join(self.path_mask, x + ".png") for x[:-4] in file_names]
+        file_names_mask=os.listdir(self.path_mask)
+        file_names_img=os.listdir(self.path_img)
+
+        self.images = [os.path.join(self.path_img, x) for x in file_names_img]
+        self.masks = [os.path.join(self.path_mask, x) for x in file_names_mask]
         assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
@@ -150,10 +160,9 @@ class LeatherData(data.Dataset):
     def __len__(self):
         return len(self.images)
 
-
 if __name__ == '__main__':
 
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu')
     print("Device: %s" % device)
 
     output_stride = 16
@@ -172,22 +181,51 @@ if __name__ == '__main__':
     vis_num_samples = 2
     enable_vis = True
 
-    path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_mask'
-    path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_img'
+    train_path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_mask'
+    test_path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Test_mask'
+    train_path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Train_img'
+    test_path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\Test_img'
 
-    model = initialize_model(num_classes=2,backbone=vgg16(pretrained=True).features,out_channels=512)
+    #model = initialize_model(num_classes=21,backbone=vgg16(pretrained=True).features,out_channels=512)
+    model = init_model(num_classes=2)
+    model.to(device)
     model.eval()
 
-    train_dst = LeatherData(path_mask,path_img,transform=transforms)
-    val_dst = LeatherData(path_mask,path_img,transform=transforms)
+    train_dst = LeatherData(path_mask=test_path_mask,path_img=test_path_img,transform=transform_function)
+    val_dst = LeatherData(path_mask=train_path_mask,path_img=train_path_img,transform=transform_function)
     train_loader = data.DataLoader(
-       train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
+       train_dst, batch_size=2, shuffle=True, num_workers=2)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=True, num_workers=2)
     print("Train set: %d, Val set: %d" % (len(train_dst), len(val_dst)))
+    i = 0
+
+    path_test = r'C:/Users/johan/iCloudDrive/DTU/KID/BA/Kode/brevetti/'
+    im = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00001.png').convert("RGB")
+    im2 = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00002.png').convert("RGB")
+    img = np.array(im)
+    img2 = np.array(im2)
+    image_transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize([0, 0, 0], [1, 1, 1]),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+    img = image_transform(img)
+    img2 = image_transform(img2)
+    imgs = [img, img2]
+    #metric_logger = utils.MetricLogger(delimiter="  ")
+    #header = 'Test:'
+    for (images, labels) in train_loader:
+        if i < 10:
+            images = images.to(device, dtype=torch.float32)
+            labels = labels.to(device, dtype=torch.long)
+            image = list(img.to(device) for img in images)
+            pred = model(images)
+            pr = model(imgs)
+            break
+        else:
+            pass
 
 
-
+#            a = Image.fromarray(images[0].mul(255).permute(1, 2, 0).byte().numpy())
+#            Image.fromarray(pred[0]['boxes'].mul(255).byte().cpu().numpy())
 #path_test = r'C:/Users/johan/iCloudDrive/DTU/KID/BA/Kode/brevetti/'
 #    img = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00001.png').convert("RGB")
 #    img2 = Image.open(path_test+'PennFudanPed/PNGImages/FudanPed00002.png').convert("RGB")
