@@ -91,7 +91,6 @@ class DataLoader():
             self.simple_plot_cv2(images)
             if len(masks)>0:
                 self.simple_plot_cv2(masks)
-
         else:
             for idx,image in enumerate(images):
                 self.simple_plot_cv2(image)
@@ -119,7 +118,7 @@ class DataLoader():
                     images.append(image)
                     masks.append(mask)
         return images,masks
-
+    def get_
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -179,9 +178,10 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 if __name__ == '__main__':
     dataloader = DataLoader()
     pass
-    images, masks = dataloader.get_image_and_labels(20)
+    images, masks = dataloader.get_image_and_labels([41,45])
     dataloader.plot_function(images,masks)
 
+    pass
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)
     # pass

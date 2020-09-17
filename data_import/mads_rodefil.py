@@ -31,3 +31,5 @@ def generate_binary_class_dictionary(self):
 
             np.where(np.array([numb in dataloader.valid_annotations for numb in list(range(691))]) == False)[0] # Get index of invalid masks
             np.where(np.array(dataloader.visibility_score) == 3)[0] #
+            np.sort(np.array(list(np.where(np.array(dataloader.visibility_score) == 3)[0]) + list(
+                np.where(np.array(dataloader.visibility_score) == 2)[0])))
