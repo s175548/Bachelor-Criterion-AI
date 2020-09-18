@@ -8,7 +8,7 @@ import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.leather_data import LeatherData_BB
-from object_detect.helper.engine import train_one_epoch, evaluate
+from object_detect.helper.engine2 import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -36,7 +36,8 @@ if __name__ == '__main__':
 
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005,
+    params_to_train = params[64:]
+    optimizer = torch.optim.SGD(params_to_train, lr=0.005,
                                 momentum=0.9, weight_decay=0.0005)
 
     # and a learning rate scheduler which decreases the learning rate by
@@ -66,8 +67,8 @@ if __name__ == '__main__':
 #        bounding_boxes.append(bounding_box)
 
     # Define dataloaders
-    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:4],transform=transform_function)
-    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[670:],transform=transform_function)
+    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:10],transform=transform_function)
+    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[675:],transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
