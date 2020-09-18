@@ -118,7 +118,7 @@ class DataLoader():
                     images.append(image)
                     masks.append(mask)
         return images,masks
-    def get_
+
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
