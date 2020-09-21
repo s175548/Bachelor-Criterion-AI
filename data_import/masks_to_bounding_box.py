@@ -15,20 +15,17 @@ def convert_mask_to_bounding_box(mask):
     contours, hierarchy = cv2.findContours(mask.astype('uint8'), 1, 2)
     bounding_box_mask = np.empty((mask.shape[0],mask.shape[1]))
     bounding_box_coordinates = []
-    cv2.imshow('mask',cv2.resize(mask,(1000,1000)))
+    cv2.imshow('mask',cv2.resize(mask,(800,800)))
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
         bounding_box_coordinates.append((x,y,w,h,1))
-    cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
+    cv2.imshow('bound', cv2.resize(bounding_box_mask,(800,800)))
     cv2.waitKey(0)
     return bounding_box_mask,bounding_box_coordinates
 
 def find_background(image):
-    cv2.imshow('image',cv2.resize(image,(512,512)))
-    cv2.waitKey(0)
-
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
     lower_red = np.array([0, 120, 70])
     upper_red = np.array([10, 255, 255])
@@ -37,35 +34,12 @@ def find_background(image):
     lower_red = np.array([170, 120, 70])
     upper_red = np.array([180, 255, 255])
     mask2 = cv2.inRange(hsv, lower_red, upper_red)
-
     mask1 = mask1 + mask2
-    # cv2.imshow('mask1 and 2',mask1)
-    # cv2.waitKey(0)
-
-    test = mask1
-
-    # blur = cv2.blur(test, (5, 5))
-    # cv2.imshow('blur mask',blur)
-    # cv2.waitKey(0)
-
-    median = cv2.medianBlur(test, 5)
-    resized_mask = cv2.resize(median,(512,512))
-
-    cv2.imshow('median mask',resized_mask)
-    cv2.waitKey(0)
-
-    # blur1 = cv2.bilateralFilter(test, 9, 75, 75)
-    # cv2.imshow('blur1 mask',blur1)
-    # cv2.waitKey(0)
+    median_mask = cv2.medianBlur(mask1, 5)
+    return median_mask
 
 
-    # cv2.imshow('original',image)
-    # cv2.imshow('hsv',hsv)
-    # cv2.imshow('mask',mask)
-
-    cv2.waitKey(0)
-
-def test_find_backgrounds(list):
+def find_backgrounds(list):
     for i in list:
         img_test, mask = data_loader.get_image_and_labels(i)
         find_background(img_test)
@@ -82,7 +56,7 @@ if __name__ == '__main__':
         bounding_boxes.append(bounding_box)
     pass
     # find_background(img_test)
-    test_find_backgrounds(background_idx)
+    find_backgrounds(background_idx)
 
     test_mask,test_box_coord = convert_mask_to_bounding_box(mask)
     pass
