@@ -82,15 +82,20 @@ def draw_contours2(segmentation, label_space, draw_buffer=None, drawContoursArgs
     return cont
 
 
-def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
+def extract_bounding_box_coords(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
+    """For each annotation return the 4 (x,y) coordinates that constitute the bounding box.
+
+    """
     shape = (segmentation["image"]["height"], segmentation["image"]["width"])
     bounding_box_mask = np.empty(shape)
     bounding_box_coordinates = []
 
     for anno in segmentation["annotations"]:
+        xs = [ anno['points'][i]['x'] for i in range(len(anno))]
+        ys = [ anno['points'][i]['y'] for i in range(len(anno))]
+        bounding_box_coordinates.append( [np.min(xs),np.min(ys),np.max(xs),np.max(ys)] )
 
-        pass
-        # bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
+        bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (np.min(xs),np.min(ys)), (np.max(xs),np.max(ys)), (255, 255, 255), 3)
         # bounding_box_coordinates.append((x, y, w, h))
     # cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
     # cv2.waitKey(0)
@@ -98,7 +103,3 @@ def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContou
     cv2.waitKey(0)
 
     return bounding_box_mask, bounding_box_coordinates
-
-
-#
-    return cont

@@ -30,7 +30,7 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
         img,mask = data_loader.get_image_and_labels(i)
         back_mask = get_background_mask(img)
         mask = np.squeeze(mask) + back_mask * 2
-        img_crops, mask_crops = data_loader.generate_patches(img,mask)
+        img_crops, mask_crops= data_loader.generate_patches(img,mask,img_index=i)
         bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
         #Add whitening, random crop, flip
