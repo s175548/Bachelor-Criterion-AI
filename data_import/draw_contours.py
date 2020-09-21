@@ -82,28 +82,23 @@ def draw_contours2(segmentation, label_space, draw_buffer=None, drawContoursArgs
     return cont
 
 
-# def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
-#         shape = (segmentation["image"]["height"], segmentation["image"]["width"])
-#         first_label = next(iter(label_space.values()))
-#         shape = (*shape, len(first_label))
-#         cont = np.zeros(shape, dtype=np.float32)
-#     else:
-#         cont = draw_buffer
+def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
+    shape = (segmentation["image"]["height"], segmentation["image"]["width"])
+    bounding_box_mask = np.empty(shape)
+    bounding_box_coordinates = []
+
+    for anno in segmentation["annotations"]:
+
+        pass
+        # bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
+        # bounding_box_coordinates.append((x, y, w, h))
+    # cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
+    # cv2.waitKey(0)
+    cv2.imshow('box', bounding_box_mask)
+    cv2.waitKey(0)
+
+    return bounding_box_mask, bounding_box_coordinates
+
+
 #
-#     for lbl, color in label_space.items():
-#         color = color if isinstance(color, (tuple, list)) else color.tolist()
-#         contours = []
-#         for anno in segmentation["annotations"]:
-#             if lbl in anno["label"] or (isinstance(lbl, tuple) and np.any([lbl_ii in anno["label"] for lbl_ii in lbl])):
-#                 contour = make_contour(anno["points"], anno["type"], **kwargs)
-#                 if contour is not None:
-#                     contours.extend(contour)
-#         if drawContoursArgs is None:
-#             drawContoursArgs = dict(thickness=cv2.FILLED)
-#         if len(color) <= 4:
-#             cv2.drawContours(cont, contours, -1, tuple(color), **drawContoursArgs)
-#         else:
-#             cont[..., np.array(color) == 1] = cv2.drawContours(cont[..., np.array(color) == 1].copy(), contours, -1, 1,
-#                                                                **drawContoursArgs)
-#
-#     return cont
+    return cont

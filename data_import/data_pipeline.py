@@ -21,6 +21,10 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
     #     idx = np.sort(idx)
     # else:
     #     idx = data_loader.valid_annotations
+    idx = [42,56]
+
+    shuffled_idx = idx[:]
+    random.shuffle(shuffled_idx)
 
     for i in idx:
         img,mask = data_loader.get_image_and_labels(i)
@@ -28,7 +32,12 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
         mask = np.squeeze(mask) + back_mask * 2
         img_crops, mask_crops = data_loader.generate_patches(img,mask)
         bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
-        
+
+        #Add whitening, random crop, flip
+
+
+
+
     #     os.chdir(directory_path)
     #     img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
     #     im_pil = Image.fromarray(img2)
