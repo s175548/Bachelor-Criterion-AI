@@ -1,0 +1,6 @@
+img=PIL.Image.open('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/61.jpg')
+img_1=PIL.ImageEnhance.Sharpness(img)
+img_12=img_1.enhance(3.0)
+img_3=PIL.ImageEnhance.Contrast(img_12)
+img_3.enhance(3.0).show()
+img.show()
