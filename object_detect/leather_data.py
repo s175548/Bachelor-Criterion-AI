@@ -42,8 +42,12 @@ class LeatherData_BB(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.masks[index]).convert('P')
 
-
         mask = np.array(target)
+        new_mask = cv2.resize(mask, (512, 512))
+        Image._show(Image.fromarray(np.array(img)))
+        Image._show(Image.fromarray(mask))
+        cv2.imshow('mask', mask)
+        cv2.waitKey(0)
         _, bounding_box = convert_mask_to_bounding_box(np.resize(mask,(512,512,1) ))
         obj_ids = np.unique(mask)
         # first id is the background, so remove it
