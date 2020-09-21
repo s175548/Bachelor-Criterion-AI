@@ -20,9 +20,9 @@ def convert_mask_to_bounding_box(mask):
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
-        bounding_box_coordinates.append((x,y,w,h,1))
-    cv2.imshow('bound', cv2.resize(bounding_box_mask,(800,800)))
-    cv2.waitKey(0)
+        bounding_box_coordinates.append((x,y,w,h))
+    #cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
+    #cv2.waitKey(0)
     return bounding_box_mask,bounding_box_coordinates
 
 def find_background(image):
