@@ -41,8 +41,25 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.masks[index])
 
+        if bounding_box == True:
+            _, bounding_box = convert_mask_to_bounding_box(mask)
+            mask = np.array(target)
+            obj_ids = np.unique(mask)
+            masks = mask == obj_ids[:, None, None]
+            num_objs = len(obj_ids)
+            boxes = torch.as_tensor(bounding_box, dtype=torch.float32)
+            labels = torch.ones((num_objs,), dtype=torch.int64)
+            if self.transform is not None:
+                img, target = self.transform(img, target)
+            targets = {}
+            targets["boxes"] = boxes
+            targets["labels"] = labels
+            targets["masks"] = masks
+            return img, targets
+
         if self.transform is not None:
             img, target = self.transform(img, target)
+
         return img, target
 
     def __len__(self):

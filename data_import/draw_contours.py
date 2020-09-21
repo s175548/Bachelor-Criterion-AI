@@ -80,3 +80,43 @@ def draw_contours2(segmentation, label_space, draw_buffer=None, drawContoursArgs
                                                                **drawContoursArgs)
 
     return cont
+
+
+# def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
+#     """
+#     If more than four channels are in the label space only values 1 will be drawn to the segmentation
+#     :param segmentation:
+#     :param label_space:
+#     :param draw_buffer: input draw bufffer, use to draw on top of existing images
+#     :param drawContoursArgs: Args for drawContours.. eg thickness to draw non filled contours
+#     :param kwargs: args for make_contours
+#     :return:
+#     """
+#     if not kwargs:
+#         kwargs = dict(use_circle=False)
+#
+#     if draw_buffer is None:
+#         shape = (segmentation["image"]["height"], segmentation["image"]["width"])
+#         first_label = next(iter(label_space.values()))
+#         shape = (*shape, len(first_label))
+#         cont = np.zeros(shape, dtype=np.float32)
+#     else:
+#         cont = draw_buffer
+#
+#     for lbl, color in label_space.items():
+#         color = color if isinstance(color, (tuple, list)) else color.tolist()
+#         contours = []
+#         for anno in segmentation["annotations"]:
+#             if lbl in anno["label"] or (isinstance(lbl, tuple) and np.any([lbl_ii in anno["label"] for lbl_ii in lbl])):
+#                 contour = make_contour(anno["points"], anno["type"], **kwargs)
+#                 if contour is not None:
+#                     contours.extend(contour)
+#         if drawContoursArgs is None:
+#             drawContoursArgs = dict(thickness=cv2.FILLED)
+#         if len(color) <= 4:
+#             cv2.drawContours(cont, contours, -1, tuple(color), **drawContoursArgs)
+#         else:
+#             cont[..., np.array(color) == 1] = cv2.drawContours(cont[..., np.array(color) == 1].copy(), contours, -1, 1,
+#                                                                **drawContoursArgs)
+#
+#     return cont

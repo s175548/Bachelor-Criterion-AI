@@ -91,7 +91,6 @@ class DataLoader():
             self.simple_plot_cv2(images)
             if len(masks)>0:
                 self.simple_plot_cv2(masks)
-
         else:
             for idx,image in enumerate(images):
                 self.simple_plot_cv2(image)
@@ -179,9 +178,12 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 if __name__ == '__main__':
     dataloader = DataLoader()
     pass
-    images, masks = dataloader.get_image_and_labels(20)
+    images, masks = dataloader.get_image_and_labels([41,45])
     dataloader.plot_function(images,masks)
 
+
+    img, mask = get_patches(dataloader.valid_annotations[0:50],dataloader)
+    pass
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)
     # pass
