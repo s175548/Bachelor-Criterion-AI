@@ -16,12 +16,11 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
-    for images, targets in metric_logger.log_every(data_loader, print_freq, header):
+    for images, labels in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
         loss_dict = model(images, targets)
-
         losses = sum(loss for loss in loss_dict.values())
 
         # reduce losses over all GPUs for logging purposes
@@ -72,14 +71,13 @@ def evaluate(model, data_loader, device):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
 
-    for image, targets in metric_logger.log_every(data_loader, 100, header):
+    for image, labels in metric_logger.log_every(data_loader, 100, header):
         image = list(img.to(device) for img in image)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
         torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(image)
-
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
 

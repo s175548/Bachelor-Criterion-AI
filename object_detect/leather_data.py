@@ -40,14 +40,14 @@ class LeatherData_BB(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index])
+        target = Image.open(self.masks[index]).convert('P')
 
 
         mask = np.array(target)
         _, bounding_box = convert_mask_to_bounding_box(np.resize(mask,(512,512,1) ))
         obj_ids = np.unique(mask)
         # first id is the background, so remove it
-        obj_ids = obj_ids[1:]
+        #obj_ids = obj_ids[1:]
         masks = mask == obj_ids[:, None, None]
         image_id = torch.tensor([index])
         num_objs = len(obj_ids)
@@ -63,7 +63,7 @@ class LeatherData_BB(data.Dataset):
         targets = {}
         targets["boxes"] = boxes
         targets["labels"] = labels
-        targets["masks"] = tgt
+        #targets["masks"] = torch.reshape(tgt,(1,512,512))
         targets["image_id"] = image_id
         targets["area"] = area
         targets["iscrowd"] = iscrowd

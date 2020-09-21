@@ -15,14 +15,14 @@ def convert_mask_to_bounding_box(mask):
     contours, hierarchy = cv2.findContours(mask.astype('uint8'), 1, 2)
     bounding_box_mask = np.empty((mask.shape[0],mask.shape[1]))
     bounding_box_coordinates = []
-    cv2.imshow('mask',cv2.resize(mask,(1000,1000)))
+    #cv2.imshow('mask',cv2.resize(mask,(1000,1000)))
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
-        bounding_box_coordinates.append((x,y,w,h,1))
-    cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
-    cv2.waitKey(0)
+        bounding_box_coordinates.append((x,y,w,h))
+    #cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
+    #cv2.waitKey(0)
     return bounding_box_mask,bounding_box_coordinates
 
 def find_background(image):

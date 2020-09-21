@@ -181,6 +181,8 @@ if __name__ == '__main__':
     images, masks = dataloader.get_image_and_labels([41,45])
     dataloader.plot_function(images,masks)
 
+
+    img, mask = get_patches(dataloader.valid_annotations[0:50],dataloader)
     pass
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)

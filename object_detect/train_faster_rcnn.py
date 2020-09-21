@@ -67,8 +67,8 @@ if __name__ == '__main__':
 #        bounding_boxes.append(bounding_box)
 
     # Define dataloaders
-    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:10],transform=transform_function)
-    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[675:],transform=transform_function)
+    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:20],transform=transform_function)
+    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[665:],transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
