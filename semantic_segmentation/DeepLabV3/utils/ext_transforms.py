@@ -6,11 +6,37 @@ import numbers
 import numpy as np
 from PIL import Image
 from PIL import ImageOps
+import PIL
 
 
 #
 #  Extended Transforms for Semantic Segmentation
 #
+class ExtEnhanceContrast(object):
+    """Returns label in "P" format and inverts colors of label.
+
+    """
+
+    def __init__(self):
+        pass
+
+    def __call__(self,img, lbl):
+        """
+        Args:
+            img (PIL Image): Image to be cropped.
+        Returns:
+            PIL Image: Cropped image.
+        """
+        img = PIL.ImageEnhance.Sharpness(img)
+        img = img.enhance(2.0)
+        img= PIL.ImageEnhance.Contrast(img)
+        img=img.enhance(2.0)
+
+        return img, lbl
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(size={0})'.format(self.size)
+
 
 
 class ExtRandomHorizontalFlip(object):
