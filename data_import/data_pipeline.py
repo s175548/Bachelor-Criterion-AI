@@ -1,5 +1,6 @@
-import os, numpy as np,cv2
-from data_import.data_loader import DataLoader,get_patches
+import os, numpy as np,cv2,random
+from data_import.data_loader import DataLoader
+from data_import.masks_to_bounding_box import get_background_mask,convert_mask_to_bounding_box
 
 
 """ Steps:
@@ -12,17 +13,22 @@ from data_import.data_loader import DataLoader,get_patches
 """
 
 def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder',visibility_scores = []):
-    if visibility_scores != []:
-        idx = np.array([])
-        for score in visibility_scores:
-            idx = np.hstack((idx, np.where(np.array(dataloader.visibility_score) == score)[0]))
-        idx = np.sort(idx)
-    else:
-        idx = data_loader.valid_annotations
-        
+    random.seed(42)
+    # if visibility_scores != []:
+    #     idx = np.array([])
+    #     for score in visibility_scores:
+    #         idx = np.hstack((idx, np.where(np.array(dataloader.visibility_score) == score)[0]))
+    #     idx = np.sort(idx)
+    # else:
+    #     idx = data_loader.valid_annotations
+
     for i in idx:
         img,mask = data_loader.get_image_and_labels(i)
-
+        back_mask = get_background_mask(img)
+        mask = np.squeeze(mask) + back_mask * 2
+        img_crops, mask_crops = data_loader.generate_patches(img,mask)
+        bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
+        
     #     os.chdir(directory_path)
     #     img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
     #     im_pil = Image.fromarray(img2)

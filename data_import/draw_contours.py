@@ -83,19 +83,6 @@ def draw_contours2(segmentation, label_space, draw_buffer=None, drawContoursArgs
 
 
 # def extract_bounding_box(segmentation, label_space, draw_buffer=None, drawContoursArgs=None, **kwargs):
-#     """
-#     If more than four channels are in the label space only values 1 will be drawn to the segmentation
-#     :param segmentation:
-#     :param label_space:
-#     :param draw_buffer: input draw bufffer, use to draw on top of existing images
-#     :param drawContoursArgs: Args for drawContours.. eg thickness to draw non filled contours
-#     :param kwargs: args for make_contours
-#     :return:
-#     """
-#     if not kwargs:
-#         kwargs = dict(use_circle=False)
-#
-#     if draw_buffer is None:
 #         shape = (segmentation["image"]["height"], segmentation["image"]["width"])
 #         first_label = next(iter(label_space.values()))
 #         shape = (*shape, len(first_label))
