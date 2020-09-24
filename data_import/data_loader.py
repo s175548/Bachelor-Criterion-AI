@@ -1,4 +1,4 @@
-import json, cv2, torch, os,pandas as pd,numpy as np
+import json, cv2, torch, os,pandas as pd,numpy as np,PIL
 from PIL import Image
 from torchvision import datasets, transforms
 from data_import.draw_contours import draw_contours2,extract_bounding_box_coords
@@ -124,6 +124,13 @@ class DataLoader():
                     images.append(image)
                     masks.append(mask)
         return images,masks
+    def enchance_contrast(self,img):
+        img = Image.fromarray(img)
+        img = PIL.ImageEnhance.Sharpness(img)
+        img = img.enhance(2.0)
+        img= PIL.ImageEnhance.Contrast(img)
+        img=img.enhance(2.0)
+        return np.array(img)
 
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
