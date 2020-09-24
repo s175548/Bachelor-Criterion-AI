@@ -28,7 +28,7 @@ class LeatherData(data.Dataset):
         file_names=list_of_filenames
 
         self.images = [os.path.join(self.path_img, x+ '.jpg') for x in file_names]
-        self.masks = [os.path.join(self.path_mask, x+ '_mask.png') for x in file_names]
+        self.masks = [os.path.join(self.path_mask, x+ '_mask.jpg') for x in file_names]
         assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index, bounding_box=False):
@@ -44,7 +44,7 @@ class LeatherData(data.Dataset):
         if bounding_box == True:
             _, bounding_box = convert_mask_to_bounding_box(mask)
             mask = np.array(target)
-            obj_ids = np.unique(mask)
+            objs = np.unique(mask)
             masks = mask == obj_ids[:, None, None]
             num_objs = len(obj_ids)
             boxes = torch.as_tensor(bounding_box, dtype=torch.float32)
