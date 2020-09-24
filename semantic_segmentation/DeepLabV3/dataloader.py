@@ -1,7 +1,7 @@
 from semantic_segmentation.DeepLabV3.Training_windows import*
-import sys
+import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject')
-
+print(os.getcwd())
 HPC = True
 if __name__ == "__main__":
     if HPC:
