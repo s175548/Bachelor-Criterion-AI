@@ -1,7 +1,7 @@
-import json, cv2, torch, os,pandas as pd,numpy as np
+import json, cv2, torch, os,pandas as pd,numpy as np,PIL
 from PIL import Image
 from torchvision import datasets, transforms
-from data_import.draw_contours import draw_contours2,make_contour
+from data_import.draw_contours import draw_contours2,extract_bounding_box_coords
 import matplotlib.pyplot as plt
 
 
@@ -50,6 +50,8 @@ class DataLoader():
         else:
             return cv2.imread( os.path.join(self.data_path, self.metadata_csv[images_idx,1]) ),self.read_segmentation_file( os.path.join(self.data_path,self.metadata_csv[images_idx,3]))
 
+    def get_bounding_box(self,mask):
+        self.read_segmentation_file(os.path.join(self.data_path, self.metadata_csv[image_idx, 3]))
 
     def read_segmentation_file(self,filepath):
         """     Helper function, that simply opens segmentation file, draws a contour from this.
@@ -96,11 +98,14 @@ class DataLoader():
                 self.simple_plot_cv2(image)
                 if len(masks)>0:
                     self.simple_plot_cv2(masks[idx])
-    def generate_patches(self,img, msk,patch_size=360,print_=False):
+    def generate_patches(self,img, msk,patch_size=360,print_=False,img_index=None):
         images = []
         masks = []
         crop_count_height = int(np.floor(img.shape[0] / patch_size))
         crop_count_width =  int(np.floor(img.shape[1] / patch_size))
+
+        # seg = self.get_json_file_content( os.path.join(self.data_path, self.metadata_csv[img_index, 3]))
+        # segmentation = extract_bounding_box_coords(seg, label_space={kk["label"]: [1.0] for kk in seg["annotations"]})
 
         if print_:
             cv2.imshow('',img)
@@ -110,7 +115,7 @@ class DataLoader():
                 for j in range(crop_count_width):
                     image = img[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
                     mask = msk[i*patch_size:(i+1)*patch_size,j*patch_size:(j+1)*patch_size]
-
+    
                     if print_:
                         cv2.imshow('image', image)
                         cv2.imshow('mask',mask)
@@ -119,6 +124,13 @@ class DataLoader():
                     images.append(image)
                     masks.append(mask)
         return images,masks
+    def enchance_contrast(self,img):
+        img = Image.fromarray(img)
+        img = PIL.ImageEnhance.Sharpness(img)
+        img = img.enhance(2.0)
+        img= PIL.ImageEnhance.Contrast(img)
+        img=img.enhance(2.0)
+        return np.array(img)
 
 def to_tensor_and_normalize(img):
     img2 = cv2.cvtColor(img, cv2.COLOR_BGR2RGB) #cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
@@ -179,11 +191,15 @@ def save_pictures_locally(data_loader,directory_path=r'C:\Users\Mads-\Documents\
 if __name__ == '__main__':
     dataloader = DataLoader()
     pass
-    images, masks = dataloader.get_image_and_labels([41,45])
-    dataloader.plot_function(images,masks)
+    images, masks = dataloader.get_image_and_labels(41)
+
+    dataloader.generate_patches(images,masks,img_index=41)
+
+    # images, masks = dataloader.get_image_and_labels([41,45])
+    # dataloader.plot_function(images,masks)
 
 
-    img, mask = get_patches(dataloader.valid_annotations[0:50],dataloader)
+    # img, mask = get_patches(dataloader.valid_annotations[0:50],dataloader)
     pass
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)
