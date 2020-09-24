@@ -15,7 +15,7 @@ def convert_mask_to_bounding_box(mask):
     contours, hierarchy = cv2.findContours(mask.astype('uint8'), 1, 2)
     bounding_box_mask = np.empty((mask.shape[0],mask.shape[1]))
     bounding_box_coordinates = []
-    cv2.imshow('mask',cv2.resize(mask,(800,800)))
+    cv2.imshow('mask',mask)
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
@@ -23,9 +23,12 @@ def convert_mask_to_bounding_box(mask):
         bounding_box_coordinates.append((x,y,w,h))
     #cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
     #cv2.waitKey(0)
+    cv2.imshow('box',bounding_box_mask)
+    cv2.waitKey(0)
+
     return bounding_box_mask,bounding_box_coordinates
 
-def find_background(image):
+def get_background_mask(image):
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
     lower_red = np.array([0, 120, 70])
     upper_red = np.array([10, 255, 255])
@@ -36,14 +39,24 @@ def find_background(image):
     mask2 = cv2.inRange(hsv, lower_red, upper_red)
     mask1 = mask1 + mask2
     median_mask = cv2.medianBlur(mask1, 5)
-    return median_mask
+    return (~median_mask)
 
 
 def find_backgrounds(list):
     for i in list:
         img_test, mask = data_loader.get_image_and_labels(i)
-        find_background(img_test)
+        get_background_mask(img_test)
 
+def combine_seg_and_back_mask(mask_idx):
+    for i in mask_idx:
+        img_, seg_mask = data_loader.get_image_and_labels(i)
+        back_mask = get_background_mask(img_)
+        new_mask =  np.squeeze(seg_mask) + back_mask*2
+        #_, binary = cv2.threshold(new_mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
+        # mask_pil = Image.fromarray(new_mask)
+        # mask_pil.convert('RGB').save(str(i)+'_mask.png')
+        pass
+    return new_mask
 
 if __name__ == '__main__':
     data_loader = DataLoader()

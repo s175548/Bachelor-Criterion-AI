@@ -113,6 +113,7 @@ class DataLoader():
 
                     if print_:
                         cv2.imshow('image', image)
+                        cv2.imshow('mask',mask)
                         cv2.waitKey(0)
 
                     images.append(image)
