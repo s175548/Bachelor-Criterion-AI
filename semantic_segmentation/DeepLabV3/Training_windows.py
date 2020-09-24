@@ -61,7 +61,7 @@ path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelor
 path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
 
 
-def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None):
+def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd()):
     """ save current model
     """
     torch.save({
@@ -70,7 +70,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
         "optimizer_state": optimizer.state_dict(),
         "scheduler_state": scheduler.state_dict(),
         "best_score": best_score,
-    }, '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /'+model_name+'.pt')
+    }, save_path+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
@@ -235,7 +235,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(10),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion)
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,save_path=os.getcwd())
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
