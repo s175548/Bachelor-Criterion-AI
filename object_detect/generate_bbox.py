@@ -52,3 +52,7 @@ class LeatherData_BB(data.Dataset):
     def __len__(self):
         return len(self.images)
 
+if __name__ == '__main__':
+    print("HPC ")
+    txt = "HOC"
+    np.save(txt)

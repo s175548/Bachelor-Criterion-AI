@@ -76,7 +76,7 @@ if __name__ == '__main__':
     scale = 512
     # Define dataloaders
     train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                               list_of_filenames=file_names[:130],scale=scale,transform=transform_function)
+                               list_of_filenames=file_names[:164],scale=scale,transform=transform_function)
     val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
                              list_of_filenames=file_names[130:],scale=scale,transform=transform_function)
 
