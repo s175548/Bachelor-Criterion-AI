@@ -1,5 +1,6 @@
-import os,cv2
 import sys
+sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
+import os,cv2
 import tarfile
 import torch
 import collections
