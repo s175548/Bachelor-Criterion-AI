@@ -46,7 +46,7 @@ print_interval=10
 val_interval=10
 vis_num_samples=2
 enable_vis=True
-N_epochs=25
+N_epochs=10
 
 
 path_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask'
@@ -148,11 +148,12 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
     file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] !=".DS_S"])
     itemlist=itemlist[file_names.astype(np.uint8)]
-    file_names=np.sort(file_names)[np.logical_or(itemlist==2,itemlist==3)]
+    file_index=get_samples_visibility(visibility_scores,itemlist)
+    file_names=np.sort(file_names)[file_index]
     N_files=len(file_names)
     shuffled_index=np.random.permutation(len(file_names))
-    file_names_img=file_names[shuffled_index]
-    file_names=file_names[file_names != ".DS_S"]
+    file_names=file_names[shuffled_index]
+
 
 
 
@@ -272,6 +273,16 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 def grad_check(model,requires_grad):
     for parameter in model.classifier.parameters():
         parameter.requires_grad_(requires_grad=requires_grad)
+
+
+def get_samples_visibility(visibility_scores,item_list):
+    for i in range(len(visibility_scores)):
+        if i==0:
+            ids_bool=visibility_scores[i]==item_list
+        else:
+            ids_bool=np.logical_or(ids_bool,item_list==visibility_scores[i])
+    return ids_bool
+
 
 training(['model_pre_full'])
 
