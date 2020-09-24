@@ -6,23 +6,30 @@ import matplotlib as mpl
 import cv2
 from data_import.data_loader import DataLoader
 from data_import.draw_contours import draw_contours2
+from PIL import Image
+
 
 
 def convert_mask_to_bounding_box(mask):
     """input: mask
     output: bounding boxes
     """
-    contours, hierarchy = cv2.findContours(mask.astype('uint8'), 1, 2)
-    bounding_box_mask = np.empty((mask.shape[0],mask.shape[1]))
+    new_mask = np.copy(mask)
+    for i in range(512):
+        for j in range(512):
+            if mask[i,j] < 190:
+                new_mask[i,j] = 0
+            else:
+                new_mask[i,j] = 1
+    contours, hierarchy = cv2.findContours(new_mask.astype('uint8'), cv2.RETR_TREE,cv2.CHAIN_APPROX_TC89_L1)
+    bounding_box_mask = np.empty((new_mask.shape[0],new_mask.shape[1]))
     bounding_box_coordinates = []
-    #cv2.imshow('mask',cv2.resize(mask,(800,800)))
 
     for cnt in contours:
         x, y, w, h = cv2.boundingRect(cnt)
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x, y), (x + w, y + h), (255, 255, 255), 3)
         bounding_box_coordinates.append((x,y,x+w,y+h))
-    #cv2.imshow('bound', cv2.resize(bounding_box_mask,(1000,1000)))
-    #cv2.waitKey(0)
+
     return bounding_box_mask,bounding_box_coordinates
 
 def find_background(image):
