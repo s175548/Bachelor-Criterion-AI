@@ -42,4 +42,4 @@ if __name__ == "__main__":
 
     pass
 
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,path_img =path_img,path_mask=path_mask)
