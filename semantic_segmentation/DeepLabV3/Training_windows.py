@@ -118,7 +118,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
 
-def training(models=['model_pre_class','model_pre_full','model_full'],load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',path2='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /Github_bachelor/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg', visibility_scores=[2,3],train_loader=None,val_loader=None,train_dst=None, val_dst=None,path_img = "",path_mask=""):
+def training(models=['model_pre_class','model_pre_full','model_full'],load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',path2='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /Github_bachelor/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg', visibility_scores=[2,3],train_loader=None,val_loader=None,train_dst=None, val_dst=None):
 
     model_dict_parameters = {'model_pre_class': {'pretrained':True ,'num_classes':21,'requires_grad':False},
                 'model_pre_full': {'pretrained':True,'num_classes':21,'requires_grad':True},
@@ -152,15 +152,6 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                 'rb') as fp:
             itemlist = np.array(pickle.load(fp))
 
-
-
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] !=".DS_S"])
-    # itemlist=itemlist[file_names.astype(np.uint8)]
-    # file_names=np.sort(file_names)[np.logical_or(itemlist==2,itemlist==3)]
-    N_files=len(file_names)
-    shuffled_index=np.random.permutation(len(file_names))
-    file_names_img=file_names[shuffled_index]
-    file_names=file_names[file_names != ".DS_S"]
 
 
 

@@ -8,10 +8,12 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 HPC = True
 if __name__ == "__main__":
     if HPC:
+        path_model = r'/work3/s173934/Bachelorprojekt/'
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data/mask'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data/img'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
     else:
+        path_model = os.getcwd()
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
         path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
@@ -42,4 +44,4 @@ if __name__ == "__main__":
 
     pass
 
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,path_img =path_img,path_mask=path_mask,model_path=os.getcwd())
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model)
