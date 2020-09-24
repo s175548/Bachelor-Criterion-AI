@@ -56,4 +56,4 @@ class LeatherData_BB(data.Dataset):
 if __name__ == '__main__':
     print("HPC ")
     txt = "HOC"
-    np.save(txt)
+    np.save("try_txt",txt)
