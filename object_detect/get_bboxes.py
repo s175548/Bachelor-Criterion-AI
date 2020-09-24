@@ -32,6 +32,13 @@ def convert_mask_to_bounding_box(mask):
 
     return bounding_box_mask,bounding_box_coordinates
 
+def generate_bbox_mask(mask,bbox):
+    bounding_box_mask = np.empty((mask.shape[0], mask.shape[1]))
+    for i in range(len(bbox)):
+        bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (bbox[i][0], bbox[i][1]), (bbox[i][2], bbox[i][3]), (255, 255, 255), 3)
+    return bounding_box_mask
+
+
 def find_background(image):
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
     lower_red = np.array([0, 120, 70])

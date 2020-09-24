@@ -1,5 +1,6 @@
-import os,cv2
 import sys
+sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
+import os,cv2
 import tarfile
 import torch
 import collections
@@ -52,3 +53,7 @@ class LeatherData_BB(data.Dataset):
     def __len__(self):
         return len(self.images)
 
+if __name__ == '__main__':
+    print("HPC ")
+    txt = "HOC"
+    np.save(txt)
