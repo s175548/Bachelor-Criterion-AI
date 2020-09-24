@@ -7,7 +7,7 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from Bachelor-Criterion-AI.object_detect.get_bboxes import convert_mask_to_bounding_box
+from object_detect.get_bboxes import convert_mask_to_bounding_box
 from PIL import Image
 
 
