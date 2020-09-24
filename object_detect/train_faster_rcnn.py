@@ -54,7 +54,7 @@ if __name__ == '__main__':
     path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
     path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
-    batch_size = 16
+    batch_size = 1
     val_batch_size = 4
 
     visibility_scores = [3]
@@ -67,15 +67,18 @@ if __name__ == '__main__':
 
     file_names = np.array([img[:-4] for img in os.listdir(path_img)])
     itemlist=itemlist[file_names.astype(np.uint8)]
-    file_names=np.sort(file_names)[np.logical_or(itemlist==2, itemlist==3)]
+    file_names=np.sort(file_names)[itemlist==3]
     N_files=len(file_names)
     shuffled_index=np.random.permutation(len(file_names))
     file_names_img=file_names[shuffled_index]
     file_names=file_names[file_names != ".DS_S"]
 
+    scale = 512
     # Define dataloaders
-    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:210],transform=transform_function)
-    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[210:],transform=transform_function)
+    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
+                               list_of_filenames=file_names[:100],scale=scale,transform=transform_function)
+    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
+                             list_of_filenames=file_names[130:140],scale=scale,transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
@@ -88,8 +91,8 @@ if __name__ == '__main__':
         # train for one epoch, printing every 10 iterations
         train_one_epoch(model, optimizer, train_loader, device, epoch,print_freq=10)
         # update the learning rate
-        lr_scheduler.step()
+        #lr_scheduler.step()
         print("\n Finished training for epoch!")
         # evaluate on the test dataset
-        evaluate(model, val_loader, device=device)
+        #evaluate(model, val_loader, device=device)
         print("\n Finished evaluation for epoch!")
