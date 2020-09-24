@@ -23,7 +23,7 @@ if __name__ == "__main__":
     file_names_img=file_names[shuffled_index]
     file_names=file_names[file_names != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512),et.ExtScale(512),et.ExtEnhanceContrast(),
+    transform_function = et.ExtCompose([et.ExtTransformLabel(),
                     et.ExtToTensor(),
                     et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225]),])
