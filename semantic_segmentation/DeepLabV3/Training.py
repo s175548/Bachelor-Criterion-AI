@@ -152,8 +152,8 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
     file_names=np.sort(file_names)[file_index]
     N_files=len(file_names)
     shuffled_index=np.random.permutation(len(file_names))
-    file_names_img=file_names[shuffled_index]
-    file_names=file_names[file_names != ".DS_S"]
+    file_names=file_names[shuffled_index]
+
 
 
 
@@ -275,7 +275,7 @@ def grad_check(model,requires_grad):
         parameter.requires_grad_(requires_grad=requires_grad)
 
 
-def get_samples_visibility(visibility_scores,item_list)
+def get_samples_visibility(visibility_scores,item_list):
     for i in range(len(visibility_scores)):
         if i==0:
             ids_bool=visibility_scores[i]==item_list
