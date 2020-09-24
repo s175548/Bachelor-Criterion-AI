@@ -1,7 +1,9 @@
-from semantic_segmentation.DeepLabV3.Training_windows import*
+from semantic_segmentation.DeepLabV3.Training_windows import *
+# from semantic_segmentation.DeepLabV3.Training_windows import*
 import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
-print(os.getcwd())
+sys.path.append('BachelorProject/Bachelor-Criterion-AI')
+
 HPC = True
 if __name__ == "__main__":
     if HPC:
