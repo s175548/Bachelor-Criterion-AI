@@ -1,5 +1,5 @@
 """ Script by Johannes B. Reiche, inspired by: https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html """
-import torchvision, random
+import torchvision
 from torch.utils import data
 import os, pickle
 import numpy as np
@@ -63,15 +63,13 @@ if __name__ == '__main__':
                 'rb') as fp:
             itemlist = np.array(pickle.load(fp))
 
-    np.random.seed(2)
-    random.seed(2)
     file_names = np.array([img[:-4] for img in os.listdir(path_img)])
     itemlist=itemlist[file_names.astype(np.uint8)]
     file_names=np.sort(file_names)[itemlist==3]
     N_files=len(file_names)
-    #shuffled_index=np.random.permutation(len(file_names))
-    #file_names_img=file_names[shuffled_index]
-    #file_names=file_names[file_names != ".DS_S"]
+    shuffled_index=np.random.permutation(len(file_names))
+    file_names_img=file_names[shuffled_index]
+    file_names=file_names[file_names != ".DS_S"]
 
     scale = 512
     # Define dataloaders
@@ -94,5 +92,5 @@ if __name__ == '__main__':
         lr_scheduler.step()
         print("\n Finished training for epoch!")
         # evaluate on the test dataset
-        evaluate(model, val_loader, device=device)
+        eval = evaluate(model, val_loader, device=device)
         print("\n Finished evaluation for epoch!")
