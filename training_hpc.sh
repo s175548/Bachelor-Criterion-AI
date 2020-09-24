@@ -13,5 +13,6 @@
 
 echo "Running script..."
 source test-env/bin/activate
-python3 Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/Training_windows.py
+cd Bachelor-Criterion-AI
+python3 semantic_segmentation/DeepLabV3/Training_windows.py
 echo "Done"
