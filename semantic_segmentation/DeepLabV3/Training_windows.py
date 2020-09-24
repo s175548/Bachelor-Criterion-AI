@@ -2,11 +2,15 @@
 Made with heavy inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
+import sys
+sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
+
 
 from tqdm import tqdm
 import random
 import numpy as np
-from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+#from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
 from torch.utils import data
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
@@ -57,7 +61,7 @@ path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelor
 path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
 
 
-def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None):
+def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd()):
     """ save current model
     """
     torch.save({
@@ -66,7 +70,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
         "optimizer_state": optimizer.state_dict(),
         "scheduler_state": scheduler.state_dict(),
         "best_score": best_score,
-    }, '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /'+model_name+'.pt')
+    }, save_path+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
@@ -150,15 +154,6 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
 
 
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] !=".DS_S"])
-    # itemlist=itemlist[file_names.astype(np.uint8)]
-    # file_names=np.sort(file_names)[np.logical_or(itemlist==2,itemlist==3)]
-    N_files=len(file_names)
-    shuffled_index=np.random.permutation(len(file_names))
-    file_names_img=file_names[shuffled_index]
-    file_names=file_names[file_names != ".DS_S"]
-
-
 
 
     # Set up metrics
@@ -231,7 +226,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(10),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion)
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,save_path=os.getcwd())
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
@@ -270,7 +265,7 @@ def grad_check(model,requires_grad):
 # training(['model_pre_full'])
 
 if __name__ == "__main__":
-    training(['model_pre_full'],path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg')
-
+    #training(['model_pre_full'],path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg')
+    pass
 
 
