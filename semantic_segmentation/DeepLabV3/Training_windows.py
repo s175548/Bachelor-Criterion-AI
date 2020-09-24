@@ -37,20 +37,20 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=1
+total_itrs=1000
 lr=0.01
 lr_policy='step'
 step_size=10000
-batch_size=4
+batch_size=16
 val_batch_size=4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 print_interval=10
-val_interval=1
+val_interval=100
 vis_num_samples=2
 enable_vis=True
-N_epochs=25
+N_epochs=100
 
 
 
