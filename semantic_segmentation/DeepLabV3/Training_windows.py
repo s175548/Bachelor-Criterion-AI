@@ -6,7 +6,7 @@ https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8
 from tqdm import tqdm
 import random
 import numpy as np
-from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+#from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
 from torch.utils import data
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
