@@ -7,8 +7,8 @@ from semantic_segmentation.DeepLabV3.Training_windows import *
 HPC = True
 if __name__ == "__main__":
     if HPC:
-        path_mask = r'/work3/s173934/Bachelorprojekt\cropped_data\mask'
-        path_img = r'/work3/s173934/Bachelorprojekt\cropped_data\img'
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data/mask'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data/img'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
     else:
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
