@@ -261,6 +261,8 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 def grad_check(model,requires_grad):
     for parameter in model.classifier.parameters():
         parameter.requires_grad_(requires_grad=requires_grad)
+    # for parameter in model.backbone.parameters():
+    #     parameter.requires_grad_(requires_grad=False)
 
 # training(['model_pre_full'])
 
