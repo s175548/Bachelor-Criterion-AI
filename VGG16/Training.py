@@ -97,7 +97,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                   'model_full': {'pretrained':False ,'num_classes':2,'requires_grad':True}}
     model_dict={}
     for model_name in models:
-        model=deeplabv3_resnet101(pretrained=model_dict_parameters[model_name]['pretrained'], progress=True,
+        model=vgg16(pretrained=model_dict_parameters[model_name]['pretrained'], progress=True,
                                   num_classes=model_dict_parameters[model_name]['num_classes'], aux_loss=None)
         grad_check(model, requires_grad=model_dict_parameters[model_name]['requires_grad'])
         if model_dict_parameters[model_name]['num_classes']==21:
