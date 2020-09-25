@@ -45,4 +45,4 @@ if __name__ == "__main__":
 
     pass
 
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path)
