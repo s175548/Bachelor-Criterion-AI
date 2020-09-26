@@ -42,9 +42,9 @@ class DataLoader():
 
         for i in range(len(self.metadata_csv)):
             if self.metadata_csv[i, 0][2:6] == 'Good':
-                image=np.arrray(PIL.Image.fromarray(os.path.join(self.data_path, self.metadata_csv[i, 1])))
+                image=np.array(PIL.Image.open(os.path.join(self.data_path, self.metadata_csv[i, 1])))
                 mask=np.zeros(image.shape[:-1])
-                images.append(cv2.imread(os.path.join(self.data_path, self.metadata_csv[i, 1])))
+                images.append(image)
                 masks.append(mask)
         return images, masks
 
