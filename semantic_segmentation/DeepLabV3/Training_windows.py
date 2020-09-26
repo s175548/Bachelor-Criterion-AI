@@ -37,20 +37,20 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=1000
+total_itrs=10 #1000
 lr=0.01
 lr_policy='step'
 step_size=10000
-batch_size=16
-val_batch_size=4
+batch_size=2 # 16
+val_batch_size=2 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 print_interval=10
-val_interval=100
+val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs=100
+N_epochs=1
 
 
 
@@ -226,7 +226,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(10),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,save_path=os.getcwd())
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,save_path=save_path)
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']

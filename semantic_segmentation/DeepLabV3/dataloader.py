@@ -8,12 +8,13 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 HPC = True
 if __name__ == "__main__":
     if HPC:
-        save_path = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/'
+        save_path = r'/zhome/87/9/127623/BachelorProject/'
         path_model = r'/work3/s173934/Bachelorprojekt/'
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data/mask'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data/img'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
     else:
+        save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
         path_model = os.getcwd()
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
         path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
@@ -44,5 +45,8 @@ if __name__ == "__main__":
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     pass
+    for i, (images, labels) in tqdm(enumerate(train_loader)):
+        image = images
+        label = labels
 
     training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path)
