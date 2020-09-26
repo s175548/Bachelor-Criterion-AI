@@ -31,6 +31,7 @@ def import_data_and_mask_classifier(data_loader, good_patches=False,
     # shuffled_idx = idx[:]
     # random.shuffle(shuffled_idx)
     for i in idx:
+        break
         i = int(i)
         img, mask = data_loader.get_image_and_labels(i)
         back_mask = get_background_mask(img)
@@ -46,17 +47,14 @@ def import_data_and_mask_classifier(data_loader, good_patches=False,
     if good_patches:
         img, mask = data_loader.get_good_patches()
         for i in range(len(img)):
-            img=img[i]
-            mask=mask[i]
-            back_mask = get_background_mask(img)
-            mask = np.squeeze(mask) + back_mask * 2
-            img = data_loader.enchance_contrast(img)
-            im_pil = Image.fromarray(img)
+            back_mask = get_background_mask(img[i])
+            mask[i] = np.squeeze(mask[i]) + back_mask * 2
+            img[i] = data_loader.enchance_contrast(img[i])
+            im_pil = Image.fromarray(img[i])
             im_pil.save(str(i+len(idx)) + ".jpg")
 
-            _, binary = cv2.threshold(mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
+            _, binary = cv2.threshold(mask[i] * 255, 225, 255, cv2.THRESH_BINARY_INV)
             mask_pil = Image.fromarray(binary)
-            mask_pil.show()
             mask_pil.convert('RGB').save(str(i+len(idx)) + '_mask.jpg')
 
     # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]

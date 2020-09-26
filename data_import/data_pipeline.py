@@ -36,8 +36,7 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
 
         for k in range(len(img_crops)):
             k = int(k)
-            img2 = cv2.cvtColor(img_crops[k],cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
-            im_pil = Image.fromarray(img2)
+            im_pil = Image.fromarray(img)
             im_pil.save(str(i)+"_"+str(k) + ".jpg")
 
             _, binary = cv2.threshold(mask_crops[k] * 255, 225, 255, cv2.THRESH_BINARY_INV)
