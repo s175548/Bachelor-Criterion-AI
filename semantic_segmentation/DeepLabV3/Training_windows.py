@@ -34,14 +34,16 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
                 et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                 std=[0.229, 0.224, 0.225]),])
 
+
+
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=10 #1000
+total_itrs=100 #1000
 lr=0.01
 lr_policy='step'
 step_size=10000
-batch_size=2 # 16
+batch_size=8 # 16
 val_batch_size=2 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -50,7 +52,7 @@ print_interval=10
 val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs=1
+N_epochs=4
 
 
 
