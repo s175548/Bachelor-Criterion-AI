@@ -1,9 +1,7 @@
 #!/bin/sh
 #BSUB -J cpuversion0001
 #BSUB -o cpuversion0001%J.out
-#BSUB -q gpuv100
-#BSUB -n 1
-#BSUB -cpu "num=1:mode=exclusive_process"
+#BSUB -n 4
 #BSUB -R "rusage[mem=32G]"
 #BSUB -W 24:00
 #BSUB -u s173934@win.dtu.dk
