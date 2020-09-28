@@ -44,8 +44,8 @@ total_itrs=1000 # 100 #1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
-val_batch_size=2 #4
+batch_size= 32 # 16
+val_batch_size=4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
@@ -53,7 +53,7 @@ print_interval=10
 val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs= 4 # 4 #Helst mange
+N_epochs=  # 4 #Helst mange
 
 
 
@@ -87,7 +87,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
     running_loss=0
     with torch.no_grad():
         for i, (images, labels) in tqdm(enumerate(loader)):
-            break
             images = images.to(device, dtype=torch.float32)
             labels = labels.to(device, dtype=torch.long)
 
@@ -156,10 +155,10 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
 
     # Setup visualization
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-    # device = torch.device('cpu')
+    device = torch.device('cpu')
     # torch.cuda.empty_cache()
     print("Device: %s" % device)
 

@@ -31,8 +31,8 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
         img,mask = data_loader.get_image_and_labels(i)
         back_mask = get_background_mask(img)
         mask = np.squeeze(mask) + back_mask * 2
-        img_crops, mask_crops= data_loader.generate_patches(img,mask,img_index=i)
-        img_crops = [data_loader.enchance_contrast(img_crops[j]) for j in range(len(img_crops))]
+        img_crops, mask_crops= data_loader.generate_patches(img,mask,img_index=i,patch_size=512)
+        # img_crops = [data_loader.enchance_contrast(img_crops[j]) for j in range(len(img_crops))]
 
         for k in range(len(img_crops)):
             k = int(k)
