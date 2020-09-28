@@ -49,11 +49,11 @@ val_batch_size=4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-print_interval=10
+print_interval=55
 val_interval=55 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs= 10 # 4 #Helst mange
+N_epochs= 240 # 240 #Helst mange
 
 
 
