@@ -2,6 +2,14 @@ import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
+
+import argparse
+parser = argparse.ArgumentParser(description='Take learning rate parameter')
+parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+args = vars(parser.parse_args())
+lr = args['learning rate'][0]
+print(args['learning rate'][0]," this is the learning_rate")
+
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
@@ -44,9 +52,4 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    pass
-    for i, (images, labels) in tqdm(enumerate(train_loader)):
-        image = images
-        label = labels
-
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr)
