@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J gpu_lr0_001_
-#BSUB -o gpu_lr0_001_%J.out
+#BSUB -J version001
+#BSUB -o version001%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
