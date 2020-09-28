@@ -50,6 +50,11 @@ if __name__ == "__main__":
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
+    train_img = []
+    for i in range(5):
+        train_img.append(train_dst.__getitem__(i))
+
+
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_imgages=train_img)
