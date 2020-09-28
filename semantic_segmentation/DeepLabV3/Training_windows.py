@@ -236,7 +236,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images,lr=lr)
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images,lr=lr,save_path=save_path)
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
