@@ -2,9 +2,10 @@ import math
 import sys
 import time
 import torch
-
+import numpy as np
 import torchvision.models.detection.mask_rcnn
-
+from PIL import Image
+from object_detect.get_bboxes import get_bbox_mask
 from object_detect.helper.coco_utils import get_coco_api_from_dataset
 from object_detect.helper.coco_eval import CocoEvaluator
 import object_detect.helper.utils as utils
@@ -16,7 +17,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
-    for images, labels in metric_logger.log_every(data_loader, print_freq, header):
+    for images, labels, _ in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
@@ -57,21 +58,22 @@ def _get_iou_types(model):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device):
+def evaluate(model, data_loader, device,N):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
     cpu_device = torch.device("cpu")
     model.eval()
-
+    path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
     coco = get_coco_api_from_dataset(data_loader.dataset)
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
-
-    for i, (image, labels) in metric_logger.log_every(data_loader, 100, header):
+    num_boxes_val = []
+    num_boxes_pred = []
+    for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
         image = list(img.to(device) for img in image)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
@@ -80,6 +82,7 @@ def evaluate(model, data_loader, device):
         outputs = model(image)
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
+        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
 
         res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
@@ -87,11 +90,18 @@ def evaluate(model, data_loader, device):
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
-        for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_img'.format(model_name,N,id),format='PNG')
-            PIL.Image.fromarray((pred * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_prediction'.format(model_name,N,id),format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_mask'.format(model_name,N,id),format='PNG')
+        samples = []
+        num_boxes_val.append([len(targets[i]['boxes']) for i in range(len(ids))])
+        num_boxes_pred.append([len(targets[i]['boxes']) for i in range(len(ids))])
+        samples.append((image, masks, targets, outputs))
+
+        for (img,m,t,p), id in zip(samples,ids):
+            for i in range(len(ids)):
+                boxes = p[i]['boxes'].numpy()
+                bmask = get_bbox_mask(mask=m[i], bbox=boxes)
+                #image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
+                #Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save+'\{}_{}_prediction.png'.format(N,id),format='PNG')
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
