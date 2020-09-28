@@ -108,7 +108,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            image = image.to(device, dtype=torch.float32)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
             PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_img.png'.format(model_name,N,id,lr),format='PNG')
             PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_prediction.png'.format(model_name,N,id,lr),format='PNG')
@@ -118,7 +117,10 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for i in range(len(train_images)):
-            output = model(train_images[i][0].unsqueeze(0))['out']
+            image = train_images[i][0].unsqueeze(0)
+            image = image.to(device, dtype=torch.float32)
+
+            output = model(image)['out']
             pred = output.detach().max(dim=1)[1].cpu().numpy()
             target=train_images[i][1].cpu().numpy()
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
