@@ -5,6 +5,7 @@
 #BSUB -n 2
 #BSUB -gpu "num=2:mode=exclusive_process"
 #BSUB -R "rusage[mem=32G]"
+#BSUB -R "select[gpu32gb]"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 24:00
 #BSUB -u s173934@win.dtu.dk
