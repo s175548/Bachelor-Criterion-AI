@@ -3,13 +3,13 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 
-import argparse
-parser = argparse.ArgumentParser(description='Take learning rate parameter')
-parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
-args = vars(parser.parse_args())
-lr = args['learning rate'][0]
-print(args['learning rate'][0]," this is the learning_rate")
-
+# import argparse
+# parser = argparse.ArgumentParser(description='Take learning rate parameter')
+# parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+# args = vars(parser.parse_args())
+# lr = args['learning rate'][0]
+# print(args['learning rate'][0]," this is the learning_rate")
+lr = 0.01
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
@@ -18,8 +18,8 @@ if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
         path_model = r'/work3/s173934/Bachelorprojekt/'
-        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data/mask'
-        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data/img'
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'

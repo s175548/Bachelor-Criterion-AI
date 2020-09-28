@@ -40,7 +40,7 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=100 #1000
+total_itrs=10 # 100 #1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
@@ -53,7 +53,7 @@ print_interval=10
 val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs=4 #Helst mange
+N_epochs= 1 # 4 #Helst mange
 
 
 
@@ -154,8 +154,8 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
 
     # Setup visualization
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # device = torch.device('cpu')
     # torch.cuda.empty_cache()
     print("Device: %s" % device)
 
@@ -252,18 +252,18 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
             validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
 
-        plt.plot(range(N_epochs),train_loss_values,'-o')
-        plt.title('Train Loss')
-        plt.xlabel('N_epochs')
-        plt.ylabel('Loss')
-        plt.savefig(model_path+model_name+"_"+(str(lr)+'_train_loss')
-        plt.show()
-        plt.plot(range(N_epochs),validation_loss_values, '-o')
-        plt.title('Validation Loss')
-        plt.xlabel('N_epochs')
-        plt.ylabel('Loss')
-        plt.savefig(model_path + model_name +"_"+(str(lr)+ '_validation_loss')
-        plt.show()
+        # plt.plot(range(N_epochs),train_loss_values,'-o')
+        # plt.title('Train Loss')
+        # plt.xlabel('N_epochs')
+        # plt.ylabel('Loss')
+        # plt.savefig(model_path+model_name+"_"+(str(lr)+'_train_loss')
+        # plt.show()
+        # plt.plot(range(N_epochs),validation_loss_values, '-o')
+        # plt.title('Validation Loss')
+        # plt.xlabel('N_epochs')
+        # plt.ylabel('Loss')
+        # plt.savefig(model_path + model_name +"_"+(str(lr)+ '_validation_loss')
+        # plt.show()
 
 
 

@@ -36,12 +36,12 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
 
         for k in range(len(img_crops)):
             k = int(k)
-            im_pil = Image.fromarray(img)
-            im_pil.save(str(i)+"_"+str(k) + ".jpg")
+            im_pil = Image.fromarray(img_crops[k])
+            im_pil.save(os.path.join(r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img',str(i)+"_"+str(k) + ".png"))
 
             _, binary = cv2.threshold(mask_crops[k] * 255, 225, 255, cv2.THRESH_BINARY_INV)
             mask_pil = Image.fromarray(binary)
-            mask_pil.convert('RGB').save(str(i)+"_"+str(k)  + '_mask.jpg')
+            mask_pil.convert('RGB').save(os.path.join(r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask',str(i)+"_"+str(k)  + '_mask.png'))
         
         # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
