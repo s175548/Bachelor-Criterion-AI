@@ -1,7 +1,7 @@
-import os, numpy as np,cv2,random
+import os, numpy as np, cv2, random
 from data_import.data_loader import DataLoader
 from PIL import Image
-from data_import.masks_to_bounding_box import get_background_mask,convert_mask_to_bounding_box
+from data_import.masks_to_bounding_box import get_background_mask, convert_mask_to_bounding_box
 from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContrast
 
 """ Steps:
@@ -13,42 +13,53 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder',visibility_scores = []):
+
+def import_data_and_mask_classifier(data_loader, good_patches=False,
+                         directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\cropped_data',
+                         visibility_scores=[]):
     random.seed(42)
-    os.chdir(r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\cropped_data')
+    os.chdir(directory_path)
     if visibility_scores != []:
         idx = np.array([])
         for score in visibility_scores:
-            idx = np.hstack((idx, np.where(np.array(dataloader.visibility_score) == score)[0]))
+            idx = np.hstack((idx, np.where(np.array(data_loader.visibility_score) == score)[0]))
         idx = np.sort(idx)
     else:
         idx = data_loader.valid_annotations
+    print(len(idx))
 
     # shuffled_idx = idx[:]
     # random.shuffle(shuffled_idx)
     for i in idx:
+        break
         i = int(i)
-        img,mask = data_loader.get_image_and_labels(i)
+        img, mask = data_loader.get_image_and_labels(i)
         back_mask = get_background_mask(img)
         mask = np.squeeze(mask) + back_mask * 2
-        img_crops, mask_crops= data_loader.generate_patches(img,mask,img_index=i)
-        img_crops = [data_loader.enchance_contrast(img_crops[j]) for j in range(len(img_crops))]
+        img = data_loader.enchance_contrast(img)
+        im_pil = Image.fromarray(img)
+        im_pil.save(str(i) + ".jpg")
 
-        for k in range(len(img_crops)):
-            k = int(k)
-            im_pil = Image.fromarray(img)
-            im_pil.save(str(i)+"_"+str(k) + ".jpg")
+        _, binary = cv2.threshold(mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
+        mask_pil = Image.fromarray(binary)
+        mask_pil.convert('RGB').save(str(i)+'_mask.jpg')
 
-            _, binary = cv2.threshold(mask_crops[k] * 255, 225, 255, cv2.THRESH_BINARY_INV)
+    if good_patches:
+        img, mask = data_loader.get_good_patches()
+        for i in range(len(img)):
+            back_mask = get_background_mask(img[i])
+            mask[i] = np.squeeze(mask[i]) + back_mask * 2
+            img[i] = data_loader.enchance_contrast(img[i])
+            im_pil = Image.fromarray(img[i])
+            im_pil.save(str(i+len(idx)) + ".jpg")
+
+            _, binary = cv2.threshold(mask[i] * 255, 225, 255, cv2.THRESH_BINARY_INV)
             mask_pil = Image.fromarray(binary)
-            mask_pil.convert('RGB').save(str(i)+"_"+str(k)  + '_mask.jpg')
-        
-        # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
+            mask_pil.convert('RGB').save(str(i+len(idx)) + '_mask.jpg')
 
-        #Add whitening, random crop, flip
+    # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
-
-
+        # Add whitening, random crop, flip
 
     #     os.chdir(directory_path)
     #     img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
@@ -64,10 +75,6 @@ def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\U
 Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
-if __name__ == "__main__":
-    dataloader = DataLoader()
-    import_data_and_mask(dataloader,visibility_scores=[2,3])
-    
-
-
-
+# if __name__ == "__main__":
+# dataloader = DataLoader()
+# import_data_and_mask(dataloader,visibility_scores=[2,3])

@@ -29,7 +29,7 @@ def convert_mask_to_bounding_box(mask):
     return bounding_box_mask,bounding_box_coordinates
 
 def get_background_mask(image):
-    hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+    hsv = cv2.cvtColor(image,cv2.COLOR_RGB2HSV)
     lower_red = np.array([0, 120, 70])
     upper_red = np.array([10, 255, 255])
     mask1 = cv2.inRange(hsv,lower_red,upper_red)
