@@ -155,10 +155,10 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
 
     # Setup visualization
-    # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-    device = torch.device('cpu')
+    # device = torch.device('cpu')
     # torch.cuda.empty_cache()
     print("Device: %s" % device)
 

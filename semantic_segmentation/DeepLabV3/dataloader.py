@@ -13,7 +13,7 @@ lr = 0.01
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
-HPC = False
+HPC = True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
