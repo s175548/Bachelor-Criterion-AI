@@ -74,6 +74,7 @@ if __name__ == '__main__':
                 'rb') as fp:
             itemlist = np.array(pickle.load(fp))
 
+    torch.manual_seed(2)
     np.random.seed(2)
     random.seed(2)
     file_names = np.array([img[:-4] for img in os.listdir(path_img)])
@@ -120,5 +121,5 @@ if __name__ == '__main__':
 
     print("Risk was set to: ", risk)
     checkpoint = coco.coco_eval['bbox'].stats[1]
-    save_model(model,"005",n_epochs=num_epoch,optimizer,lr_scheduler,best_score=best_map,losses=loss_train)
+    save_model(model,"005",n_epochs=num_epoch,optimizer=optimizer,scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
     print(checkpoint)

@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J lr1
-#BSUB -o lr1%J.out
+#BSUB -J frcnn
+#BSUB -o frcnn%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/generate_bbox.py
+python3 object_detect/train_hpc.py
 echo "Done"
