@@ -8,7 +8,7 @@ import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.leather_data import LeatherData_BB
-from object_detect.helper.engine2 import train_one_epoch, evaluate
+from object_detect.helper.engine3 import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -46,14 +46,14 @@ if __name__ == '__main__':
                                                    step_size=10,
                                                    gamma=0.1)
 
-    num_epoch = 10
+    num_epoch = 2
     print_freq = 10
 
     path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
     path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
-    batch_size = 2
-    val_batch_size = 4
+    batch_size = 2 
+    val_batch_size = 2
 
     visibility_scores = [3]
 
@@ -76,9 +76,9 @@ if __name__ == '__main__':
     scale = 512
     # Define dataloaders
     train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                               list_of_filenames=file_names[:164],scale=scale,transform=transform_function)
+                               list_of_filenames=file_names[:2],scale=scale,transform=transform_function)
     val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                             list_of_filenames=file_names[130:],scale=scale,transform=transform_function)
+                             list_of_filenames=file_names[146:148],scale=scale,transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
@@ -94,5 +94,5 @@ if __name__ == '__main__':
         lr_scheduler.step()
         print("\n Finished training for epoch!")
         # evaluate on the test dataset
-        evaluate(model, val_loader, device=device)
+        evaluate(model, val_loader, device=device,N=epoch)
         print("\n Finished evaluation for epoch!")

@@ -10,8 +10,6 @@ from object_detect.get_bboxes import convert_mask_to_bounding_box
 from PIL import Image
 
 
-
-
 class LeatherData_BB(data.Dataset):
 
     def __init__(self,
@@ -73,11 +71,11 @@ class LeatherData_BB(data.Dataset):
         targets = {}
         targets["boxes"] = boxes
         targets["labels"] = labels
-        #targets["masks"] = torch.reshape(tgt,(1,512,512))
+        #targets["masks"] = tgt
         targets["image_id"] = image_id
         targets["area"] = area
         targets["iscrowd"] = iscrowd
-        return img, targets
+        return img, targets, new_mask
 
     def __len__(self):
         return len(self.images)
