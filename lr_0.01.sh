@@ -2,7 +2,7 @@
 #BSUB -J lr1
 #BSUB -o lr1%J.out
 #BSUB -q gpuv100
-#BSUB -n 2
+#BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
 #BSUB -R "rusage[mem=128G]"
 #BSUB -R "span[hosts=1]"
