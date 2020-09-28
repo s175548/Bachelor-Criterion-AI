@@ -10,7 +10,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 from tqdm import tqdm
 import random
 import numpy as np
-#from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
 from torch.utils import data
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
@@ -37,7 +37,7 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=10 #1000
+total_itrs=1 #1000
 lr=0.01
 lr_policy='step'
 step_size=10000
@@ -75,7 +75,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
              ret_samples_ids=None,save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/',
-             ):
+             train_images=None):
     """Do validation and return specified samples"""
     metrics.reset()
     ret_samples = []
@@ -84,8 +84,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
     running_loss=0
     with torch.no_grad():
         for i, (images, labels) in tqdm(enumerate(loader)):
-
-
+            break
             images = images.to(device, dtype=torch.float32)
             labels = labels.to(device, dtype=torch.long)
 
@@ -106,10 +105,26 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
+            break
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_img'.format(model_name,N,id),format='PNG')
-            PIL.Image.fromarray((pred * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_prediction'.format(model_name,N,id),format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_mask'.format(model_name,N,id),format='PNG')
+            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_img.png'.format(model_name,N,id),format='PNG')
+            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save(save_path+'/{}/{}_{}_prediction.png'.format(model_name,N,id),format='PNG')
+            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_mask.png'.format(model_name,N,id),format='PNG')
+
+
+
+
+        for i in range(len(train_images)):
+            output = model(train_images[i][0].unsqueeze(0))['out']
+            pred = output.detach().max(dim=1)[1].cpu().numpy()
+            target=train_images[i][1].cpu().numpy()
+            image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_img_train.png'.format(model_name, N, i),
+                                                             format='PNG')
+            PIL.Image.fromarray(((pred.squeeze() - 1) * (-255)).astype(np.uint8)).save(
+                save_path + '/{}/{}_{}_prediction_train.png'.format(model_name, N, i), format='PNG')
+            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(
+                save_path + '/{}/{}_{}_mask_train.png'.format(model_name, N, i), format='PNG')
 
 
         score = metrics.get_results()
@@ -118,7 +133,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
 
-def training(models=['model_pre_class','model_pre_full','model_full'],load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',path2='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /Github_bachelor/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg', visibility_scores=[2,3],train_loader=None,val_loader=None,train_dst=None, val_dst=None,save_path = os.getcwd()):
+def training(models=['model_pre_class','model_pre_full','model_full'],load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /', visibility_scores=[2,3],train_loader=None,val_loader=None,train_dst=None, val_dst=None,save_path = os.getcwd(),train_images=None):
 
     model_dict_parameters = {'model_pre_class': {'pretrained':True ,'num_classes':21,'requires_grad':False},
                 'model_pre_full': {'pretrained':True,'num_classes':21,'requires_grad':True},
@@ -145,14 +160,6 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
-
-    if type(visibility_scores) == list:
-        with open(
-                path2,
-                'rb') as fp:
-            itemlist = np.array(pickle.load(fp))
-
-
 
 
 
@@ -225,11 +232,11 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                 if (cur_itrs) % val_interval == 0:
                     print("validation...")
                     model.eval()
-                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(10),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,save_path=save_path)
+                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images)
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
-                        best_score = val_score['Mean IoU']
+                        best_score = (val_score['Mean IoU'],val_score['Class IoU'])
                         save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name)
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
