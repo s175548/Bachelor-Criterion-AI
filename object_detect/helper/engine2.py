@@ -2,12 +2,13 @@ import math
 import sys
 import time
 import torch
-
+import numpy as np
 import torchvision.models.detection.mask_rcnn
-
+from object_detect.get_bboxes import get_bbox_mask
 from object_detect.helper.coco_utils import get_coco_api_from_dataset
 from object_detect.helper.coco_eval import CocoEvaluator
 import object_detect.helper.utils as utils
+from PIL import Image
 
 
 def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
@@ -16,7 +17,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq):
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
-    for images, labels in metric_logger.log_every(data_loader, print_freq, header):
+    for images, labels, _ in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
@@ -58,7 +59,7 @@ def _get_iou_types(model):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device):
+def evaluate(model, data_loader, device, file_names):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
@@ -72,7 +73,7 @@ def evaluate(model, data_loader, device):
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
 
-    for image, labels in metric_logger.log_every(data_loader, 100, header):
+    for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
         image = list(img.to(device) for img in image)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
@@ -82,11 +83,16 @@ def evaluate(model, data_loader, device):
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
 
+        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
         res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
         coco_evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+        boxes = outputs[0]['boxes'].numpy()
+        bmask1 = get_bbox_mask(mask=masks[0], bbox=boxes)
+        Image._show(Image.fromarray(bmask1))
+        dfs = 2
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()

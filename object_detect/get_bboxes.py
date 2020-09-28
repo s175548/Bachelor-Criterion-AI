@@ -32,10 +32,11 @@ def convert_mask_to_bounding_box(mask):
 
     return bounding_box_mask,bounding_box_coordinates
 
-def generate_bbox_mask(mask,bbox):
-    bounding_box_mask = np.empty((mask.shape[0], mask.shape[1]))
+def get_bbox_mask(mask,bbox):
+    #bounding_box_mask = np.zeros((mask.shape[0], mask.shape[1]))
+    bounding_box_mask = (np.copy(mask)/225)*255
     for i in range(len(bbox)):
-        bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (bbox[i][0], bbox[i][1]), (bbox[i][2], bbox[i][3]), (255, 255, 255), 3)
+        bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (bbox[i][0], bbox[i][1]), (bbox[i][2], bbox[i][3]), (155, 255, 0), 2)
     return bounding_box_mask
 
 

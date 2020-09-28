@@ -37,3 +37,4 @@ semantic_segmentation/DeepLabV3/utils/__pycache__/loss.cpython-37.pyc
 semantic_segmentation/DeepLabV3/utils/__pycache__/scheduler.cpython-37.pyc
 semantic_segmentation/DeepLabV3/utils/__pycache__/utils.cpython-37.pyc
 semantic_segmentation/DeepLabV3/utils/__pycache__/visualizer.cpython-37.pyc
+.idea/Bachelor-Criterion-AI.iml
