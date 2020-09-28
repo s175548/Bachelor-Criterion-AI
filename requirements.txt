@@ -63,5 +63,6 @@ websocket-client==0.57.0
 Werkzeug==1.0.1
 wrapt==1.12.1
 zipp==3.1.0
-pycocotools==2.0
 Cython==0.29.21
+pycocotools==2.0
+
