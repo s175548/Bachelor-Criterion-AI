@@ -40,7 +40,7 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=10 # 100 #1000
+total_itrs=1000 # 100 #1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
@@ -53,7 +53,7 @@ print_interval=10
 val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs= 1 # 4 #Helst mange
+N_epochs= 4 # 4 #Helst mange
 
 
 
