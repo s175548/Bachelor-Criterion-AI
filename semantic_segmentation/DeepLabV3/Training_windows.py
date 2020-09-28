@@ -53,7 +53,7 @@ print_interval=10
 val_interval=1 #1
 vis_num_samples=2
 enable_vis=True
-N_epochs=  # 4 #Helst mange
+N_epochs= 10 # 4 #Helst mange
 
 
 
