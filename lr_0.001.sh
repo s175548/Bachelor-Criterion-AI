@@ -1,8 +1,8 @@
 #!/bin/sh
-#BSUB -J lr1
-#BSUB -o lr1%J.out
+#BSUB -J gpu_lr0.001
+#BSUB -o gpu_lr0.001%J.out
 #BSUB -q gpuv100
-#BSUB -n 2
+#BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
 #BSUB -R "rusage[mem=32G]"
 #BSUB -R "span[hosts=1]"
@@ -12,6 +12,9 @@
 # end of BSUB options
 
 echo "Running script..."
+module load cuda/10.2
+/appl/cuda/10.2/samples/NVIDIA_CUDA-10.2_Samples/bin/x86_64/linux/release/deviceQuery
+
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
