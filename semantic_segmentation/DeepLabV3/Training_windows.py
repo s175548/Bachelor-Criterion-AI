@@ -108,7 +108,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            break
+            image = image.to(device, dtype=torch.float32)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
             PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_img.png'.format(model_name,N,id,lr),format='PNG')
             PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_prediction.png'.format(model_name,N,id,lr),format='PNG')
@@ -155,6 +155,8 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
     # Setup visualization
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
     # device = torch.device('cpu')
     # torch.cuda.empty_cache()
     print("Device: %s" % device)
