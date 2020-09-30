@@ -34,7 +34,9 @@ if __name__ == "__main__":
         data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
         metadata_path=r'samples/model_comparison.csv')
 
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-1] !="k"])
+    labels=['Piega', 'Verruca', 'Puntura insetto']
+
+    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] !="k"])
     N_files=len(file_names)
     shuffled_index=np.random.permutation(len(file_names))
     file_names_img=file_names[shuffled_index]
@@ -46,12 +48,13 @@ if __name__ == "__main__":
                                     std=[0.229, 0.224, 0.225]),])
 
 
-    target_dict=data_loader.get_target_dict()
+    target_dict=data_loader.get_target_dict(labels)
+    color_dict=data_loader.color_dict
 
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
-                            transform=None,color_dict=data_loader.color_dict_binary,target_dict=target_dict)
+                            transform=None,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.80):],
-                          transform=None,color_dict=data_loader.color_dict_binary,target_dict=target_dict)
+                          transform=None,color_dict=color_dict,target_dict=target_dict)
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = data.DataLoader(
@@ -65,4 +68,4 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)
+  #  training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)

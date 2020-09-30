@@ -59,9 +59,9 @@ class LeatherData(data.Dataset):
             targets["masks"] = masks
             return img, targets
 
-        for key,value in self.color_dict.items():
+        for key,value in self.target_dict.items():
+            value=self.color_dict[key]
             index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            sum(index)
             target[index,:]=self.target_dict[key]
 
         if self.transform is not None:
