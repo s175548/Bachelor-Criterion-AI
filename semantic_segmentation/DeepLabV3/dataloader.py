@@ -3,13 +3,13 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 
-# import argparse
-# parser = argparse.ArgumentParser(description='Take learning rate parameter')
-# parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
-# args = vars(parser.parse_args())
-# lr = args['learning rate'][0]
-# print(args['learning rate'][0]," this is the learning_rate")
-lr = 0.01
+import argparse
+parser = argparse.ArgumentParser(description='Take learning rate parameter')
+parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+args = vars(parser.parse_args())
+lr = args['learning rate'][0]
+print(args['learning rate'][0]," this is the learning_rate")
+# lr = 0.01
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
@@ -57,8 +57,7 @@ if __name__ == "__main__":
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     train_img = []
-    for i in range(5):
-
+    for i in range(2):
         train_img.append(train_dst.__getitem__(i))
 
 
