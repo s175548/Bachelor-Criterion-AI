@@ -65,6 +65,7 @@ class LeatherData(data.Dataset):
             target[index,:]=self.target_dict[key]
 
         if self.transform is not None:
+            target = Image.fromarray(target)
             img, target = self.transform(img, target)
 
 

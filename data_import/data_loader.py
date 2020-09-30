@@ -297,9 +297,6 @@ def get_background_mask(image):
 
 
 
-data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
-                         metadata_path=r'samples/model_comparison.csv')
-label_dict=data_loader.get_image_and_labels([1])
 if __name__ == '__main__':
 #    dataloader = DataLoader()
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
