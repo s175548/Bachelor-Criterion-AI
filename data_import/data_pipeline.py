@@ -13,39 +13,37 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,directory_path=r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\data_folder',visibility_scores = []):
+def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = "All",exclude_no_mask_crops=True):
     random.seed(42)
-    os.chdir(r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bachelorprojekt\cropped_data')
-    if visibility_scores != []:
-        idx = np.array([])
-        for score in visibility_scores:
-            idx = np.hstack((idx, np.where(np.array(dataloader.visibility_score) == score)[0]))
-        idx = np.sort(idx)
-    else:
-        idx = data_loader.valid_annotations
+    if visibility_scores != "All":
+        visibility_idx=data_loader.get_visibility_score()
+        idx=visibility_idx
+    if labels != "All":
+        label_idx=data_loader.get_index_for_label(labels)
+        idx=label_idx
+    if (labels != "All") and (visibility_scores != "All"):
+        idx=np.intersect1d(label_idx,visibility_idx)
 
-    # shuffled_idx = idx[:]
-    # random.shuffle(shuffled_idx)
     for i in idx:
         i = int(i)
-        img,mask = data_loader.get_image_and_labels(i)
-        back_mask = get_background_mask(img)
-        mask = np.squeeze(mask) + back_mask * 2
-        img_crops, mask_crops= data_loader.generate_patches(img,mask,img_index=i)
-        img_crops = [data_loader.enchance_contrast(img_crops[j]) for j in range(len(img_crops))]
+        img,mask = data_loader.get_image_and_labels([i],labels=labels)
+        img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
 
         for k in range(len(img_crops)):
-            k = int(k)
-            im_pil = Image.fromarray(img)
-            im_pil.save(str(i)+"_"+str(k) + ".jpg")
-
-            _, binary = cv2.threshold(mask_crops[k] * 255, 225, 255, cv2.THRESH_BINARY_INV)
-            mask_pil = Image.fromarray(binary)
-            mask_pil.convert('RGB').save(str(i)+"_"+str(k)  + '_mask.jpg')
+            if exclude_no_mask_crops:
+                if list(np.setdiff1d(np.unique(mask_crops[k]),[0,53, 101, 113]))==[]:
+                    pass
+                else:
+                    k = int(k)
+                    im_pil = Image.fromarray(img_crops[k])
+                    im_pil.save(path+str(i)+"_"+str(k) + ".png")
+                    mask_pil = Image.fromarray(mask_crops[k])
+                    mask_pil.save(path+str(i)+"_"+str(k) + '_mask.png')
         
         # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
         #Add whitening, random crop, flip
+
 
 
 
@@ -65,9 +63,13 @@ Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
-    dataloader = DataLoader()
-    import_data_and_mask(dataloader,visibility_scores=[2,3])
-    
+    data_loader = DataLoader(
+        data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+        metadata_path=r'samples/model_comparison.csv')
+
+   # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
+    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
+
 
 
 

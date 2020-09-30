@@ -276,5 +276,6 @@ def grad_check(model,requires_grad):
 # training(['model_pre_full'])
 
 if __name__ == "__main__":
+
     #training(['model_pre_full'],path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg')
     pass

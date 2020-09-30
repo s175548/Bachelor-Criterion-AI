@@ -15,19 +15,21 @@ class LeatherData(data.Dataset):
 
     def __init__(self,
                  path_mask,path_img,list_of_filenames,
-                 transform=None):
+                 transform=None,color_dict=None,target_dict=None):
 
 
         self.path_mask = path_mask
         self.path_img = path_img
         self.transform = transform
+        self.color_dict=color_dict
+        self.target_dict=target_dict
 
 
         file_names_mask=os.listdir(self.path_mask)
         file_names_img=os.listdir(self.path_img)
         file_names=list_of_filenames
 
-        self.images = [os.path.join(self.path_img, x+ '.jpg') for x in file_names]
+        self.images = [os.path.join(self.path_img, x+ '.png') for x in file_names]
         self.masks = [os.path.join(self.path_mask, x+ '_mask.png') for x in file_names]
         assert (len(self.images) == len(self.masks))
 
@@ -39,7 +41,7 @@ class LeatherData(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index])
+        target = np.array(Image.open(self.masks[index]))
 
         if bounding_box == True:
             _, bounding_box = convert_mask_to_bounding_box(mask)
@@ -57,10 +59,18 @@ class LeatherData(data.Dataset):
             targets["masks"] = masks
             return img, targets
 
+        for key,value in self.color_dict.items():
+            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
+            sum(index)
+            target[index,:]=self.target_dict[key]
+
         if self.transform is not None:
             img, target = self.transform(img, target)
 
-        return img, target
+
+
+
+        return img, target[:,:,0]
 
     def __len__(self):
         return len(self.images)

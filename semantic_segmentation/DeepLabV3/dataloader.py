@@ -4,6 +4,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from data_import.data_loader import DataLoader
 
 HPC = True
 if __name__ == "__main__":
@@ -20,23 +21,29 @@ if __name__ == "__main__":
         path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
 
+    path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
+    data_loader = DataLoader(
+        data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+        metadata_path=r'samples/model_comparison.csv')
 
-
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] !=".DS_S"])
+    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-1] !="k"])
     N_files=len(file_names)
     shuffled_index=np.random.permutation(len(file_names))
     file_names_img=file_names[shuffled_index]
     file_names=file_names[file_names != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtTransformLabel(),
+    transform_function = et.ExtCompose([
                     et.ExtToTensor(),
                     et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225]),])
 
 
+    target_dict=data_loader.get_target_dict()
 
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)], transform=transform_function)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.80):], transform=transform_function)
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
+                            transform=None,color_dict=data_loader.color_dict_binary,target_dict=target_dict)
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.80):],
+                          transform=None,color_dict=data_loader.color_dict_binary,target_dict=target_dict)
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = data.DataLoader(
@@ -44,9 +51,11 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    pass
+
     for i, (images, labels) in tqdm(enumerate(train_loader)):
         image = images
         label = labels
+        break
+
 
     training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path)
