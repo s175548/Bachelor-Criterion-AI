@@ -40,20 +40,20 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=1000 # 100 #1000
+total_itrs=100 #1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
 batch_size= 16 # 16
-val_batch_size=4 #4
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 print_interval=55
-val_interval=55 #1
-vis_num_samples=2
+val_interval= 55 # 55
+vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 2 # 240 #Helst mange
+N_epochs= 240 # 240 #Helst mange
 
 
 
@@ -108,9 +108,9 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_img.png'.format(model_name,N,id,"tick"+lr),format='PNG')
-            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+lr),format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_mask.png'.format(model_name,N,id,"tick"+lr),format='PNG')
+            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
+            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray((target * 255).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
 
 
 
@@ -123,12 +123,12 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             pred = output.detach().max(dim=1)[1].cpu().numpy()
             target=train_images[i][1].cpu().numpy()
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+lr),
+            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr)),
                                                              format='PNG')
             PIL.Image.fromarray(((pred.squeeze() - 1) * (-255)).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_prediction_train.png'.format(model_name, N, i,"tick"+lr), format='PNG')
+                save_path + '/{}/{}_{}_{}_prediction_train.png'.format(model_name, N, i,"tick"+str(lr)), format='PNG')
             PIL.Image.fromarray((target * 255).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+lr), format='PNG')
+                save_path + '/{}/{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)), format='PNG')
 
 
         score = metrics.get_results()
@@ -259,13 +259,13 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
         plt.title('Train Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(model_path+model_name+"_tick"+(str(lr)+'_train_loss'))
+        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_train_loss'),format='png')
         plt.show()
         plt.plot(range(N_epochs),validation_loss_values, '-o')
         plt.title('Validation Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(model_path + model_name +"_tick"+(str(lr)+ '_validation_loss'))
+        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_train_loss'),format='png')
         plt.show()
 
 
