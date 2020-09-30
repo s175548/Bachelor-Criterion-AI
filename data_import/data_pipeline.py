@@ -8,7 +8,7 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 1. Import complete dataset img + mask. Good and defect areas (You can choose to pick visibility score = X only)
 2. Find background and add to mask
 3. Crop images and masks to NxN size (default: 256x256)
-4. Add bounding boxes to 3. 
+4. Add bounding boxes to 3.
 5. Divide into test and training
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
@@ -35,9 +35,9 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
                 else:
                     k = int(k)
                     im_pil = Image.fromarray(img_crops[k])
-                    im_pil.save(path+str(i)+"_"+str(k) + ".png")
+                    im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
                     mask_pil = Image.fromarray(mask_crops[k])
-                    mask_pil.save(path+str(i)+"_"+str(k) + '_mask.png')
+                    mask_pil.save( os.path.join( path, str(i)+"_"+str(k) + '_mask.png') )
 
         # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
@@ -62,9 +62,10 @@ Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
-    data_loader = DataLoader(
-        data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
-        metadata_path=r'samples/model_comparison.csv')
-
+    # data_loader = DataLoader(
+    #     data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+    #     metadata_path=r'samples/model_comparison.csv')
+    data_loader = DataLoader()
    # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
     import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Piega', 'Verruca', 'Puntura insetto'],make_binary=False)
+#    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])
