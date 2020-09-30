@@ -1,13 +1,13 @@
 #!/bin/sh
-#BSUB -J frcnn
-#BSUB -o frcnn%J.out
+#BSUB -J version0001
+#BSUB -o version0001%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
 #BSUB -R "rusage[mem=32G]"
-#BSUB -R "span[hosts=1]"
+#BSUB -R "select[gpu32gb]"
 #BSUB -W 24:00
-#BSUB -u s175549@win.dtu.dk
+#BSUB -u s173934@win.dtu.dk
 #BSUB -N
 # end of BSUB options
 
@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py
+python3 semantic_segmentation/DeepLabV3/dataloader.py 0.0001
 echo "Done"

@@ -2,6 +2,14 @@ import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
+
+# import argparse
+# parser = argparse.ArgumentParser(description='Take learning rate parameter')
+# parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+# args = vars(parser.parse_args())
+# lr = args['learning rate'][0]
+# print(args['learning rate'][0]," this is the learning_rate")
+lr = 0.01
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
@@ -11,14 +19,14 @@ if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
         path_model = r'/work3/s173934/Bachelorprojekt/'
-        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data/mask'
-        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data/img'
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
         path_model = os.getcwd()
-        path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
-        path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
+        path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_28_09\mask'
+        path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_28_09\img'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
 
     path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
@@ -49,13 +57,12 @@ if __name__ == "__main__":
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
+    train_img = []
+    for i in range(5):
+        train_img.append(train_dst.__getitem__(i))
+
+
+
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-
-    for i, (images, labels) in tqdm(enumerate(train_loader)):
-        image = images
-        label = labels
-        break
-
-
-    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)

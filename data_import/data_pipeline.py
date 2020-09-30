@@ -39,7 +39,7 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
                     im_pil.save(path+str(i)+"_"+str(k) + ".png")
                     mask_pil = Image.fromarray(mask_crops[k])
                     mask_pil.save(path+str(i)+"_"+str(k) + '_mask.png')
-        
+
         # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
 
         #Add whitening, random crop, flip
@@ -58,7 +58,7 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
     #     mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
 
-"""TO DO: 
+"""TO DO:
 Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
@@ -69,7 +69,3 @@ if __name__ == "__main__":
 
    # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
     import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
-
-
-
-
