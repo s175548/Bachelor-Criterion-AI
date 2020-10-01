@@ -61,7 +61,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
     """ save current model
     """
     torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
-    }, os.path.join(save_path,"{}_{}".format(model,exp_description)+str(lr)+'.pt'))
+    }, os.path.join(save_path,"{}_{}".format(model_name,exp_description)+str(lr)+'.pt'))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
@@ -183,6 +183,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
 
     for model_name, model in model_dict.items():
+        print(model_name)
         cur_epochs = 0
         interval_loss = 0
         train_loss_values = []
@@ -231,7 +232,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path,exp_description=exp_description)
+                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
                         np.save(metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
