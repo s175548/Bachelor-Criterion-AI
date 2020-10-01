@@ -75,7 +75,7 @@ def new_convert(mask):
     for box in boxes:
         x1, y1, x2, y2 = box
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
-    boxes = torch.as_tensor(boxes, dtype=torch.float32)
+    #boxes = torch.as_tensor(boxes, dtype=torch.float32)
 
     return bounding_box_mask, boxes
 
