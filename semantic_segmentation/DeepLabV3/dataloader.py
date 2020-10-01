@@ -5,7 +5,9 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
-import argparse,os
+import argparse,os,json,ast
+
+
 
 HPC =False
 Villads=True
@@ -17,6 +19,7 @@ if __name__ == "__main__":
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
 
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
         parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
@@ -30,6 +33,7 @@ if __name__ == "__main__":
         metadata_path=save_path = r'samples/model_comparison.csv'
         path_model = save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor '
         lr = 0.01
+        path_meta_data = r'samples/model_comparison.csv'
 
 
     else:
@@ -40,10 +44,11 @@ if __name__ == "__main__":
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_tickbite_vis_2_and_3'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
         lr = 0.01
+        path_meta_data = r'samples/model_comparison.csv'
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    data_loader = DataLoader(data_path=path_original_data)
+    data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
 
@@ -68,9 +73,12 @@ if __name__ == "__main__":
         annotations_dict = data_loader.annotations_dict
 
     else:
-        color_dict=data_loader.color_dict
+        color_dict= data_loader.color_dict
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
+
+    
+
 
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
@@ -91,5 +99,4 @@ if __name__ == "__main__":
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
 
-
-    training(n_classes=3, model='MobileNet', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
+    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)

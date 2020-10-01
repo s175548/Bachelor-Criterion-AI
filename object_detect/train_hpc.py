@@ -9,8 +9,8 @@ import numpy as np
 import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.leather_data_hpc import LeatherData_BB
-from object_detect.helper.engine_hpc import train_one_epoch, evaluate
+from object_detect.leather_data_hpc import LeatherData
+from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -38,7 +38,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtToTensor(),et.ExtRandomCrop(256)])
 
 if __name__ == '__main__':
 
@@ -104,9 +104,9 @@ if __name__ == '__main__':
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
-            coco, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
+            mAP, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
 
-            checkpoint = coco.coco_eval['bbox'].stats[1]
+            checkpoint = mAP
             if checkpoint > best_map:
                 best_map = checkpoint
 

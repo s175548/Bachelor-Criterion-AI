@@ -39,19 +39,19 @@ from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=1#1000
+total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 4 # 16
+batch_size= 16 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-val_interval= 1 # 55
+val_interval= 55 # 55
 vis_num_samples= 2 #2
-enable_vis=True
-N_epochs= 1 # 240 #Helst mange
+enable_vis=True 
+N_epochs= 100 # 240 #Helst mange
 
 
 
@@ -181,7 +181,7 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
     ], lr=lr, momentum=0.9, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=-1, reduction='mean')
+    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
 
 
     # ==========   Train Loop   ==========#

@@ -6,11 +6,11 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from object_detect.get_bboxes import convert_mask_to_bounding_box
+from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask, new_convert
 from PIL import Image
 
 
-class LeatherData_BB(data.Dataset):
+class LeatherData(data.Dataset):
 
     def __init__(self,
                  path_mask,path_img,list_of_filenames,
@@ -38,10 +38,16 @@ class LeatherData_BB(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index])
-
+        target = Image.open(self.masks[index]).convert('P')
         new_mask = np.array(target)
-        bmask, bounding_box = convert_mask_to_bounding_box(new_mask)
+
+        if self.transform is not None:
+            target = Image.fromarray(new_mask)
+            img, target = self.transform(img, target)
+
+        mask = target.numpy()
+        shape = check_mask(mask=mask,name="shape")
+        bmask, bounding_box = new_convert(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
             if bounding_box[i] == (0, 0, 256, 256):
@@ -58,9 +64,6 @@ class LeatherData_BB(data.Dataset):
             boxes = torch.as_tensor(bboxes, dtype=torch.float32)
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
             labels = torch.ones((len(bboxes),), dtype=torch.int64)
-
-        if self.transform is not None:
-            img, target = self.transform(img, target)
 
         image_id = torch.tensor([index])
         # suppose all instances are not crowd

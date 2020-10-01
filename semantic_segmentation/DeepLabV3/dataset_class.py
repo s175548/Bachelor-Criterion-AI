@@ -43,6 +43,16 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
 
+        for key,value in self.target_dict.items():
+            value=self.color_dict[key]
+            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
+            target[index,:]=self.target_dict[key]
+
+
+        if self.transform is not None:
+            target = Image.fromarray(target)
+            img, target = self.transform(img, target)
+
         if bounding_box == True:
             _, bounding_box = convert_mask_to_bounding_box(mask)
             mask = np.array(target)
@@ -58,15 +68,6 @@ class LeatherData(data.Dataset):
             targets["labels"] = labels
             targets["masks"] = masks
             return img, targets
-
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
-
-        if self.transform is not None:
-            target = Image.fromarray(target)
-            img, target = self.transform(img, target)
 
 
 
