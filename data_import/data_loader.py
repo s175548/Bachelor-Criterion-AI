@@ -3,6 +3,7 @@ from PIL import Image
 from torchvision import datasets, transforms
 from data_import.draw_contours import draw_contours2,extract_bounding_box_coords
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -136,10 +137,10 @@ class DataLoader():
         return label_dict
 
     def make_color_dict(self):
-        palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
-        colors = torch.as_tensor([i for i in range(len(list(self.annotations_dict.keys()))+1)])[:, None] * palette
-        colors = (colors % 255).numpy().astype("uint8")
         color_dict={}
+        np.random.seed(0)
+        colors = np.array([[np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255)] for _ in
+                  range(60)])
         for color,label in zip(colors,np.sort(list(self.annotations_dict.values()))):
             color_dict[label]=color
         return color_dict
@@ -157,7 +158,6 @@ class DataLoader():
             label_dict={}
             for i,label in enumerate(labels):
                 label_dict[self.annotations_dict[label]]=i+1
-            label_dict[53]=i+2
         return label_dict
 
 

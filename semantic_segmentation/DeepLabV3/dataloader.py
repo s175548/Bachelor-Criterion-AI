@@ -7,8 +7,8 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 import argparse,os
 
-HPC = True
-Villads=False
+HPC =False
+Villads=True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -47,7 +47,7 @@ if __name__ == "__main__":
 
 
 
-    labels=['Piega', 'Verruca', 'Puntura insetto']
+    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
 
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
-    binary=True
+    binary=False
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
@@ -92,4 +92,4 @@ if __name__ == "__main__":
 
 
 
-    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
+    training(n_classes=3, model='MobileNet', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
