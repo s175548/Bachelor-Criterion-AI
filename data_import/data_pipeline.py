@@ -13,8 +13,7 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = "All",exclude_no_mask_crops=True):
-    random.seed(42)
+def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = "All",exclude_no_mask_crops=True,make_binary=True):
     if visibility_scores != "All":
         visibility_idx=data_loader.get_visibility_score()
         idx=visibility_idx
@@ -26,7 +25,7 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
 
     for i in idx:
         i = int(i)
-        img,mask = data_loader.get_image_and_labels([i],labels=labels)
+        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary)
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
 
         for k in range(len(img_crops)):
@@ -68,4 +67,5 @@ if __name__ == "__main__":
     #     metadata_path=r'samples/model_comparison.csv')
     data_loader = DataLoader()
    # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
-    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])
+    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Piega', 'Verruca', 'Puntura insetto'],make_binary=False)
+#    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])

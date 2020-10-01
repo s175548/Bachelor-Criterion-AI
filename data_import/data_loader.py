@@ -78,6 +78,12 @@ class DataLoader():
                     for color_id,color_map in self.color_dict_binary.items():
                         index = mask==color_id
                         mask_3d[index,:]=mask_3d[index,:]/color_id*color_map
+                else:
+                    for label in labels:
+                        color_id=self.annotations_dict[label]
+                        color_map=self.color_dict[color_id]
+                        index = mask == color_id
+                        mask_3d[index, :] = mask_3d[index, :] / color_id * color_map
                 segmentation_masks.append(mask_3d.astype(np.uint8))
                 images.append(image)
             return (images,segmentation_masks)
@@ -98,10 +104,14 @@ class DataLoader():
                 label_dict[key]=1
         if labels=='All':
             labels=list(label_dict.keys())
-        label_space = {kk["label"]: label_dict[kk["label"]] for kk in seg["annotations"] if
+        label_space = {kk["label"]: [label_dict[kk["label"]]] for kk in seg["annotations"] if
                        (kk["label"] in labels) and (kk["label"] not in key_good)}
-        segmentation = draw_contours2(seg, label_space={kk["label"]: [label_dict[kk["label"]]] for kk in seg["annotations"] if (kk["label"] in labels) and (kk["label"] not in key_good)})
-        return segmentation
+        if not label_space:
+            print('Image with provided idx does not contain any of the wanted labels')
+            return
+        else:
+            segmentation = draw_contours2(seg, label_space=label_space)
+            return segmentation
 
     def get_all_annotations(self):
         label_names_set=set()
@@ -111,7 +121,7 @@ class DataLoader():
             seg = self.get_json_file_content(filepath)
             for label in seg["annotations"]:
                 label_names_set.add(label["label"])
-        for i,label_name in enumerate(label_names_set):
+        for i,label_name in enumerate(np.sort(list(label_names_set))):
             label_dict_new[label_name]=i
         label_dict_new['Background']=len(list(label_dict_new.keys()))
         return label_dict_new
@@ -130,7 +140,7 @@ class DataLoader():
         colors = torch.as_tensor([i for i in range(len(list(self.annotations_dict.keys()))+1)])[:, None] * palette
         colors = (colors % 255).numpy().astype("uint8")
         color_dict={}
-        for color,label in zip(colors,self.annotations_dict.values()):
+        for color,label in zip(colors,np.sort(list(self.annotations_dict.values()))):
             color_dict[label]=color
         return color_dict
 
@@ -146,9 +156,11 @@ class DataLoader():
         else:
             label_dict={}
             for i,label in enumerate(labels):
-                label_dict[self.annotations_dict[label].copy()]=i+1
-            label_dict[53]=i+1
+                label_dict[self.annotations_dict[label]]=i+1
+            label_dict[53]=i+2
         return label_dict
+
+
 
     def get_json_file_content(self,filename):
         with open(filename,'r') as fh:
@@ -224,6 +236,15 @@ class DataLoader():
         img=img.enhance(2.0)
         return np.array(img)
 
+def convert_to_image(self,pred,color_dict,target_dict,annotations_dict):
+    inv_target_dict = {v: k for k, v in target_dict.items()}
+    for key, value in inv_target_dict:
+        color_id = annotations_dict[key]
+        color_map = color_dict[key]
+        index = pred == value
+        rgb_pred=np.dstack((pred,pred,pred))
+        rgb_pred[index, :] = rgb_pred[index, :] / color_id * color_map
+        return rgb_pred.astype(np.int8)
 
 
 def to_tensor_and_normalize(img):
@@ -301,7 +322,7 @@ if __name__ == '__main__':
 #    dataloader = DataLoader()
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                          metadata_path=r'samples/model_comparison.csv')
-    label_dict=data_loader.get_image_and_labels([1])
+    label_dict=data_loader.get_image_and_labels([21],labels=['Piega ','Verruca','Puntura insetto'],make_binary=False)
 
 #    images, masks = dataloader.get_image_and_labels(41)
 
