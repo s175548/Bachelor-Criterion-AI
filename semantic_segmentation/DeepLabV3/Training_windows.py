@@ -8,7 +8,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 
 
 from tqdm import tqdm
-import random
+import random,json
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
@@ -43,30 +43,30 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
+batch_size= 4 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-val_interval= 55 # 55
+val_interval= 1 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100 # 240 #Helst mange
+N_epochs= 1 # 240 #Helst mange
 
 
 
 
 
-def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01):
+def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model
     """
     torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
-    }, os.path.join(save_path,"model_tick"+str(lr)+'.pt'))
+    }, os.path.join(save_path,"{}_{}".format(model,exp_description)+str(lr)+'.pt'))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
              ret_samples_ids=None,save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/',
-             train_images=None,lr=0.01,color_dict=None,target_dict=None,annotations_dict=None):
+             train_images=None,lr=0.01,color_dict=None,target_dict=None,annotations_dict=None,exp_description=''):
     """Do validation and return specified samples"""
     metrics.reset()
     ret_samples = []
@@ -104,9 +104,9 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             target = convert_to_image(target.squeeze(), color_dict, target_dict)
             pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
-            PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
-            PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG' )
+            PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
 
 
 
@@ -124,10 +124,10 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             target=convert_to_image(target.squeeze(),color_dict,target_dict)
             pred=convert_to_image(pred.squeeze(),color_dict,target_dict)
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr))),
+            PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr))),
                                                              format='PNG')
-            PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "tick" + str(lr)) ), format='PNG')
-            PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)) ), format='PNG')
+            PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "{}".format(exp_description) + str(lr)) ), format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr)) ), format='PNG')
 
 
         score = metrics.get_results()
@@ -136,32 +136,27 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
 
-def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
+def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None,val_loader=None,train_dst=None, val_dst=None,
-             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None):
+             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = ''):
 
 
     model_dict={}
     if model=='DeepLab':
-        model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,
-                                  num_classes=21, aux_loss=None)
+        model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
         grad_check(model_dict[model])
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
 
     if model=="MobileNet":
-        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,
-                                     pretrained_backbone=True)
+        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
         grad_check(model_dict[model],model_layers='All')
 
 
 
     # Setup visualization
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-
-
     print("Device: %s" % device)
 
     # Setup random seed
@@ -232,11 +227,12 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
                         model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images,lr=lr,save_path=save_path,
-                                                                      color_dict=color_dict,target_dict=target_dict,annotations_dict=annotations_dict)
+                                                                      color_dict=color_dict,target_dict=target_dict,annotations_dict=annotations_dict,exp_description=exp_description)
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path)
+                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path,exp_description=exp_description)
+                        np.save(metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
                         print("[Val] Class IoU", val_score['Class IoU'])
@@ -252,14 +248,22 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
         plt.title('Train Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_train_loss'),format='png')
+        plt.savefig(os.path.join(save_path,exp_description+(str(lr))+'_train_loss'),format='png')
         plt.close()
         plt.plot(range(N_epochs),validation_loss_values, '-o')
         plt.title('Validation Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_val_loss'),format='png')
+        plt.savefig(os.path.join(save_path,exp_description+(str(lr))+'_val_loss'),format='png')
         plt.close()
+
+        experiment_dict = {}
+        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,model]
+        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','model_backbone']
+        for idx,key in enumerate(hyperparams):
+            experiment_dict[key] = hyperparams_val[idx]
+        with open('exp_{}_{}.txt'.format(exp_description,lr),'w') as file:
+            json.dump(experiment_dict,file)
 
 
 
