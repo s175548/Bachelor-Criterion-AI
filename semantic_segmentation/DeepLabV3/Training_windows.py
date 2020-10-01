@@ -182,6 +182,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
 
     for model_name, model in model_dict.items():
+        print(model_name)
         cur_epochs = 0
         interval_loss = 0
         train_loss_values = []

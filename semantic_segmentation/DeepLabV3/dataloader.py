@@ -65,6 +65,8 @@ if __name__ == "__main__":
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+
+
                                    std=[0.229, 0.224, 0.225])])
     binary=True
     if binary:
