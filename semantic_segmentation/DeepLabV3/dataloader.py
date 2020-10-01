@@ -10,7 +10,7 @@ import argparse,os,json,ast
 
 
 HPC =False
-Villads=True
+Villads=False
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -78,8 +78,6 @@ if __name__ == "__main__":
         annotations_dict=data_loader.annotations_dict
 
     
-
-
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.80):],
@@ -98,5 +96,6 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
+    training(n_classes=1, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
-    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
+    #training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = 'multi_class')

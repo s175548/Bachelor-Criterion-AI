@@ -181,3 +181,42 @@ import matplotlib.pyplot as plt
 # plt.ylabel('Loss')
 # plt.savefig(os.path.join(r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\model_pre_full','val_test'), format='jpg')
 # plt.close()
+
+#EXPERIMENT WITH BINARY TICK CLASS
+#training(n_classes=1, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
+#EXPERIMENT WITH MULTI CLASS
+# num_classes=2
+# output_stride=16
+# save_val_results=False
+# total_itrs=1000#1000
+# #lr=0.01,0.001,0.0001
+# lr_policy='step'
+# step_size=10000
+# batch_size= 16 # 16
+# val_batch_size= 4 #4
+# loss_type="cross_entropy"
+# weight_decay=1e-4
+# random_seed=1
+# val_interval= 55 # 55
+# vis_num_samples= 2 #2
+# enable_vis=True
+# N_epochs= 100 # 240 #Helst mange
+
+#training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,'multi')
+
+# num_classes=2
+# output_stride=16
+# save_val_results=False
+# total_itrs=1000#1000
+# # #lr=0.01,0.001,0.0001
+# lr_policy='step'
+# step_size=10000
+# batch_size= 16 # 16
+# val_batch_size= 4 #4
+# loss_type="cross_entropy"
+# weight_decay=1e-4
+# random_seed=1
+# val_interval= 55 # 55
+# vis_num_samples= 2 #2
+# enable_vis=True
+# N_epochs= 100 # 240 #Helst mange
