@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import cv2
-from data_import.data_loader import DataLoader
+#from data_import.data_loader import DataLoader
 from data_import.draw_contours import draw_contours2
 from PIL import Image
 from scipy import ndimage
@@ -108,17 +108,17 @@ def find_backgrounds(list):
 
 
 if __name__ == '__main__':
-    data_loader = DataLoader()
-    img_test, mask = data_loader.get_image_and_labels(1)
-    background_idx = [41,42,56,99,102,121,153,157]
-    bounding_boxes = []
-    for idx in background_idx:
-        _,mask = data_loader.get_image_and_labels(idx)
-        _,bounding_box = convert_mask_to_bounding_box(mask)
-        bounding_boxes.append(bounding_box)
-    pass
+    #data_loader = DataLoader()
+    #img_test, mask = data_loader.get_image_and_labels(1)
+    #background_idx = [41,42,56,99,102,121,153,157]
+    #bounding_boxes = []
+    #for idx in background_idx:
+    #    _,mask = data_loader.get_image_and_labels(idx)
+    #    _,bounding_box = convert_mask_to_bounding_box(mask)
+    #    bounding_boxes.append(bounding_box)
+    #pass
     # find_background(img_test)
-    find_backgrounds(background_idx)
+    #find_backgrounds(background_idx)
 
     test_mask,test_box_coord = convert_mask_to_bounding_box(mask)
     pass
