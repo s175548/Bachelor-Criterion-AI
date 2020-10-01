@@ -50,7 +50,7 @@ weight_decay=1e-4
 random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
-enable_vis=True 
+enable_vis=True
 N_epochs= 100 # 240 #Helst mange
 
 
@@ -77,8 +77,13 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
         for i, (images, labels) in tqdm(enumerate(loader)):
             images = images.to(device, dtype=torch.float32)
             labels = labels.to(device, dtype=torch.long)
+            if model_name=='DeepLab':
+                outputs = model(images)['out']
+            else:
+                outputs = model(images)
 
-            outputs = model(images)['out']
+
+            print(np.unique(labels))
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
 
@@ -109,7 +114,11 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
         for i in range(len(train_images)):
             image = train_images[i][0].unsqueeze(0)
             image = image.to(device, dtype=torch.float32)
-            output = model(image)['out']
+            if model_name=='DeepLab':
+                output = model(image)['out']
+            else:
+                output = model(image)
+
             pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
             target=train_images[i][1].cpu().squeeze().numpy()
             target=convert_to_image(target.squeeze(),color_dict,target_dict)
@@ -142,7 +151,7 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
 
 
     if model=="MobileNet":
-        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=num_classes+1,
+        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,
                                      pretrained_backbone=True)
         grad_check(model_dict[model],model_layers='All')
 
@@ -197,7 +206,10 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                 labels = labels.to(device, dtype=torch.long)
 
                 optimizer.zero_grad()
-                outputs = model(images)['out']
+                if model_name=='DeepLab':
+                    outputs = model(images)['out']
+                else:
+                    outputs = model(images)
 
                 loss = criterion(outputs, labels)
                 loss.backward()
@@ -209,12 +221,13 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                 print('Loss', cur_itrs, np_loss)
 
                 if (cur_itrs) % 1 == 0:
-                    interval_loss = interval_loss / 10
+                    interval_loss = interval_loss / images.size(0)
                     print("Epoch %d, Itrs %d/%d, Loss=%f" %
                           (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
-                if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
+                # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
+                if cur_epochs % np.floor(N_epochs/4) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),

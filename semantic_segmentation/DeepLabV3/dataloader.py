@@ -9,8 +9,8 @@ import argparse,os,json,ast
 
 
 
-HPC = True
-Villads=False
+HPC =False
+Villads=True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
 
 
-    labels=['Piega', 'Verruca', 'Puntura insetto']
+    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
 
 
@@ -66,37 +66,18 @@ if __name__ == "__main__":
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
-    binary=True
+    binary=False
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
 
-    elif not binary:
+    else:
         color_dict= data_loader.color_dict
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    elif binary and HPC:
-        with open('color_dict_bin.txt', 'r') as file_test:
-            test = file_test.read()
-            color_dict = ast.literal_eval(test)
-        with open('target_dict_bin.txt', 'r') as file_test:
-            test = file_test.read()
-            target_dict = ast.literal_eval(test)
-        with open('annotations_dict_bin.txt', 'r') as file_test:
-            test = file_test.read()
-            annotations_dict = ast.literal_eval(test)
-    else:
-        with open('color_dict_multi.txt', 'r') as file_test:
-            test = file_test.read()
-            color_dict = ast.literal_eval(test)
-        with open('target_dict_multi.txt', 'r') as file_test:
-            test = file_test.read()
-            target_dict = ast.literal_eval(test)
-        with open('annotations_dict_multi.txt', 'r') as file_test:
-            test = file_test.read()
-            annotations_dict = ast.literal_eval(test)
+    
 
 
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
@@ -118,4 +99,4 @@ if __name__ == "__main__":
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
 
-    training(n_classes=1, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
+    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
