@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 class DataLoader():
-    def __init__(self,data_path=r'C:\Users\Mads-\Desktop\leather_patches',metadata_path = r'samples\model_comparison.csv'):
+    def __init__(self,data_path=r'C:\Users\Mads-\Desktop\leather_patches',metadata_path = r'samples/model_comparison.csv'):
         self.data_path = data_path
         self.metadata_path = os.path.join(data_path,metadata_path)
         self.metadata_csv = self.get_metadata(self.metadata_path)
