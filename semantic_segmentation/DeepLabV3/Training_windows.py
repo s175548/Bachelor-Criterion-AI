@@ -104,8 +104,8 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
             PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
-            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray((target * 255).astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_mask.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
 
 
 
@@ -228,7 +228,7 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                           (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
-                if (cur_itrs) % val_interval == 0:
+                if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),

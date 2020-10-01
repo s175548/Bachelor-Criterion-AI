@@ -7,7 +7,7 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 import argparse,os
 
-HPC = True
+HPC = False
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -78,4 +78,4 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-  #  training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)
+    training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)
