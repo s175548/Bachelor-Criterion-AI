@@ -6,7 +6,7 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask
+from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask, new_convert
 from PIL import Image
 
 
@@ -47,7 +47,7 @@ class LeatherData(data.Dataset):
 
         mask = target.numpy()
         shape = check_mask(mask=mask,name="shaj_trans")
-        bmask, bounding_box = convert_mask_to_bounding_box(mask)
+        bmask, bounding_box = new_convert(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
             if bounding_box[i] == (0, 0, 256, 256):
