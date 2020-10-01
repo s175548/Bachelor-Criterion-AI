@@ -70,9 +70,9 @@ if __name__ == '__main__':
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
                           list_of_filenames=file_names[round(N_files * 0.80):], transform=transform_function)
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
