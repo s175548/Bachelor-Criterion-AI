@@ -3,11 +3,11 @@ import torchvision, random
 from torch.utils import data
 import os, pickle
 import numpy as np
-#from data_import.data_loader import DataLoader
+from data_import.data_loader import DataLoader
 import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.leather_data import LeatherData_BB
+from object_detect.leather_data_hpc import LeatherData
 from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
@@ -36,7 +36,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     }, '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtScale(512),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
 
 if __name__ == '__main__':
 
@@ -66,20 +66,23 @@ if __name__ == '__main__':
     batch_size = 4
     val_batch_size = 4
 
+    data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
+                         metadata_path=r'samples\model_comparison.csv')
+    vscores = data_loader.get_visibility_score()
     visibility_scores = [3]
 
-    if type(visibility_scores) == list:
-        with open(
-                r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg',
-                'rb') as fp:
-            itemlist = np.array(pickle.load(fp))
+    #if type(visibility_scores) == list:
+    #    with open(
+    #           r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg',
+    #            'rb') as fp:
+    #        itemlist = np.array(pickle.load(fp))
 
     torch.manual_seed(2)
     np.random.seed(2)
     random.seed(2)
     file_names = np.array([img[:-4] for img in os.listdir(path_img)])
-    itemlist=itemlist[file_names.astype(np.uint8)]
-    file_names=np.sort(file_names)[itemlist==3]
+    #itemlist=itemlist[file_names.astype(np.uint8)]
+    file_names=np.sort(file_names)[vscores[:100]]
     N_files=len(file_names)
     #shuffled_index=np.random.permutation(len(file_names))
     #file_names_img=file_names[shuffled_index]
@@ -87,10 +90,10 @@ if __name__ == '__main__':
 
     scale = 512
     # Define dataloaders
-    train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                               list_of_filenames=file_names[:10],scale=scale,transform=transform_function)
-    val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                             list_of_filenames=file_names[146:152],scale=scale,transform=transform_function)
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,
+                               list_of_filenames=file_names[:10],transform=transform_function)
+    val_dst = LeatherData(path_mask=path_mask,path_img=path_img,
+                             list_of_filenames=file_names[146:152],transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)

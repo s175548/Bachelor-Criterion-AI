@@ -38,7 +38,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtToTensor(),et.ExtRandomCrop(256)])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
 
 if __name__ == '__main__':
 
