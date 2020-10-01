@@ -38,7 +38,7 @@ class LeatherData(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index])
+        target = Image.open(self.masks[index]).convert('L')
         new_mask = np.array(target)
         new_img = np.array(img)
 
