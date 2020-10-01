@@ -46,7 +46,7 @@ class LeatherData(data.Dataset):
             img, target = self.transform(img, target)
 
         mask = target.numpy()
-        shape = check_mask(mask=mask,name="SHAPE")
+        shape = check_mask(mask=mask,name="SHAPE2")
         bmask, bounding_box = new_convert(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
