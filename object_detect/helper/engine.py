@@ -68,7 +68,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
     i = 0
-    path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
@@ -108,7 +108,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
                 num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
                 model.train()
                 samples.append((images, masks, targets, outputs))
-                #get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
+                get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -135,7 +135,7 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
     torch.set_num_threads(1)
     cpu_device = torch.device("cpu")
     model.eval()
-    path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     num_boxes_val = []

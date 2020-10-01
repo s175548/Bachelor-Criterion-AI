@@ -10,7 +10,8 @@ from data_import.draw_contours import draw_contours2
 from PIL import Image
 from scipy import ndimage
 
-
+def check_mask(mask):
+    return np.shape(mask)
 
 def convert_mask_to_bounding_box(mask):
     """input: mask

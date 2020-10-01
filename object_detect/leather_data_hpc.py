@@ -6,7 +6,7 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from object_detect.get_bboxes import convert_mask_to_bounding_box
+from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask
 from PIL import Image
 
 
@@ -39,9 +39,15 @@ class LeatherData(data.Dataset):
         """
         img = Image.open(self.images[index]).convert('RGB')
         target = Image.open(self.masks[index])
-
         new_mask = np.array(target)
-        bmask, bounding_box = convert_mask_to_bounding_box(new_mask)
+
+        if self.transform is not None:
+            target = Image.fromarray(new_mask)
+            img, target = self.transform(img, target)
+
+        shape = check_mask(mask=target.numpy())
+        mask = cv2.resize(new_mask, (shape[0], shape[1]))
+        bmask, bounding_box = convert_mask_to_bounding_box(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
             if bounding_box[i] == (0, 0, 256, 256):
@@ -58,9 +64,6 @@ class LeatherData(data.Dataset):
             boxes = torch.as_tensor(bboxes, dtype=torch.float32)
             area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
             labels = torch.ones((len(bboxes),), dtype=torch.int64)
-
-        if self.transform is not None:
-            img, target = self.transform(img, target)
 
         image_id = torch.tensor([index])
         # suppose all instances are not crowd
