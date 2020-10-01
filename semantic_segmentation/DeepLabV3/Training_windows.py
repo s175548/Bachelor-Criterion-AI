@@ -43,15 +43,15 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 4 # 16
+batch_size= 16 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-val_interval= 1 # 55
+val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 1 # 240 #Helst mange
+N_epochs= 100 # 240 #Helst mange
 
 
 
