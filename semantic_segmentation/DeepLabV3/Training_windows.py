@@ -231,7 +231,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path,exp_description=exp_description)
+                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
@@ -262,8 +262,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','model_backbone']
         for idx,key in enumerate(hyperparams):
             experiment_dict[key] = hyperparams_val[idx]
-        with open('exp_{}_{}.txt'.format(exp_description,lr),'w') as file:
-            json.dump(experiment_dict,file)
+        np.save('exp_{}_{}.npy'.format(exp_description,lr), experiment_dict)
+
 
 
 

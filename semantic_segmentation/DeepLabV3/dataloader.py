@@ -10,7 +10,7 @@ import argparse,os,json,ast
 
 
 HPC =False
-Villads=True
+Villads=False
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
