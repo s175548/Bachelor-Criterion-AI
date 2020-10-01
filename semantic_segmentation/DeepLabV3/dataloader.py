@@ -9,7 +9,7 @@ import argparse,os,json,ast
 
 
 
-HPC = False
+HPC = True
 Villads=False
 if __name__ == "__main__":
     if HPC:
@@ -48,8 +48,7 @@ if __name__ == "__main__":
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    if not HPC:
-        data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
+    data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
 
@@ -68,13 +67,12 @@ if __name__ == "__main__":
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
     binary=True
-    HPC = True
-    if binary and not HPC:
+    if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
 
-    elif not binary and not HPC:
+    elif not binary:
         color_dict= data_loader.color_dict
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
