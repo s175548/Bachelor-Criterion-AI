@@ -36,8 +36,6 @@ class DataLoader():
             for a in ann["annotations"]:
                 try:
                     visibility = a["visibility"]
-                    print(visibility)
-                    print(img_idx)
                     if int(visibility) in scores:
                         visibility_list.append(img_idx)
                     break
@@ -45,8 +43,6 @@ class DataLoader():
                     pass
                 if a["label"].startswith("visibility_"):
                     visibility = a["label"].split("_")[-1]
-                    print(img_idx)
-                    print(visibility)
                     if int(visibility) in scores:
                         visibility_list.append(img_idx)
                     break
