@@ -83,7 +83,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                 outputs = model(images)
 
 
-            print(np.unique(labels))
+            # print(np.unique(labels))
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
 
@@ -165,7 +165,6 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
     random.seed(random_seed)
 
 
-
     # Set up metrics
     metrics = StreamSegMetrics(n_classes+2)
 
@@ -223,7 +222,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_epochs % np.floor(N_epochs/4) == 0:
+                if cur_epochs % np.ceil(N_epochs/4) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
@@ -232,8 +231,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
-                        np.save(metrics.to_str(val_score))
+                        save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path,exp_description=exp_description)
+                        np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
                         print("[Val] Class IoU", val_score['Class IoU'])
