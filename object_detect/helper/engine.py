@@ -61,7 +61,7 @@ def get_samples(samples,ids,N,path_save,train=True):
                                                              format='PNG')
 
 
-def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
+def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -115,6 +115,56 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
 
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
+
+def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
+    model.train()
+    lr_scheduler = None
+    i = 0
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
+    num_boxes = []
+    num_boxes_pred = []
+    for (images, labels, masks) in data_loader:
+        images = list(img.to(device, dtype=torch.float32) for img in images)
+        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
+
+        loss_dict = model(images, targets)
+        losses = sum(loss for loss in loss_dict.values())
+
+        # reduce losses over all GPUs for logging purposes
+        loss_dict_reduced = utils.reduce_dict(loss_dict)
+        losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+
+        loss_value = losses_reduced.item()
+        loss_list.append(loss_value)
+        if not math.isfinite(loss_value):
+            print("Loss is {}, stopping training".format(loss_value))
+            print(loss_dict_reduced)
+            sys.exit(1)
+
+        optimizer.zero_grad()
+        losses.backward()
+        optimizer.step()
+
+        if lr_scheduler is not None:
+            lr_scheduler.step()
+
+        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
+        #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+        #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+        if risk==True:
+            if i == 0:
+                samples = []
+                model.eval()
+                outputs = model(images)
+                num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+                num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
+                model.train()
+                samples.append((images, masks, targets, outputs))
+                get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
+        i+=1
+        print(loss_dict_reduced)
+    return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
+
 
 def _get_iou_types(model):
     model_without_ddp = model
