@@ -10,7 +10,7 @@ from object_detect.get_bboxes import convert_mask_to_bounding_box
 from PIL import Image
 
 
-class LeatherData_BB(data.Dataset):
+class LeatherData(data.Dataset):
 
     def __init__(self,
                  path_mask,path_img,list_of_filenames,

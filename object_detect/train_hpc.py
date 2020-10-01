@@ -9,7 +9,7 @@ import numpy as np
 import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.leather_data_hpc import LeatherData_BB
+from object_detect.leather_data_hpc import LeatherData
 from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
@@ -104,9 +104,9 @@ if __name__ == '__main__':
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
-            coco, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
+            mAP, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
 
-            checkpoint = coco.coco_eval['bbox'].stats[1]
+            checkpoint = mAP
             if checkpoint > best_map:
                 best_map = checkpoint
 
