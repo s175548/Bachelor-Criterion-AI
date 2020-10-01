@@ -137,8 +137,8 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,
                                   num_classes=21, aux_loss=None)
         grad_check(model_dict[model])
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
 
     if model=="MobileNet":
@@ -163,7 +163,7 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
 
 
     # Set up metrics
-    metrics = StreamSegMetrics(n_classes+1)
+    metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer
     optimizer = torch.optim.SGD(params=[

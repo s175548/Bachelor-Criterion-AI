@@ -157,7 +157,7 @@ class DataLoader():
             label_dict={}
             for i,label in enumerate(labels):
                 label_dict[self.annotations_dict[label]]=i+1
-            label_dict[53]=-1
+            label_dict[53]=i+2
         return label_dict
 
 
