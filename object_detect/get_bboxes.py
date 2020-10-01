@@ -42,8 +42,8 @@ def new_convert(mask):
     output: bounding boxes
     """
     new_mask = np.copy(mask)
-    for i in range(512):
-        for j in range(512):
+    for i in range(np.shape(new_mask)[0]):
+        for j in range(np.shape(new_mask)[0]):
             if mask[i,j] < 190:
                 new_mask[i,j] = 0
             else:
