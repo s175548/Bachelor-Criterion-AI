@@ -6,7 +6,7 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask
+from object_detect.get_bboxes import convert_mask_to_bounding_box, check_mask, new_convert
 from PIL import Image
 
 
@@ -38,16 +38,16 @@ class LeatherData(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index])
+        target = Image.open(self.masks[index]).convert('P')
         new_mask = np.array(target)
 
         if self.transform is not None:
             target = Image.fromarray(new_mask)
             img, target = self.transform(img, target)
 
-        shape = check_mask(mask=target.numpy())
-        mask = cv2.resize(new_mask, (shape[0], shape[1]))
-        bmask, bounding_box = convert_mask_to_bounding_box(mask)
+        mask = target.numpy()
+        shape = check_mask(mask=mask,name="shape")
+        bmask, bounding_box = new_convert(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
             if bounding_box[i] == (0, 0, 256, 256):

@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
     batch_size = 128
     #val_batch_size = 64
-
+    #C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\From_HPC
     path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
     path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
