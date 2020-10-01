@@ -62,10 +62,10 @@ Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
-    # data_loader = DataLoader(
-    #     data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
-    #     metadata_path=r'samples/model_comparison.csv')
-    data_loader = DataLoader()
+     data_loader = DataLoader(
+         data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+         metadata_path=r'samples/model_comparison.csv')
+#    data_loader = DataLoader()
    # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
-    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Piega', 'Verruca', 'Puntura insetto'],make_binary=False)
+     import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'],make_binary=True)
 #    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])

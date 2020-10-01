@@ -157,7 +157,7 @@ class DataLoader():
             label_dict={}
             for i,label in enumerate(labels):
                 label_dict[self.annotations_dict[label]]=i+1
-            label_dict['Background']=-1
+            label_dict[53]=-1
         return label_dict
 
 
@@ -239,12 +239,9 @@ class DataLoader():
 def convert_to_image(pred,color_dict,target_dict):
     rgb_pred = np.dstack((pred, pred, pred))
     for key, value in target_dict.items():
-        print(key)
         color_id = key
         color_map = color_dict[key]
-        print(color_map)
         index = pred == value
-        print(sum(index))
         rgb_pred[index, :] = rgb_pred[index, :] / value * color_map
     return rgb_pred
 

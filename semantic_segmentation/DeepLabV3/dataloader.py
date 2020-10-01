@@ -7,8 +7,8 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 import argparse,os
 
-HPC = False
-Villads=True
+HPC = True
+Villads=False
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -29,6 +29,7 @@ if __name__ == "__main__":
         path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
         metadata_path=save_path = r'samples/model_comparison.csv'
         path_model = save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor '
+        lr = 0.01
 
 
     else:
@@ -44,12 +45,9 @@ if __name__ == "__main__":
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
     data_loader = DataLoader(data_path=path_original_data)
 
-    data_loader = DataLoader(
-        data_path=data_path,
-        metadata_path=metadata_path)
 
 
-    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+    labels=['Piega', 'Verruca', 'Puntura insetto']
 
 
 
@@ -63,10 +61,16 @@ if __name__ == "__main__":
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
+    binary=True
+    if binary:
+        color_dict = data_loader.color_dict_binary
+        target_dict = data_loader.get_target_dict()
+        annotations_dict = data_loader.annotations_dict
 
-    color_dict=data_loader.color_dict
-    target_dict=data_loader.get_target_dict(labels)
-    annotations_dict=data_loader.annotations_dict
+    else:
+        color_dict=data_loader.color_dict
+        target_dict=data_loader.get_target_dict(labels)
+        annotations_dict=data_loader.annotations_dict
 
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
@@ -79,7 +83,7 @@ if __name__ == "__main__":
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     train_img = []
-    for i in range(2):
+    for i in range(5):
         train_img.append(train_dst.__getitem__(i))
 
 

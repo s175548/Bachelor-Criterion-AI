@@ -39,7 +39,7 @@ from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=100 #1000
+total_itrs=1#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
@@ -48,7 +48,6 @@ val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-print_interval=55
 val_interval= 1 # 55
 vis_num_samples= 2 #2
 enable_vis=True
@@ -62,7 +61,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
     """ save current model
     """
     torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
-    }, os.path.join( os.path.join( save_path,'trained_models') ,"model_tick"+str(lr)+'.pt' ))
+    }, os.path.join(save_path,"model_tick"+str(lr)+'.pt'))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
@@ -100,9 +99,9 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             target = convert_to_image(target.squeeze(), color_dict, target_dict)
             pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
-            PIL.Image.fromarray(pred).save( os.path.join( save_path,r'{}\{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
-            PIL.Image.fromarray(target).save( os.path.join( save_path,r'{}\{}_{}_{}_target.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
+            PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
 
 
 
@@ -113,13 +112,13 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             output = model(image)['out']
             pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
             target=train_images[i][1].cpu().squeeze().numpy()
-            target=convert_to_image(target.squeeze(),color_dict,target_dict,annotations_dict)
-            pred=convert_to_image(pred.squeeze(),color_dict,target_dict,annotations_dict)
+            target=convert_to_image(target.squeeze(),color_dict,target_dict)
+            pred=convert_to_image(pred.squeeze(),color_dict,target_dict)
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr)),
+            PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr))),
                                                              format='PNG')
-            PIL.Image.fromarray(pred).save(os.path.join (save_path , '{}\{}_{}_{}_prediction_train.png'.format(model_name, N, i, "tick" + str(lr)) ), format='PNG')
-            PIL.Image.fromarray(target).save(os.path.join ( save_path , '{}\{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)) ), format='PNG')
+            PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "tick" + str(lr)) ), format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)) ), format='PNG')
 
 
         score = metrics.get_results()
@@ -137,15 +136,15 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,
                                   num_classes=21, aux_loss=None)
-        grad_check(model)
-        model.classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model.aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        grad_check(model_dict[model])
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+1, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
 
     if model=="MobileNet":
-        model = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=num_classes+1,
+        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=num_classes+1,
                                      pretrained_backbone=True)
-        grad_check(model,model_layers='All')
+        grad_check(model_dict[model],model_layers='All')
 
 
 
@@ -164,12 +163,12 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
 
 
     # Set up metrics
-    metrics = StreamSegMetrics(num_classes)
+    metrics = StreamSegMetrics(n_classes+1)
 
     # Set up optimizer
     optimizer = torch.optim.SGD(params=[
-        {'params': model.backbone.parameters(), 'lr': 0.3 * lr},
-        {'params': model.classifier.parameters(), 'lr': lr},
+        {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+        {'params': model_dict[model].classifier.parameters(), 'lr': lr},
     ], lr=lr, momentum=0.9, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
@@ -240,13 +239,13 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
         plt.title('Train Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_train_loss'),format='png')
+        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_train_loss'),format='png')
         plt.close()
         plt.plot(range(N_epochs),validation_loss_values, '-o')
         plt.title('Validation Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_val_loss'),format='png')
+        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_val_loss'),format='png')
         plt.close()
 
 
