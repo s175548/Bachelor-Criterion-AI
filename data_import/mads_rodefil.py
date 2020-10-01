@@ -66,6 +66,23 @@ import matplotlib.pyplot as plt
 # model.aux_classifier[-1] = torch.nn.Conv2d(256, 2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 # device = torch.device('cpu')
 
+# file = open('color_dict_multi.txt', 'w')
+# file.write(str(color_dict))
+# file.close()
+#
+# file = open('target_dict_multi.txt', 'w')
+# file.write(str(target_dict))
+# file.close()
+#
+# file = open('annotations_dict_multi.txt', 'w')
+# file.write(str(annotations_dict))
+# file.close()
+
+# file_test = open('color_dict.txt', 'r')
+# test = file_test.read()
+# diction = ast.literal_eval(test)
+
+
 #TEST MODEL
 # if __name__ == "__main__":
 #     batch_size = 16
