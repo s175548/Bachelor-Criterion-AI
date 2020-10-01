@@ -29,7 +29,7 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
         for k in range(len(img_crops)):
             if exclude_no_mask_crops:
-                if list(np.setdiff1d(np.unique(mask_crops[k]),[0,53, 101, 113]))==[]:
+                if list(np.setdiff1d(np.unique(mask_crops[k]),[0,121,  98,  62]))==[]:
                     pass
                 else:
                     k = int(k)
@@ -62,7 +62,9 @@ Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
      # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-     data_loader = DataLoader()
-   # import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
-     import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
+     data_loader = DataLoader(
+         data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+         metadata_path=r'samples/model_comparison.csv')
+     import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[1,2,3],labels=['Puntura insetto','Background'],make_binary=True)
+     #import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Puntura insetto','Background'],make_binary=True)
 #    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])

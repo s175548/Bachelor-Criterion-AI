@@ -10,7 +10,7 @@ import argparse,os,json,ast
 
 
 HPC =False
-Villads=False
+Villads=True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -66,7 +66,7 @@ if __name__ == "__main__":
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                                    std=[0.229, 0.224, 0.225])])
-    binary=False
+    binary=True
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()

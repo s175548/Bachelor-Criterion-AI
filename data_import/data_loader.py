@@ -28,7 +28,7 @@ class DataLoader():
         metadata_csv.to_numpy()
         return metadata_csv.to_numpy()
 
-    def get_visibility_score(self):
+    def get_visibility_score(self,scores=[2,3]):
         visibility_list = []
         for img_idx in range(len(self.metadata_csv)):
             filepath = os.path.join(self.data_path, self.metadata_csv[img_idx, 3][1:])
@@ -36,13 +36,19 @@ class DataLoader():
             for a in ann["annotations"]:
                 try:
                     visibility = a["visibility"]
-                    visibility_list.append(img_idx)
+                    print(visibility)
+                    print(img_idx)
+                    if int(visibility) in scores:
+                        visibility_list.append(img_idx)
                     break
                 except KeyError:
                     pass
                 if a["label"].startswith("visibility_"):
                     visibility = a["label"].split("_")[-1]
-                    visibility_list.append(img_idx)
+                    print(img_idx)
+                    print(visibility)
+                    if int(visibility) in scores:
+                        visibility_list.append(img_idx)
                     break
         return visibility_list
 
@@ -321,7 +327,9 @@ if __name__ == '__main__':
 #    dataloader = DataLoader()
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                          metadata_path=r'samples/model_comparison.csv')
-    label_dict=data_loader.get_image_and_labels([21],labels=['Piega ','Verruca','Puntura insetto'],make_binary=False)
+    visibility_idx=data_loader.get_visibility_score([1,2,3])
+
+    #label_dict=data_loader.get_image_and_labels([21],labels=['Piega ','Verruca','Puntura insetto'],make_binary=False)
 
 #    images, masks = dataloader.get_image_and_labels(41)
 
