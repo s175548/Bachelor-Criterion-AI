@@ -38,15 +38,15 @@ class LeatherData(data.Dataset):
             tuple: (image, target) where target is the image segmentation.
         """
         img = Image.open(self.images[index]).convert('RGB')
-        target = Image.open(self.masks[index]).convert('P')
+        target = Image.open(self.masks[index])
         new_mask = np.array(target)
+        new_img = np.array(img)
 
         if self.transform is not None:
-            target = Image.fromarray(new_mask)
             img, target = self.transform(img, target)
 
         mask = target.numpy()
-        shape = check_mask(mask=mask,name="shape")
+        shape = check_mask(mask=mask,name="SHAPE")
         bmask, bounding_box = new_convert(mask)
         bboxes = []
         for i in range(np.shape(bounding_box)[0]):
