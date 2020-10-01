@@ -9,7 +9,7 @@ import argparse,os,json,ast
 
 
 
-HPC =True
+HPC =False
 Villads=False
 if __name__ == "__main__":
     if HPC:
