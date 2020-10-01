@@ -43,36 +43,26 @@ total_itrs=100 #1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
+batch_size= 4 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 print_interval=55
-val_interval= 55 # 55
+val_interval= 1 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100 # 240 #Helst mange
+N_epochs= 1 # 240 #Helst mange
 
 
 
-# path_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask'
-# path_img = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img'
-
-path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
-path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01):
     """ save current model
     """
-    torch.save({
-        "cur_itrs": cur_itrs,
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict(),
-        "scheduler_state": scheduler.state_dict(),
-        "best_score": best_score,
-    }, save_path+model_name+"_tick"+str(lr)+'.pt')
+    torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
+    }, os.path.join( os.path.join( save_path,'trained_models') ,"model_tick"+str(lr)+'.pt' ))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
@@ -107,8 +97,8 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            target = convert_to_image(target.squeeze(), color_dict, target_dict, annotations_dict)
-            pred = convert_to_image(pred.squeeze(), color_dict, target_dict, annotations_dict)
+            target = convert_to_image(target.squeeze(), color_dict, target_dict)
+            pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
             PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}\{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
             PIL.Image.fromarray(pred).save( os.path.join( save_path,r'{}\{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
@@ -123,15 +113,13 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             output = model(image)['out']
             pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
             target=train_images[i][1].cpu().squeeze().numpy()
-            target=convert_to_image(target,color_dict,target_dict,annotations_dict)
-            pred=convert_to_image(pred,color_dict,target_dict,annotations_dict)
+            target=convert_to_image(target.squeeze(),color_dict,target_dict,annotations_dict)
+            pred=convert_to_image(pred.squeeze(),color_dict,target_dict,annotations_dict)
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
             PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr)),
                                                              format='PNG')
-            PIL.Image.fromarray(((pred.squeeze() - 1) * (-255)).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_prediction_train.png'.format(model_name, N, i,"tick"+str(lr)), format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)), format='PNG')
+            PIL.Image.fromarray(pred).save(os.path.join (save_path , '{}\{}_{}_{}_prediction_train.png'.format(model_name, N, i, "tick" + str(lr)) ), format='PNG')
+            PIL.Image.fromarray(target).save(os.path.join ( save_path , '{}\{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)) ), format='PNG')
 
 
         score = metrics.get_results()
@@ -227,7 +215,7 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                           (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
-                if (cur_itrs) % val_interval == 0:
+                if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
@@ -236,7 +224,7 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr)
+                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path)
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
                         print("[Val] Class IoU", val_score['Class IoU'])
@@ -253,15 +241,13 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
         plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_train_loss'),format='png')
-        plt.show()
         plt.close()
         plt.plot(range(N_epochs),validation_loss_values, '-o')
         plt.title('Validation Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_train_loss'),format='png')
+        plt.savefig(os.path.join( os.path.join( model_path,model_name),"tick"+(str(lr))+'_val_loss'),format='png')
         plt.close()
-        plt.show()
 
 
 

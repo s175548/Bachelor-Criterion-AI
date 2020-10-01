@@ -1,18 +1,11 @@
-import sys,os
+import sys
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
-
-import argparse
-parser = argparse.ArgumentParser(description='Take learning rate parameter')
-parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
-args = vars(parser.parse_args())
-lr = args['learning rate'][0]
-print(args['learning rate'][0]," this is the learning_rate")
-# lr = 0.01
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
+import argparse,os
 
 HPC = False
 Villads=True
@@ -23,9 +16,17 @@ if __name__ == "__main__":
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
+        path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+
+        parser = argparse.ArgumentParser(description='Take learning rate parameter')
+        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+        args = vars(parser.parse_args())
+        lr = args['learning rate'][0]
+        print(args['learning rate'][0], " this is the learning_rate")
+
     elif Villads:
         path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
-        data_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
+        path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
         metadata_path=save_path = r'samples/model_comparison.csv'
         path_model = save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor '
 
@@ -33,22 +34,24 @@ if __name__ == "__main__":
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
         path_model = save_path
-        # path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_28_09\mask'
-        # path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_28_09\img'
+        path_original_data = r'C:\Users\Mads-\Desktop\leather_patches'
         path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_tickbite_vis_2_and_3'
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_tickbite_vis_2_and_3'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
+        lr = 0.01
 
+    # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
+    # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+    data_loader = DataLoader(data_path=path_original_data)
 
-    path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     data_loader = DataLoader(
         data_path=data_path,
         metadata_path=metadata_path)
 
+
     labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
 
-#    data_loader = DataLoader()
 
     file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] !="k"])
     N_files=len(file_names)
@@ -84,4 +87,5 @@ if __name__ == "__main__":
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
 
-    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=0.01, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
+
+    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
