@@ -23,16 +23,15 @@ import os
 import PIL
 import pickle
 import matplotlib.pyplot as plt
+from data_import.data_loader import convert_to_image
+from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 
 
 
 
 
 
-transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512),et.ExtScale(512),et.ExtEnhanceContrast(),
-                et.ExtToTensor(),
-                et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225]),])
+
 
 
 #Forskellig learning rate, (træn på en klasse, tick bite, multiclass)
@@ -40,45 +39,34 @@ transform_function = et.ExtCompose([et.ExtTransformLabel(),et.ExtCenterCrop(512)
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=10 # 100 #1000
+total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
-val_batch_size=2 #4
+batch_size= 4 # 16
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-print_interval=10
-val_interval=1 #1
-vis_num_samples=2
+val_interval= 1 # 55
+vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 1 # 4 #Helst mange
+N_epochs= 1 # 240 #Helst mange
 
 
 
-# path_mask = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask'
-# path_img = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img'
-
-path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\mask'
-path_img = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data\img'
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01):
     """ save current model
     """
-    torch.save({
-        "cur_itrs": cur_itrs,
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict(),
-        "scheduler_state": scheduler.state_dict(),
-        "best_score": best_score,
-    }, save_path+model_name+str(lr)+'.pt')
+    torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
+    }, os.path.join(save_path,"model_tick"+str(lr)+'.pt'))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
              ret_samples_ids=None,save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/',
-             train_images=None,lr=0.01):
+             train_images=None,lr=0.01,color_dict=None,target_dict=None,annotations_dict=None):
     """Do validation and return specified samples"""
     metrics.reset()
     ret_samples = []
@@ -87,7 +75,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
     running_loss=0
     with torch.no_grad():
         for i, (images, labels) in tqdm(enumerate(loader)):
-            break
             images = images.to(device, dtype=torch.float32)
             labels = labels.to(device, dtype=torch.long)
 
@@ -99,6 +86,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             preds = outputs.detach().max(dim=1)[1].cpu().numpy()
             targets = labels.cpu().numpy()
 
+
             if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
                 ret_samples.append(
                     (images[0], targets[0], preds[0]))
@@ -108,26 +96,29 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
         for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            break
+            target = convert_to_image(target.squeeze(), color_dict, target_dict)
+            pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
             image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_img.png'.format(model_name,N,id,lr),format='PNG')
-            PIL.Image.fromarray(((pred-1) * (-255)).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_prediction.png'.format(model_name,N,id,lr),format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(save_path+'/{}/{}_{}_{}_mask.png'.format(model_name,N,id,lr),format='PNG')
+            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG' )
+            PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"tick"+str(lr) )),format='PNG')
 
 
 
 
         for i in range(len(train_images)):
-            output = model(train_images[i][0].unsqueeze(0))['out']
-            pred = output.detach().max(dim=1)[1].cpu().numpy()
-            target=train_images[i][1].cpu().numpy()
+            image = train_images[i][0].unsqueeze(0)
+            image = image.to(device, dtype=torch.float32)
+            output = model(image)['out']
+            pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
+            target=train_images[i][1].cpu().squeeze().numpy()
+            target=convert_to_image(target.squeeze(),color_dict,target_dict)
+            pred=convert_to_image(pred.squeeze(),color_dict,target_dict)
             image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(save_path + '/{}/{}_{}_{}_img_train.png'.format(model_name, N, i,lr),
+            PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"tick"+str(lr))),
                                                              format='PNG')
-            PIL.Image.fromarray(((pred.squeeze() - 1) * (-255)).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_prediction_train.png'.format(model_name, N, i,lr), format='PNG')
-            PIL.Image.fromarray((target * 255).astype(np.uint8)).save(
-                save_path + '/{}/{}_{}_{}_mask_train.png'.format(model_name, N, i,lr), format='PNG')
+            PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "tick" + str(lr)) ), format='PNG')
+            PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"tick"+str(lr)) ), format='PNG')
 
 
         score = metrics.get_results()
@@ -136,27 +127,32 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 
 
-def training(models=['model_pre_class','model_pre_full','model_full'],load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',path2='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /Github_bachelor/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg', visibility_scores=[2,3],train_loader=None,val_loader=None,train_dst=None, val_dst=None,save_path = os.getcwd(),lr=0.01,train_images = None):
+def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
+             train_loader=None,val_loader=None,train_dst=None, val_dst=None,
+             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None):
 
-    model_dict_parameters = {'model_pre_class': {'pretrained':True ,'num_classes':21,'requires_grad':False},
-                'model_pre_full': {'pretrained':True,'num_classes':21,'requires_grad':True},
-                  'model_full': {'pretrained':False ,'num_classes':2,'requires_grad':True}}
+
     model_dict={}
-    for model_name in models:
-        model=deeplabv3_resnet101(pretrained=model_dict_parameters[model_name]['pretrained'], progress=True,
-                                  num_classes=model_dict_parameters[model_name]['num_classes'], aux_loss=None)
-        grad_check(model, requires_grad=model_dict_parameters[model_name]['requires_grad'])
-        if model_dict_parameters[model_name]['num_classes']==21:
-            model.classifier[-1] = torch.nn.Conv2d(256, 2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-            model.aux_classifier[-1] = torch.nn.Conv2d(256, 2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model_dict[model_name]=model
+    if model=='DeepLab':
+        model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,
+                                  num_classes=21, aux_loss=None)
+        grad_check(model_dict[model])
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+
+
+    if model=="MobileNet":
+        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=num_classes+1,
+                                     pretrained_backbone=True)
+        grad_check(model_dict[model],model_layers='All')
 
 
 
     # Setup visualization
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    # device = torch.device('cpu')
-    # torch.cuda.empty_cache()
+
+
+
     print("Device: %s" % device)
 
     # Setup random seed
@@ -167,30 +163,16 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
 
 
     # Set up metrics
-    metrics = StreamSegMetrics(num_classes)
+    metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer
     optimizer = torch.optim.SGD(params=[
-        {'params': model.backbone.parameters(), 'lr': 0.3 * lr},
-        {'params': model.classifier.parameters(), 'lr': lr},
+        {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+        {'params': model_dict[model].classifier.parameters(), 'lr': lr},
     ], lr=lr, momentum=0.9, weight_decay=weight_decay)
-    # optimizer = torch.optim.SGD(params=model.parameters(), lr=opts.lr, momentum=0.9, weight_decay=opts.weight_decay)
-    # torch.optim.lr_scheduler.StepLR(optimizer, step_size=opts.lr_decay_step, gamma=opts.lr_decay_factor)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
-    # Set up criterion
-    # criterion = utils.get_loss(opts.loss_type)
-
-    criterion = nn.CrossEntropyLoss(ignore_index=255, reduction='mean')
-
-
-    if load_models:
-        checkpoint = torch.load(model_path+model_name + '.pt', map_location=torch.device('cpu'))
-        model.load_state_dict(checkpoint["model_state"])
-        model = nn.DataParallel(model)
-        model.to(device)
-        del checkpoint
-        print("Model restored")
+    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
 
 
     # ==========   Train Loop   ==========#
@@ -232,15 +214,16 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
                           (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
-                if (cur_itrs) % val_interval == 0:
+                if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
-                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images,lr=lr)
+                        model=model, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion,train_images=train_images,lr=lr,save_path=save_path,
+                                                                      color_dict=color_dict,target_dict=target_dict,annotations_dict=annotations_dict)
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
-                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr)
+                        save_ckpt(model=model,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,model_name=model_name,lr=lr,save_path=save_path)
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
                         print("[Val] Class IoU", val_score['Class IoU'])
@@ -252,30 +235,32 @@ def training(models=['model_pre_class','model_pre_full','model_full'],load_model
             validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
 
-        # plt.plot(range(N_epochs),train_loss_values,'-o')
-        # plt.title('Train Loss')
-        # plt.xlabel('N_epochs')
-        # plt.ylabel('Loss')
-        # plt.savefig(model_path+model_name+"_"+(str(lr)+'_train_loss')
-        # plt.show()
-        # plt.plot(range(N_epochs),validation_loss_values, '-o')
-        # plt.title('Validation Loss')
-        # plt.xlabel('N_epochs')
-        # plt.ylabel('Loss')
-        # plt.savefig(model_path + model_name +"_"+(str(lr)+ '_validation_loss')
-        # plt.show()
+        plt.plot(range(N_epochs),train_loss_values,'-o')
+        plt.title('Train Loss')
+        plt.xlabel('N_epochs')
+        plt.ylabel('Loss')
+        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_train_loss'),format='png')
+        plt.close()
+        plt.plot(range(N_epochs),validation_loss_values, '-o')
+        plt.title('Validation Loss')
+        plt.xlabel('N_epochs')
+        plt.ylabel('Loss')
+        plt.savefig(os.path.join(save_path,"tick"+(str(lr))+'_val_loss'),format='png')
+        plt.close()
 
 
 
 
-def grad_check(model,requires_grad):
-    for parameter in model.classifier.parameters():
-        parameter.requires_grad_(requires_grad=requires_grad)
-    # for parameter in model.backbone.parameters():
-    #     parameter.requires_grad_(requires_grad=False)
+def grad_check(model,model_layers='Classifier'):
+    if model_layers=='Classifier':
+        for parameter in model.classifier.parameters():
+            parameter.requires_grad_(requires_grad=True)
+    else:
+        for parameter in model.parameters():
+            parameter.requires_grad_(requires_grad=True)
 
-# training(['model_pre_full'])
 
 if __name__ == "__main__":
+
     #training(['model_pre_full'],path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg')
     pass
