@@ -50,7 +50,7 @@ weight_decay=1e-4
 random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
-enable_vis=True 
+enable_vis=True
 N_epochs= 100 # 240 #Helst mange
 
 
@@ -226,8 +226,8 @@ def training(n_classes=3,model='Deep_lab',load_models=False,model_path='/Users/v
                           (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
-#                if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if (cur_itrs) % 1 == 0:
+                # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
+                if cur_epochs % np.floor(N_epochs/4) == 0:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),

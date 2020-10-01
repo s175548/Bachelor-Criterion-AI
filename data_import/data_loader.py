@@ -175,7 +175,6 @@ class DataLoader():
         empty = []
         for i in range(len(self.metadata_csv)):
             file_path = os.path.join(self.data_path, self.metadata_csv[i, 3][1:])
-            print(i,file_path)
             with open(file_path) as file:
                 content = file.read()
                 seg = json.loads(content)
