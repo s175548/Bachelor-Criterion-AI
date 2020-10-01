@@ -11,6 +11,8 @@ from PIL import Image
 from scipy import ndimage
 
 def check_mask(mask):
+    j = np.shape(mask)
+    np.save("Shape_j",j)
     return np.shape(mask)
 
 def convert_mask_to_bounding_box(mask):
@@ -24,7 +26,7 @@ def convert_mask_to_bounding_box(mask):
                 new_mask[i,j,0] = 0
             else:
                 new_mask[i,j,0] = 1
-    contours, hierarchy = cv2.findContours(new_mask[:,:,0].astype('uint8'), cv2.RETR_TREE,cv2.CHAIN_APPROX_TC89_L1)
+    contours, hierarchy = cv2.findContours(new_mask.astype('uint8'), cv2.RETR_TREE,cv2.CHAIN_APPROX_TC89_L1)
     bounding_box_mask = np.empty((new_mask.shape[0],new_mask.shape[1]))
     bounding_box_coordinates = []
 
