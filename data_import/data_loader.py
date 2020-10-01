@@ -152,7 +152,7 @@ class DataLoader():
 
     def get_target_dict(self,labels="Binary"):
         if labels == "Binary":
-            label_dict = {1:1,53:-1}
+            label_dict = {1:1,53:2}
         else:
             label_dict={}
             for i,label in enumerate(labels):
