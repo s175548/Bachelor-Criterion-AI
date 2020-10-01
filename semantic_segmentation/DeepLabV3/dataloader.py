@@ -10,7 +10,7 @@ import argparse,os,json,ast
 
 
 HPC =False
-Villads=False
+Villads=True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -65,8 +65,10 @@ if __name__ == "__main__":
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),
                    et.ExtToTensor(),
                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+
+
                                    std=[0.229, 0.224, 0.225])])
-    binary=False
+    binary=True
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
@@ -96,6 +98,6 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    training(n_classes=1, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
+    training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
     #training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = 'multi_class')
