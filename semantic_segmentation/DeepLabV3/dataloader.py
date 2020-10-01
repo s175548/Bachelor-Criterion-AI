@@ -17,6 +17,7 @@ if __name__ == "__main__":
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
 
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
         parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
@@ -30,6 +31,7 @@ if __name__ == "__main__":
         metadata_path=save_path = r'samples/model_comparison.csv'
         path_model = save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor '
         lr = 0.01
+        path_meta_data = r'samples/model_comparison.csv'
 
 
     else:
@@ -40,10 +42,11 @@ if __name__ == "__main__":
         path_mask = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_tickbite_vis_2_and_3'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
         lr = 0.01
+        path_meta_data = r'samples/model_comparison.csv'
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    data_loader = DataLoader(data_path=path_original_data)
+    data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
 
