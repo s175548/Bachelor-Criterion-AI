@@ -7,7 +7,7 @@ import collections
 import torch.utils.data as data
 import shutil
 import numpy as np
-from object_detect.get_bboxes import convert_mask_to_bounding_box
+from object_detect.get_bboxes import new_convert
 from PIL import Image
 
 
@@ -46,7 +46,7 @@ class LeatherData_BB(data.Dataset):
 
         mask = np.array(target)
         new_mask = cv2.resize(mask, (self.scale, self.scale))
-        bmask, bounding_box = convert_mask_to_bounding_box(new_mask)
+        bmask, bounding_box = new_convert(new_mask)
 
         return new_mask, bmask, bounding_box
 

@@ -8,7 +8,7 @@ import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.leather_data import LeatherData_BB
-from object_detect.helper.engine3 import train_one_epoch, evaluate
+from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -23,7 +23,7 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses):
+def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None):
     """ save final model
     """
     torch.save({
@@ -88,9 +88,9 @@ if __name__ == '__main__':
     scale = 512
     # Define dataloaders
     train_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                               list_of_filenames=file_names[:100],scale=scale,transform=transform_function)
+                               list_of_filenames=file_names[:10],scale=scale,transform=transform_function)
     val_dst = LeatherData_BB(path_mask=path_mask,path_img=path_img,
-                             list_of_filenames=file_names[146:162],scale=scale,transform=transform_function)
+                             list_of_filenames=file_names[146:152],scale=scale,transform=transform_function)
 
     train_loader = data.DataLoader(
        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
@@ -113,13 +113,14 @@ if __name__ == '__main__':
         lr_scheduler.step()
         print("\n Finished training for epoch!")
         # evaluate on the test dataset
-        coco, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
+        mAP, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
         print("\n Finished evaluation for epoch!")
-        checkpoint = coco.coco_eval['bbox'].stats[1]
+        checkpoint = mAP
         if checkpoint > best_map:
             best_map = checkpoint
 
     print("Risk was set to: ", risk)
-    checkpoint = coco.coco_eval['bbox'].stats[1]
-    save_model(model,"005",n_epochs=num_epoch,optimizer=optimizer,scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
-    print(checkpoint)
+    print("Best mAP overall: ", mAP)
+    #checkpoint = coco.coco_eval['bbox'].stats[1]
+    #save_model(model,"005",n_epochs=num_epoch,optimizer=optimizer,scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
+    #print(checkpoint)

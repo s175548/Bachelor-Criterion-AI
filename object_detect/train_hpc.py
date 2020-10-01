@@ -10,7 +10,7 @@ import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.leather_data_hpc import LeatherData_BB
-from object_detect.helper.engine_hpc import train_one_epoch, evaluate
+from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
