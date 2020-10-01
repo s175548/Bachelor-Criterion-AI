@@ -368,7 +368,7 @@ class ExtToTensor(object):
             Tensor: Converted image and label
         """
         if self.normalize:
-            return F.to_tensor(pic), torch.from_numpy( np.array( lbl, dtype=self.target_type)/225 )
+            return F.to_tensor(pic), torch.from_numpy( np.array( lbl, dtype=self.target_type))
         else:
             return torch.from_numpy( np.array( pic, dtype=np.float32).transpose(2, 0, 1) ), torch.from_numpy( np.array( lbl, dtype=self.target_type)/255 )
 

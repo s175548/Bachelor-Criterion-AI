@@ -152,12 +152,12 @@ class DataLoader():
 
     def get_target_dict(self,labels="Binary"):
         if labels == "Binary":
-            label_dict = {1:1,53:2}
+            label_dict = {1:1,53:-1}
         else:
             label_dict={}
             for i,label in enumerate(labels):
                 label_dict[self.annotations_dict[label]]=i+1
-            label_dict[53]=i+2
+            label_dict['Background']=-1
         return label_dict
 
 
@@ -236,15 +236,17 @@ class DataLoader():
         img=img.enhance(2.0)
         return np.array(img)
 
-def convert_to_image(self,pred,color_dict,target_dict,annotations_dict):
-    inv_target_dict = {v: k for k, v in target_dict.items()}
-    for key, value in inv_target_dict:
-        color_id = annotations_dict[key]
+def convert_to_image(pred,color_dict,target_dict):
+    rgb_pred = np.dstack((pred, pred, pred))
+    for key, value in target_dict.items():
+        print(key)
+        color_id = key
         color_map = color_dict[key]
+        print(color_map)
         index = pred == value
-        rgb_pred=np.dstack((pred,pred,pred))
-        rgb_pred[index, :] = rgb_pred[index, :] / color_id * color_map
-        return rgb_pred.astype(np.int8)
+        print(sum(index))
+        rgb_pred[index, :] = rgb_pred[index, :] / value * color_map
+    return rgb_pred
 
 
 def to_tensor_and_normalize(img):

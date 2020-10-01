@@ -14,7 +14,8 @@ from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 
-HPC = True
+HPC = False
+Villads=True
 if __name__ == "__main__":
     if HPC:
         save_path = r'/zhome/87/9/127623/BachelorProject/'
@@ -22,6 +23,13 @@ if __name__ == "__main__":
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
+    elif Villads:
+        path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
+        data_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
+        metadata_path=save_path = r'samples/model_comparison.csv'
+        path_model = save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor '
+
+
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
         path_model = save_path
@@ -34,8 +42,8 @@ if __name__ == "__main__":
 
     path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     data_loader = DataLoader(
-        data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
-        metadata_path=r'samples/model_comparison.csv')
+        data_path=data_path,
+        metadata_path=metadata_path)
 
     labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
@@ -49,14 +57,13 @@ if __name__ == "__main__":
     file_names=file_names[file_names != ".DS_S"]
 
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),
-                    et.ExtToTensor(),
-                    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225]),])
-
+                   et.ExtToTensor(),
+                   et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                                   std=[0.229, 0.224, 0.225])])
 
     color_dict=data_loader.color_dict
-
-    target_dict=data_loader.get_target_dict()
+    target_dict=data_loader.get_target_dict(labels)
+    annotations_dict=data_loader.annotations_dict
 
     train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.80)],
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
@@ -76,4 +83,5 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-  #  training(['model_pre_full'],path2=path2,val_loader=val_loader,train_loader=train_loader,train_dst=train_dst, val_dst=val_dst,model_path=path_model,save_path=save_path,lr=lr,train_images=train_img)
+
+    training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=0.01, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict)
