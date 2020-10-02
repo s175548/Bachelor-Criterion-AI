@@ -68,8 +68,6 @@ if __name__ == '__main__':
 
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
                          metadata_path=r'samples\model_comparison.csv')
-    vscores = data_loader.get_visibility_score()
-    visibility_scores = [3]
 
     #if type(visibility_scores) == list:
     #    with open(
