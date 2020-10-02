@@ -53,8 +53,8 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
 
 
-    #device = torch.device('cpu')
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cpu')
+    #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
     model = init_model(num_classes=2)
     model.to(device)

@@ -86,6 +86,7 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
         loss_list.append(loss_value)
         if not math.isfinite(loss_value):
             print("Loss is {}, stopping training".format(loss_value))
+            print("Target was: ", targets)
             print(loss_dict_reduced)
             sys.exit(1)
 
