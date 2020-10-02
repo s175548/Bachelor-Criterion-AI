@@ -50,8 +50,8 @@ if __name__ == '__main__':
     path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
     path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
 
-    batch_size = 8
-    val_batch_size = 8
+    batch_size = 16
+    val_batch_size = 16
     num_epoch = 1
 
     torch.manual_seed(2)
