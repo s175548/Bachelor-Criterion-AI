@@ -49,15 +49,6 @@ class LeatherData(data.Dataset):
         mask_for_bbox = Image.open(self.masks[index]).convert('L')
         img_index = index
 
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
-
-
-        if self.transform is not None:
-            target = Image.fromarray(target)
-            img, target = self.transform(img, target)
 
         if self.bbox == True:
             if self.transform is not None:
@@ -106,7 +97,15 @@ class LeatherData(data.Dataset):
                 print("bounding.. ", bounding_box)
             return img, targets, mask
 
+        for key,value in self.target_dict.items():
+            value=self.color_dict[key]
+            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
+            target[index,:]=self.target_dict[key]
 
+
+        if self.transform is not None:
+            target = Image.fromarray(target)
+            img, target = self.transform(img, target)
 
 
         return img, target[:,:,0]
