@@ -66,7 +66,8 @@ class LeatherData(data.Dataset):
             #shape = check_mask(mask=mask, name="SHAPE2")
             bmask, bounding_box = new_convert(mask)
             bboxes = []
-            if img_index == 947:
+            if img_index == 947 or img_index == 51 or img_index == 309:
+                print("id ", img_index)
                 print("Found one")
                 print("bounding.. ", bounding_box)
             for i in range(np.shape(bounding_box)[0]):
@@ -84,7 +85,7 @@ class LeatherData(data.Dataset):
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.ones((len(bboxes),), dtype=torch.int64)
-            if img_index == 947:
+            if img_index == 947 or img_index == 51 or img_index == 309:
                 print("boxes.. ", boxes)
                 print("labels.. ", labels)
             image_id = torch.tensor([img_index])
