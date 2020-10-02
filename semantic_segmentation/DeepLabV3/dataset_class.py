@@ -71,7 +71,7 @@ class LeatherData(data.Dataset):
                 print("Found one")
                 print("bounding.. ", bounding_box)
             for i in range(np.shape(bounding_box)[0]):
-                if bounding_box[i] == (0, 0, 256, 256):
+                if bounding_box[i] == (0, 0, 255, 255):
                     pass
                 else:
                     bboxes.append(bounding_box[i])
