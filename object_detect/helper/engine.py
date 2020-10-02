@@ -88,6 +88,7 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
             print("Loss is {}, stopping training".format(loss_value))
             print("Target was: ", targets)
             print(loss_dict_reduced)
+            sys.exit(1)
             for j in range(len(images)):
                 ld = model(images[j], targets[j])
                 l = sum(loss for loss in ld.values())
