@@ -60,8 +60,8 @@ if __name__ == '__main__':
 
     file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] != ".DS_S"])
     N_files = len(file_names)
-    shuffled_index = np.random.permutation(len(file_names))
-    file_names_img = file_names[shuffled_index]
+    #shuffled_index = np.random.permutation(len(file_names))
+    #file_names_img = file_names[shuffled_index]
     file_names = file_names[file_names != ".DS_S"]
 
     # Define dataloaders
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files * 0.80):],
                           transform=transform_function)
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
 
