@@ -3,7 +3,6 @@ from PIL import Image
 from torchvision import datasets, transforms
 from data_import.draw_contours import draw_contours2,extract_bounding_box_coords
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 
 
