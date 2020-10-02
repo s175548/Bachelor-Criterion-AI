@@ -205,7 +205,7 @@ def _onnx_heatmaps_to_keypoints(maps, maps_i, roi_map_width, roi_map_height,
     return xy_preds_i, end_scores_i
 
 
-@torch.jit._script_if_tracing
+#@torch.jit._script_if_tracing
 def _onnx_heatmaps_to_keypoints_loop(maps, rois, widths_ceil, heights_ceil,
                                      widths, heights, offset_x, offset_y, num_keypoints):
     xy_preds = torch.zeros((0, 3, int(num_keypoints)), dtype=torch.float32, device=maps.device)
@@ -366,7 +366,7 @@ def expand_boxes(boxes, scale):
     return boxes_exp
 
 
-@torch.jit.unused
+#@torch.jit.unused
 def expand_masks_tracing_scale(M, padding):
     # type: (int, int) -> float
     return torch.tensor(M + 2 * padding).to(torch.float32) / torch.tensor(M).to(torch.float32)
@@ -451,7 +451,7 @@ def _onnx_paste_mask_in_image(mask, box, im_h, im_w):
     return im_mask
 
 
-@torch.jit._script_if_tracing
+#@torch.jit._script_if_tracing
 def _onnx_paste_masks_in_image_loop(masks, boxes, im_h, im_w):
     res_append = torch.zeros(0, im_h, im_w)
     for i in range(masks.size(0)):
