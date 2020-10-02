@@ -30,6 +30,11 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     labels = torch.cat(labels, dim=0)
     regression_targets = torch.cat(regression_targets, dim=0)
     classification_loss = F.binary_cross_entropy(class_logits,labels)
+    if classification_loss == torch.isnan():
+        print("Found a NaN")
+        print("Labels was", labels)
+        print("Target ", regression_targets)
+        print("logits ", class_logits)
     #classification_loss = F.cross_entropy(class_logits, labels)
 
     # get indices that correspond to the regression targets for
