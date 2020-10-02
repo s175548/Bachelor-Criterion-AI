@@ -72,7 +72,7 @@ if __name__ == '__main__':
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn))
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
