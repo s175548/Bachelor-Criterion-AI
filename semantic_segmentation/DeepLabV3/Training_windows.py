@@ -222,7 +222,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_epochs % np.ceil(N_epochs/4) == 0:
+                if cur_epochs % np.ceil(N_epochs/4) == 0 or cur_epochs==1:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
