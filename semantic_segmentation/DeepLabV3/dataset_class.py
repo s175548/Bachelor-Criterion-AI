@@ -73,9 +73,9 @@ class LeatherData(data.Dataset):
                     bboxes.append(bounding_box[i])
 
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 0, 0))
+                bboxes.append((0, 0, 1, 1))
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
-                area = torch.zeros(1, dtype=torch.float32)
+                area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.ones(1, dtype=torch.int64)
             else:
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
