@@ -66,13 +66,15 @@ if __name__ == '__main__':
 
     # Define dataloaders
     train_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[:round(N_files * 0.80)],
+                            bbox=True,
                             transform=transform_function)
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files * 0.80):],
+                          bbox=True,
                           transform=transform_function)
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
