@@ -1,14 +1,14 @@
 """ Script by Johannes B. Reiche, inspired by: https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html """
 import torchvision, random
-from torch.utils import data
 import os, pickle
 import numpy as np
+from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
+from torch.utils import data
 import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.leather_data_hpc import LeatherData
-from object_detect.helper.engine import train_one_epoch, evaluate
+from object_detect.helper.engine import train_one_epoch2, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -38,7 +38,20 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
 
+HPC =False
+binary=True
+
 if __name__ == '__main__':
+    if HPC:
+        if binary:
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+        else:
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+        path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
+
 
     device = torch.device('cpu')
     #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -69,59 +82,61 @@ if __name__ == '__main__':
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
                          metadata_path=r'samples\model_comparison.csv')
 
-    #if type(visibility_scores) == list:
-    #    with open(
-    #           r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg',
-    #            'rb') as fp:
-    #        itemlist = np.array(pickle.load(fp))
+    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+
 
     torch.manual_seed(2)
     np.random.seed(2)
     random.seed(2)
-    file_names = np.array([img[:-4] for img in os.listdir(path_img)])
-    #itemlist=itemlist[file_names.astype(np.uint8)]
-    file_names=np.sort(file_names)[vscores[:100]]
-    N_files=len(file_names)
-    #shuffled_index=np.random.permutation(len(file_names))
-    #file_names_img=file_names[shuffled_index]
-    #file_names=file_names[file_names != ".DS_S"]
 
-    scale = 512
+    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] !="k"])
+    N_files=len(file_names)
+    shuffled_index=np.random.permutation(len(file_names))
+    file_names_img=file_names[shuffled_index]
+    file_names=file_names[file_names != ".DS_S"]
+
+    if binary:
+        color_dict = data_loader.color_dict_binary
+        target_dict = data_loader.get_target_dict()
+        annotations_dict = data_loader.annotations_dict
+
+    else:
+        color_dict= data_loader.color_dict
+        target_dict=data_loader.get_target_dict(labels)
+        annotations_dict=data_loader.annotations_dict
+
+    #scale = 512
     # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,
-                               list_of_filenames=file_names[:10],transform=transform_function)
-    val_dst = LeatherData(path_mask=path_mask,path_img=path_img,
-                             list_of_filenames=file_names[146:152],transform=transform_function)
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.05)],
+                            bbox=True,
+                            transform=transform_function,color_dict=color_dict,target_dict=target_dict)
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.95):],
+                          bbox=True,
+                          transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
-       train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
+       train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
+
     print("Train set: %d, Val set: %d" % (len(train_dst), len(val_dst)))
 
-    curr_loss_train = []
-    #curr_loss_val = []
     loss_train = []
-    #loss_val = []
     risk = True
     best_map = 0
     for epoch in range(num_epoch):
         print("About to train")
+        curr_loss_train = []
         # train for one epoch, printing every 10 iterations
-        model, loss, tbox_p, tbox = train_one_epoch(model, optimizer, train_loader, device, epoch,print_freq=2,loss_list=curr_loss_train,risk=risk)
+        model, loss, _, _ = train_one_epoch2(model, optimizer, train_loader, device, epoch, print_freq=5,
+                                             loss_list=curr_loss_train, risk=risk)
         loss_train.append(loss)
         # update the learning rate
         lr_scheduler.step()
-        print("\n Finished training for epoch!")
         # evaluate on the test dataset
-        mAP, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
-        print("\n Finished evaluation for epoch!")
+        mAP, vbox_p, vbox = evaluate(model, val_loader, device=device, N=epoch, risk=risk)
+
         checkpoint = mAP
         if checkpoint > best_map:
             best_map = checkpoint
-
-    print("Risk was set to: ", risk)
-    print("Best mAP overall: ", mAP)
-    #checkpoint = coco.coco_eval['bbox'].stats[1]
-    #save_model(model,"005",n_epochs=num_epoch,optimizer=optimizer,scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
-    #print(checkpoint)
+        print("Best mAP for epoch nr. {} : ".format(epoch), best_map)

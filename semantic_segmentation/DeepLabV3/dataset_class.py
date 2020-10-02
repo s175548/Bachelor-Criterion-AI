@@ -7,6 +7,8 @@ import shutil
 import numpy as np
 from data_import.masks_to_bounding_box import convert_mask_to_bounding_box
 from PIL import Image
+from object_detect.get_bboxes import new_convert
+import torch
 
 
 
@@ -14,7 +16,7 @@ from PIL import Image
 class LeatherData(data.Dataset):
 
     def __init__(self,
-                 path_mask,path_img,list_of_filenames,
+                 path_mask,path_img,list_of_filenames,bbox=False,
                  transform=None,color_dict=None,target_dict=None):
 
 
@@ -23,6 +25,7 @@ class LeatherData(data.Dataset):
         self.transform = transform
         self.color_dict=color_dict
         self.target_dict=target_dict
+        self.bbox = bbox
 
 
         file_names_mask=os.listdir(self.path_mask)
@@ -33,7 +36,7 @@ class LeatherData(data.Dataset):
         self.masks = [os.path.join(self.path_mask, x+ '_mask.png') for x in file_names]
         assert (len(self.images) == len(self.masks))
 
-    def __getitem__(self, index, bounding_box=False):
+    def __getitem__(self, index):
         """
         Args:
             index (int): Index
@@ -53,21 +56,39 @@ class LeatherData(data.Dataset):
             target = Image.fromarray(target)
             img, target = self.transform(img, target)
 
-        if bounding_box == True:
-            _, bounding_box = convert_mask_to_bounding_box(mask)
-            mask = np.array(target)
-            objs = np.unique(mask)
-            masks = mask == obj_ids[:, None, None]
-            num_objs = len(obj_ids)
-            boxes = torch.as_tensor(bounding_box, dtype=torch.float32)
-            labels = torch.ones((num_objs,), dtype=torch.int64)
-            if self.transform is not None:
-                img, target = self.transform(img, target)
+        if self.bbox == True:
+            mask = target.numpy()
+            #shape = check_mask(mask=mask, name="SHAPE2")
+            bmask, bounding_box = new_convert(mask)
+            bboxes = []
+            for i in range(np.shape(bounding_box)[0]):
+                if bounding_box[i] == (0, 0, 256, 256):
+                    pass
+                else:
+                    bboxes.append(bounding_box[i])
+
+            if len(bboxes) == 0:
+                bboxes.append((0, 0, 256, 256))
+                boxes = torch.as_tensor(bboxes, dtype=torch.float32)
+                area = torch.zeros(1, dtype=torch.float32)
+                labels = torch.zeros((len(bboxes),), dtype=torch.int64)
+            else:
+                boxes = torch.as_tensor(bboxes, dtype=torch.float32)
+                area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+                labels = torch.ones((len(bboxes),), dtype=torch.int64)
+
+            image_id = torch.tensor([index])
+            # suppose all instances are not crowd
+            iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
+
             targets = {}
             targets["boxes"] = boxes
             targets["labels"] = labels
-            targets["masks"] = masks
-            return img, targets
+            # targets["masks"] = tgt
+            targets["image_id"] = image_id
+            targets["area"] = area
+            targets["iscrowd"] = iscrowd
+            return img, targets, mask
 
 
 
