@@ -10,7 +10,7 @@ import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.leather_data_hpc import LeatherData
-from object_detect.helper.engine import train_one_epoch, evaluate
+from object_detect.helper.engine import train_one_epoch2, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -65,14 +65,14 @@ if __name__ == '__main__':
     file_names = file_names[file_names != ".DS_S"]
 
     # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                            list_of_filenames=file_names[:round(N_files * 0.80)], transform=transform_function)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                          list_of_filenames=file_names[round(N_files * 0.80):], transform=transform_function)
+    train_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[:round(N_files * 0.80)],
+                            transform=transform_function)
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files * 0.80):],
+                          transform=transform_function)
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=2)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=2, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=2, collate_fn=utils.collate_fn))
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             print("About to train")
             curr_loss_train = []
             # train for one epoch, printing every 10 iterations
-            model, loss, _, _ = train_one_epoch(model, optimizer, train_loader, device, epoch,print_freq=5,
+            model, loss, _, _ = train_one_epoch2(model, optimizer, train_loader, device, epoch,print_freq=5,
                                                         loss_list=curr_loss_train,risk=risk)
             loss_train.append(loss)
             # update the learning rate
