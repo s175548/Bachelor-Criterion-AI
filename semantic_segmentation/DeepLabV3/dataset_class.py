@@ -93,6 +93,9 @@ class LeatherData(data.Dataset):
             targets["image_id"] = image_id
             targets["area"] = area
             targets["iscrowd"] = iscrowd
+            if targets["labels"] == torch.zeros(1):
+                print("Found one")
+                print("bounding.. ", bounding_box)
             return img, targets, mask
 
 
