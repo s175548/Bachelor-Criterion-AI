@@ -7,7 +7,7 @@ from torch.utils import data
 import pickle
 import numpy as np
 import torch
-from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from object_detect.helper.engine import train_one_epoch2, evaluate
