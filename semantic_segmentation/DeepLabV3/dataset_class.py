@@ -45,6 +45,7 @@ class LeatherData(data.Dataset):
         """
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
+        #mask_for_bbox = Image.open(self.masks[index]).convert('L')
 
         for key,value in self.target_dict.items():
             value=self.color_dict[key]

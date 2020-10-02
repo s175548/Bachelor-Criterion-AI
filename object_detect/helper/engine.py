@@ -96,7 +96,7 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu.numpy() for i in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
@@ -148,7 +148,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu.numpy() for i in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
@@ -183,7 +183,6 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
-    cpu_device = torch.device("cpu")
     model.eval()
     path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -199,9 +198,9 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(images)
-        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+        outputs = [{k: v.to(device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
-        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu.numpy() for i in range(len(targets))]
 
         res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()

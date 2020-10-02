@@ -8,7 +8,7 @@ from torch.utils import data
 import torch
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.helper.engine import train_one_epoch2, evaluate
+from object_detect.helper.engine3 import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -53,8 +53,8 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
 
 
-    device = torch.device('cpu')
-    #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    #device = torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
     model = init_model(num_classes=2)
     model.to(device)
@@ -128,7 +128,7 @@ if __name__ == '__main__':
         print("About to train")
         curr_loss_train = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch2(model, optimizer, train_loader, device, epoch, print_freq=5,
+        model, loss, _, _ = train_one_epoch(model, optimizer, train_loader, device, epoch, print_freq=5,
                                              loss_list=curr_loss_train, risk=risk)
         loss_train.append(loss)
         # update the learning rate
