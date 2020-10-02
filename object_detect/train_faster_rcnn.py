@@ -36,7 +36,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     }, '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200)),et.ExtToTensor()])
 
 HPC =False
 binary=True
@@ -76,8 +76,8 @@ if __name__ == '__main__':
     path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
     path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
-    batch_size = 4
-    val_batch_size = 4
+    batch_size = 1
+    val_batch_size = 1
 
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
                          metadata_path=r'samples\model_comparison.csv')
@@ -107,10 +107,10 @@ if __name__ == '__main__':
 
     #scale = 512
     # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.05)],
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.015)],
                             bbox=True,
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.95):],
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.985):],
                           bbox=True,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 

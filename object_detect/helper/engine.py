@@ -49,7 +49,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 def get_samples(samples,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
-            boxes = p[i]['boxes'].detach().numpy()
+            boxes = p[i]['boxes'].detach().cpu().numpy()
             bmask = get_bbox_mask(mask=m[i], bbox=boxes)
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
@@ -96,7 +96,7 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].cpu.data.numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
@@ -148,7 +148,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].cpu.data.numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
@@ -200,7 +200,7 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         outputs = model(images)
         outputs = [{k: v.to(device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
-        ids = [targets[i]['image_id'].cpu.data.numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
 
         res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()

@@ -45,7 +45,9 @@ class LeatherData(data.Dataset):
         """
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
-        #mask_for_bbox = Image.open(self.masks[index]).convert('L')
+        img_for_bbox = Image.open(self.images[index]).convert('RGB')
+        mask_for_bbox = Image.open(self.masks[index]).convert('L')
+        img_index = index
 
         for key,value in self.target_dict.items():
             value=self.color_dict[key]
@@ -58,6 +60,8 @@ class LeatherData(data.Dataset):
             img, target = self.transform(img, target)
 
         if self.bbox == True:
+            if self.transform is not None:
+                img, target = self.transform(img_for_bbox, mask_for_bbox)
             mask = target.numpy()
             #shape = check_mask(mask=mask, name="SHAPE2")
             bmask, bounding_box = new_convert(mask)
@@ -78,7 +82,7 @@ class LeatherData(data.Dataset):
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.ones((len(bboxes),), dtype=torch.int64)
 
-            image_id = torch.tensor([index])
+            image_id = torch.tensor([img_index])
             # suppose all instances are not crowd
             iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
 

@@ -6,8 +6,7 @@ import numpy as np
 import torchvision.models.detection.mask_rcnn
 from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
-from object_detect.helper.coco_utils import get_coco_api_from_dataset
-from object_detect.helper.coco_eval import CocoEvaluator
+from object_detect.helper.evaluator import get_iou2, get_map2
 import object_detect.helper.utils as utils
 
 def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
@@ -50,7 +49,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 def get_samples(samples,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
-            boxes = p[i]['boxes'].detach().numpy()
+            boxes = p[i]['boxes'].detach().cpu().numpy()
             bmask = get_bbox_mask(mask=m[i], bbox=boxes)
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
@@ -97,9 +96,9 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
-        num_boxes.append([len(targets[i]['boxes']) for i in range(len(ids))])
-        num_boxes_pred.append([len(targets[i]['boxes']) for i in range(len(ids))])
+        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
+        #num_boxes.append([len(targets[i]['boxes']) for i in range(len(ids))])
+        #num_boxes_pred.append([len(targets[i]['boxes']) for i in range(len(ids))])
         if risk==True:
             if i == 0:
                 samples = []
@@ -132,51 +131,47 @@ def evaluate(model, data_loader, device,N,risk=True):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
-    cpu_device = torch.device("cpu")
     model.eval()
     path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
-    coco = get_coco_api_from_dataset(data_loader.dataset)
-    iou_types = _get_iou_types(model)
-    coco_evaluator = CocoEvaluator(coco, iou_types)
-
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     num_boxes_val = []
     num_boxes_pred = []
     i = 0
+    mAP = []
     for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in image)
-        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
+        targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
 
         torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(images)
-        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+        outputs = [{k: v.to(device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
-        ids = [targets[i]['image_id'].numpy() for i in range(len(targets))]
+        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
 
         res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
-        coco_evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
-
+        for j in range(len(ids)):
+            iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'], target=targets[j]['boxes'])
+            df, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou,
+                              threshold=0.5)
+            mAP.append(AP)
         samples = []
-        num_boxes_val.append([len(targets[i]['boxes']) for i in range(len(ids))])
-        num_boxes_pred.append([len(targets[i]['boxes']) for i in range(len(ids))])
+        num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+        num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
         samples.append((images, masks, targets, outputs))
-        if risk==True:
+        if risk == True:
             if i < 10:
-                get_samples(samples,ids,N=N,path_save=path_save,train=False)
-        #i+=1
+                get_samples(samples, ids, N=N, path_save=path_save, train=False)
+        i += 1
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
-    coco_evaluator.synchronize_between_processes()
-
+    print("mean Average Precision for epoch {}: ".format(N + 1), np.mean(mAP))
     # accumulate predictions from all images
-    coco_evaluator.accumulate()
-    coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
-    return coco_evaluator,np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
+    return np.mean(mAP), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes_val))
