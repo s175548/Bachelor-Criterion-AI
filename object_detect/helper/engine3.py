@@ -84,6 +84,19 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
 
         loss_value = losses_reduced.item()
         loss_list.append(loss_value)
+        for j in range(len(images)):
+            img = list(img for img in images)[j]
+            tar = list(tar for tar in targets)[j]
+            ld = model(img, tar)
+            l = sum(loss for loss in ld.values())
+            model(list(images[0]), list(targets[0]))
+            # reduce losses over all GPUs for logging purposes
+            ld_reduced = utils.reduce_dict(ld)
+            l_reduced = sum(loss for loss in ld_reduced.values())
+
+            l_value = l_reduced.item()
+            if not math.isfinite(l_value):
+                print("Failing target was: ", tar)
         if not math.isfinite(loss_value):
             print("Loss is {}, stopping training".format(loss_value))
             print(loss_dict_reduced)

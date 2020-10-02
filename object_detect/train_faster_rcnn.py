@@ -76,7 +76,7 @@ if __name__ == '__main__':
     path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
     path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
-    batch_size = 1
+    batch_size = 2
     val_batch_size = 1
 
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
