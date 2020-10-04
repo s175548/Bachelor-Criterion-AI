@@ -151,7 +151,7 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     for lr in learning_rates:
-        model_name = 'resnet50'
+        model_name = 'mobilenet'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
 
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                                                        gamma=0.5)
 
         loss_train = []
-        risk = False
+        risk = True
         best_map = 0
         for epoch in range(num_epoch):
             print("About to train")
