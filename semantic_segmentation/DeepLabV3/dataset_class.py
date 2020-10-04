@@ -7,7 +7,7 @@ import shutil
 import numpy as np
 from data_import.masks_to_bounding_box import convert_mask_to_bounding_box
 from PIL import Image
-from object_detect.get_bboxes import new_convert
+from object_detect.get_bboxes import new_convert, convert_mask_to_bbox
 import torch
 
 
@@ -55,7 +55,7 @@ class LeatherData(data.Dataset):
                 img, target = self.transform(img_for_bbox, mask_for_bbox)
             mask = target.numpy()
             #shape = check_mask(mask=mask, name="SHAPE2")
-            bmask, bounding_box = new_convert(mask)
+            bmask, bounding_box = convert_mask_to_bbox(mask)
             bboxes = []
             if img_index == 49 or img_index == 51 or img_index == 309:
                 print("id ", img_index)

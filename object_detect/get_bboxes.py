@@ -15,7 +15,7 @@ def check_mask(mask,name):
     np.save(name,j)
     return np.shape(mask)
 
-def convert_mask_to_bounding_box(mask):
+def convert_mask_to_bbox(mask):
     """input: mask
     output: bounding boxes
     """
