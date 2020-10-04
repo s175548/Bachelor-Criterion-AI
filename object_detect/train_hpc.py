@@ -6,7 +6,7 @@ import torchvision, random
 import os, pickle
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
-from data_import.data_loader import DataLoader
+#from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
@@ -92,15 +92,24 @@ if __name__ == '__main__':
 
     #learning_rates = [0.05, 0.005, 0.0005]
     learning_rates = [0.005]
-    #path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-    #path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
 
+    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+    path_meta_data = r'samples/model_comparison.csv'
     if binary:
+        from data_import.data_loader import DataLoader
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+        data_loader = DataLoader(data_path=path_original_data,
+                                 metadata_path=path_meta_data)
+        color_dict = data_loader.color_dict_binary
+        target_dict = data_loader.get_target_dict()
+        annotations_dict = data_loader.annotations_dict
     else:
-        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
-        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+        from torch.utils import data
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+        #path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+        #path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
 
@@ -118,8 +127,7 @@ if __name__ == '__main__':
     #file_names_img = file_names[shuffled_index]
     file_names = file_names[file_names != ".DS_S"]
 
-    data_loader = DataLoader(data_path=path_original_data,
-                         metadata_path=path_meta_data)
+
 
     labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
@@ -129,10 +137,6 @@ if __name__ == '__main__':
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
 
-    else:
-        color_dict= data_loader.color_dict
-        target_dict=data_loader.get_target_dict(labels)
-        annotations_dict=data_loader.annotations_dict
 
     # Define dataloaders
     train_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[:round(N_files * 0.80)],
@@ -141,9 +145,9 @@ if __name__ == '__main__':
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files * 0.80):],
                           bbox=True,
                           transform=transform_function)
-    train_loader = data.DataLoader(
+    train_loader = DataLoader(
         train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
-    val_loader = data.DataLoader(
+    val_loader = DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
