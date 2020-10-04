@@ -34,8 +34,8 @@ def define_model(num_classes,net):
         # output channels in a backbone. For mobilenet_v2, it's 1280
         # so we need to add it here
         backbone.out_channels = 1280
-    elif net == 'resnet':
-        backbone = torchvision.models.resnet50(pretrained=True)
+    elif net == 'resnet50':
+        backbone = init_model(num_classes=num_classes).backbone
         # FasterRCNN needs to know the number of
         # output channels in a backbone. For resnet50, it's 256
         # so we need to add it here
@@ -127,14 +127,21 @@ if __name__ == '__main__':
         batch_size = 10
         val_batch_size = 5
 
-        split = round(N_files * 0.8)
-        split_val = round(N_files * 0.8)
+        split = round(N_files * 0.1)
+        split_val = round(N_files * 0.9)
 
         device = torch.device('cpu')
 
     print("Device: %s" % device)
-    model = define_model(num_classes=2,net='mobilenet')
-    model.to(device)
+
+    model0 = init_model(num_classes=2)
+    model0.to(device)
+
+    model1 = define_model(num_classes=2,net='resnet50')
+    model1.to(device)
+
+    model2 = define_model(num_classes=2,net='mobilenet')
+    model2.to(device)
 
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
@@ -173,7 +180,7 @@ if __name__ == '__main__':
 
     #scale = 512
     # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[245:split],
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:split],
                             bbox=True,
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[split_val:],

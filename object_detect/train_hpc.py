@@ -17,8 +17,6 @@ import object_detect.helper.utils as utils
 
 def init_model(num_classes):
     #load a model pre-trained pre-trained on COCO
-    model = FastRCNNPredictor
-
     model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
     # replace the classifier with a new one, that has
     # num_classes which is user-defined
@@ -36,8 +34,8 @@ def define_model(num_classes,net):
         # output channels in a backbone. For mobilenet_v2, it's 1280
         # so we need to add it here
         backbone.out_channels = 1280
-    elif net == 'resnet':
-        backbone = torchvision.models.resnet50(pretrained=True)
+    elif net == 'resnet50':
+        backbone = init_model(num_classes=num_classes).backbone
         # FasterRCNN needs to know the number of
         # output channels in a backbone. For resnet50, it's 256
         # so we need to add it here
@@ -154,7 +152,7 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     for lr in learning_rates:
-        model_name = 'mobilenet'
+        model_name = 'resnet50'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
 
