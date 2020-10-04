@@ -93,8 +93,8 @@ if __name__ == '__main__':
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
 
-    batch_size = 16
-    val_batch_size = 16
+    batch_size = 8
+    val_batch_size = 8
     num_epoch = 10
 
     torch.manual_seed(2)
