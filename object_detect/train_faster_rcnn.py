@@ -1,4 +1,7 @@
 """ Script by Johannes B. Reiche, inspired by: https://pytorch.org/tutorials/intermediate/torchvision_tutorial.html """
+import sys, os
+sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
+
 import torchvision, random
 import os, pickle
 import numpy as np
@@ -6,14 +9,15 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
-from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor
+from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
+from torchvision.models.detection.rpn import AnchorGenerator
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.engine3 import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
     #load a model pre-trained pre-trained on COCO
-    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+    model = fasterrcnn_resnet50_fpn(pretrained=True)
     # replace the classifier with a new one, that has
     # num_classes which is user-defined
     num_classes = num_classes  # 1 class (person) + background
@@ -23,17 +27,67 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None):
+def define_model(num_classes,net):
+    if net == 'mobilenet':
+        backbone = torchvision.models.mobilenet_v2(pretrained=True).features
+        # FasterRCNN needs to know the number of
+        # output channels in a backbone. For mobilenet_v2, it's 1280
+        # so we need to add it here
+        backbone.out_channels = 1280
+    elif net == 'resnet':
+        backbone = torchvision.models.resnet50(pretrained=True)
+        # FasterRCNN needs to know the number of
+        # output channels in a backbone. For resnet50, it's 256
+        # so we need to add it here
+        backbone.out_channels = 256
+
+    # let's make the RPN generate 5 x 3 anchors per spatial
+    # location, with 5 different sizes and 3 different aspect
+    # ratios. We have a Tuple[Tuple[int]] because each feature
+    # map could potentially have different sizes and
+    # aspect ratios>
+    anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
+                                       aspect_ratios=((0.5, 1.0, 2.0),))
+
+    # let's define what are the feature maps that we will
+    # use to perform the region of interest cropping, as well as
+    # the size of the crop after rescaling.
+    # if your backbone returns a Tensor, featmap_names is expected to
+    # be [0]. More generally, the backbone should return an
+    # OrderedDict[Tensor], and in featmap_names you can choose which
+    # feature maps to use.
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
+                                                    output_size=7,
+                                                    sampling_ratio=2)
+
+    # put the pieces together inside a FasterRCNN model
+    model = FasterRCNN(backbone,min_size=180,max_size=360,
+                       num_classes=num_classes,
+                       rpn_anchor_generator=anchor_generator,
+                       box_roi_pool=roi_pooler)
+    return model
+
+def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,hpc=False):
     """ save final model
     """
-    torch.save({
-        "n_epochs": n_epochs,
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict(),
-        "scheduler_state": scheduler.state_dict(),
-        "best_score": best_score,
-        "train_losses": losses,
-    }, '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'+model_name+'.pt')
+    if hpc==False:
+        torch.save({
+            "n_epochs": n_epochs,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict(),
+            "best_score": best_score,
+            "train_losses": losses,
+        }, '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'+model_name+'.pt')
+    if hpc==True:
+        torch.save({
+            "n_epochs": n_epochs,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict(),
+            "best_score": best_score,
+            "train_losses": losses,
+        }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/' + model_name + '.pt')
     print("Model saved as "+model_name+'.pt')
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200)),et.ExtToTensor()])
@@ -51,12 +105,35 @@ if __name__ == '__main__':
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
+        num_epoch = 1
+        print_freq = 20
+        batch_size = 8
+        val_batch_size = 8
+        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != "k"])
+        N_files = len(file_names)
+        split = round(N_files * 0.80)
+        split_val = round(N_files * 0.80)
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
+    else:
+        path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
+        path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
 
-    device = torch.device('cpu')
-    #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != "k"])
+        N_files = len(file_names)
+        num_epoch = 1
+        print_freq = 10
+
+        batch_size = 10
+        val_batch_size = 5
+
+        split = round(N_files * 0.8)
+        split_val = round(N_files * 0.8)
+
+        device = torch.device('cpu')
+
     print("Device: %s" % device)
-    model = init_model(num_classes=2)
+    model = define_model(num_classes=2,net='mobilenet')
     model.to(device)
 
     # construct an optimizer
@@ -70,30 +147,19 @@ if __name__ == '__main__':
                                                    step_size=10,
                                                    gamma=0.1)
 
-    num_epoch = 1
-    print_freq = 10
-
-    path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
-    path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
-
-    batch_size = 2
-    val_batch_size = 1
-
     data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
                          metadata_path=r'samples\model_comparison.csv')
 
     labels=['Piega', 'Verruca', 'Puntura insetto','Background']
 
 
-    torch.manual_seed(2)
-    np.random.seed(2)
-    random.seed(2)
+    #torch.manual_seed(2)
+    #np.random.seed(2)
+    #random.seed(2)
 
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] !="k"])
-    N_files=len(file_names)
-    shuffled_index=np.random.permutation(len(file_names))
-    file_names_img=file_names[shuffled_index]
-    file_names=file_names[file_names != ".DS_S"]
+    #shuffled_index=np.random.permutation(len(file_names))
+    #file_names_img=file_names[shuffled_index]
+    #file_names=file_names[file_names != ".DS_S"]
 
     if binary:
         color_dict = data_loader.color_dict_binary
@@ -107,22 +173,22 @@ if __name__ == '__main__':
 
     #scale = 512
     # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:round(N_files*0.015)],
+    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[245:split],
                             bbox=True,
                             transform=transform_function,color_dict=color_dict,target_dict=target_dict)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[round(N_files*0.985):],
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[split_val:],
                           bbox=True,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
-       train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+       train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" % (len(train_dst), len(val_dst)))
 
     loss_train = []
-    risk = True
+    risk = False
     best_map = 0
     for epoch in range(num_epoch):
         print("About to train")

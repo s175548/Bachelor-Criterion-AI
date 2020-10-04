@@ -8,8 +8,7 @@ from torchvision.ops import boxes as box_ops
 
 from torchvision.ops import roi_align
 
-from torchvision.models.detection import _utils as det_utils
-
+from object_detect.helper import uutils as det_utils
 from torch.jit.annotations import Optional, List, Dict, Tuple
 
 
@@ -28,9 +27,18 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     """
 
     labels = torch.cat(labels, dim=0)
-    regression_targets = torch.cat(regression_targets, dim=0)
-    classification_loss = F.binary_cross_entropy(class_logits,labels)
-    if classification_loss == torch.isnan():
+    targets = labels.to(torch.float32)
+    m = torch.nn.Sigmoid()
+    if regression_targets == None:
+        her_er_jeg = 0
+
+    new_regression_targets = torch.cat(regression_targets, dim=0)
+    j = [class_logits[i] for i in range(len(class_logits))]
+    hj = [j[i][0] for i in range(len(class_logits))]
+    cl = torch.as_tensor(hj,dtype=torch.float32)
+    loss_func = torch.nn.BCELoss()
+    classification_loss = loss_func(m(cl),targets)
+    if torch.isnan(classification_loss) == True:
         print("Found a NaN")
         print("Labels was", labels)
         print("Target ", regression_targets)
@@ -44,10 +52,9 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     labels_pos = labels[sampled_pos_inds_subset]
     N, num_classes = class_logits.shape
     box_regression = box_regression.reshape(N, -1, 4)
-
     box_loss = det_utils.smooth_l1_loss(
         box_regression[sampled_pos_inds_subset, labels_pos],
-        regression_targets[sampled_pos_inds_subset],
+        new_regression_targets[sampled_pos_inds_subset],
         beta=1 / 9,
         size_average=False,
     )
@@ -619,7 +626,7 @@ class RoIHeads(torch.nn.Module):
 
     def check_targets(self, targets):
         # type: (Optional[List[Dict[str, Tensor]]]) -> None
-        assert targets is not None
+        #assert targets is not None
         assert all(["boxes" in t for t in targets])
         assert all(["labels" in t for t in targets])
         if self.has_mask():
@@ -631,7 +638,7 @@ class RoIHeads(torch.nn.Module):
                                 ):
         # type: (...) -> Tuple[List[Tensor], List[Tensor], List[Tensor], List[Tensor]]
         self.check_targets(targets)
-        assert targets is not None
+#        assert targets is not None
         dtype = proposals[0].dtype
         device = proposals[0].device
 
@@ -659,6 +666,8 @@ class RoIHeads(torch.nn.Module):
             matched_gt_boxes.append(gt_boxes_in_image[matched_idxs[img_id]])
 
         regression_targets = self.box_coder.encode(matched_gt_boxes, proposals)
+        if regression_targets == None:
+            her_er_jeg_ogs = 0
         return proposals, matched_idxs, labels, regression_targets
 
     def postprocess_detections(self,
@@ -748,6 +757,7 @@ class RoIHeads(torch.nn.Module):
             labels = None
             regression_targets = None
             matched_idxs = None
+            #proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
 
         box_features = self.box_roi_pool(features, proposals, image_shapes)
         box_features = self.box_head(box_features)
@@ -759,7 +769,7 @@ class RoIHeads(torch.nn.Module):
             assert labels is not None and regression_targets is not None
             loss_classifier, loss_box_reg = fastrcnn_loss(
                 class_logits, box_regression, labels, regression_targets)
-            if loss_classifier == torch.isnan():
+            if torch.isnan(loss_classifier) == True:
                 print("found losses")
                 print("logits ", class_logits)
                 print("box_regression ", box_regression)
@@ -778,12 +788,12 @@ class RoIHeads(torch.nn.Module):
                         "scores": scores[i],
                     }
                 )
-            loss_classifier, loss_box_reg = fastrcnn_loss(
-                class_logits, box_regression, labels, regression_targets)
-            losses = {
-                "loss_classifier": loss_classifier,
-                "loss_box_reg": loss_box_reg
-            }
+            #loss_classifier, loss_box_reg = fastrcnn_loss(
+            #    class_logits, box_regression, labels, regression_targets)
+            #losses = {
+            #    "loss_classifier": loss_classifier,
+            #    "loss_box_reg": loss_box_reg
+            #}
 
         if self.has_mask():
             mask_proposals = [p["boxes"] for p in result]

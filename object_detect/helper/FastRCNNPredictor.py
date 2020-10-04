@@ -334,8 +334,8 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
     if pretrained:
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
-    backbone = resnet_fpn_backbone('resnet50', pretrained_backbone, trainable_layers=trainable_backbone_layers)
-    model = FasterRCNN(backbone, num_classes, **kwargs)
+    backbone = resnet_fpn_backbone('resnet50', pretrained_backbone)
+    model = FasterRCNN(backbone, min_size=180, max_size=360, num_classes=num_classes, **kwargs)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'],
                                               progress=progress)
