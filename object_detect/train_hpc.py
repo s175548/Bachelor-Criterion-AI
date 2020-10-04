@@ -3,13 +3,15 @@ import sys, os
 sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
 
 import torchvision, random
-from torch.utils import data
-import pickle
+import os, pickle
 import numpy as np
+from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from data_import.data_loader import DataLoader
+from torch.utils import data
 import torch
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
+from torchvision.models.detection.rpn import AnchorGenerator
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from object_detect.helper.engine import train_one_epoch2, evaluate
 import object_detect.helper.utils as utils
 
@@ -81,6 +83,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     print("Model saved as "+model_name+'.pt')
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
+binary=True
 
 if __name__ == '__main__':
 
@@ -89,8 +92,17 @@ if __name__ == '__main__':
 
     #learning_rates = [0.05, 0.005, 0.0005]
     learning_rates = [0.005]
-    path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-    path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+    #path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+    #path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+
+    if binary:
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+    else:
+        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+    path_meta_data = r'samples/model_comparison.csv'
 
     batch_size = 8
     val_batch_size = 8
@@ -105,6 +117,22 @@ if __name__ == '__main__':
     #shuffled_index = np.random.permutation(len(file_names))
     #file_names_img = file_names[shuffled_index]
     file_names = file_names[file_names != ".DS_S"]
+
+    data_loader = DataLoader(data_path=path_original_data,
+                         metadata_path=path_meta_data)
+
+    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+
+
+    if binary:
+        color_dict = data_loader.color_dict_binary
+        target_dict = data_loader.get_target_dict()
+        annotations_dict = data_loader.annotations_dict
+
+    else:
+        color_dict= data_loader.color_dict
+        target_dict=data_loader.get_target_dict(labels)
+        annotations_dict=data_loader.annotations_dict
 
     # Define dataloaders
     train_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[:round(N_files * 0.80)],
@@ -153,6 +181,6 @@ if __name__ == '__main__':
             checkpoint = mAP
             if checkpoint > best_map:
                 best_map = checkpoint
-
+            print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
         save_model(model,"{}".format(lr),n_epochs=num_epoch,optimizer=optimizer,
                    scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
