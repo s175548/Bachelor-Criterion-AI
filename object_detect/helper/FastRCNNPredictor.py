@@ -4,6 +4,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
+import torchvision
 from torchvision.ops import misc as misc_nn_ops
 from torchvision.ops import MultiScaleRoIAlign
 
@@ -335,7 +336,16 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
         # no need to download the backbone if pretrained is set
         pretrained_backbone = False
     backbone = resnet_fpn_backbone('resnet50', pretrained_backbone)
-    model = FasterRCNN(backbone, min_size=180, max_size=360, num_classes=num_classes, **kwargs)
+    anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
+                                       aspect_ratios=((0.5, 1.0, 2.0),))
+    roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
+                                                    output_size=7,
+                                                    sampling_ratio=2)
+    #model = FasterRCNN(backbone, min_size=180, max_size=360, num_classes=num_classes, **kwargs)
+    model = FasterRCNN(backbone,min_size=180,max_size=360,
+                       num_classes=num_classes,
+                       rpn_anchor_generator=anchor_generator,
+                       box_roi_pool=roi_pooler)
     if pretrained:
         state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'],
                                               progress=progress)
