@@ -37,6 +37,9 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     hj = [j[i][0] for i in range(len(class_logits))]
     cl = torch.as_tensor(hj,dtype=torch.float32)
     loss_func = torch.nn.BCELoss()
+    print("Device cl is: ", cl.device)
+    print("Device target is: ", targets.device)
+    print("Device m(cl) is: ", m(cl).device)
     classification_loss = loss_func(m(cl),targets)
     if torch.isnan(classification_loss) == True:
         print("Found a NaN")
