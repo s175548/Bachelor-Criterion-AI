@@ -62,8 +62,21 @@ def define_model(num_classes, net):
                            box_roi_pool=roi_pooler)
 
     elif net == 'resnet50':
-        model = init_model(num_classes=num_classes)
-
+        resnet50 = init_model(num_classes=num_classes)
+        anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+        aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+        rpn_anchor_generator = AnchorGenerator(
+            anchor_sizes, aspect_ratios
+        )
+        rpn_head = RPNHead(
+                resnet50.backbone.out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
+        roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
+                                                        output_size=7,
+                                                        sampling_ratio=2)
+        model = FasterRCNN(resnet50.backbone, min_size=180, max_size=360,
+                           num_classes=num_classes,
+                           rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
+                           box_roi_pool=roi_pooler)
     return model
 
 def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None):
@@ -151,7 +164,7 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     for lr in learning_rates:
-        model_name = 'mobilenet'
+        model_name = 'resnet50'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
 
