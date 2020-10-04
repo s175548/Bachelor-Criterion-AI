@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
     batch_size = 16
     val_batch_size = 16
-    num_epoch = 10
+    num_epoch = 25
 
     torch.manual_seed(2)
     np.random.seed(2)
