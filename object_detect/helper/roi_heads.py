@@ -35,7 +35,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     new_regression_targets = torch.cat(regression_targets, dim=0)
     j = [class_logits[i] for i in range(len(class_logits))]
     hj = [j[i][0] for i in range(len(class_logits))]
-    cl = torch.as_tensor(hj,dtype=torch.float32)
+    cl = torch.as_tensor(hj,dtype=torch.float32, device=torch.device('cuda'))
     loss_func = torch.nn.BCELoss()
     print("Device cl is: ", cl.device)
     print("Device target is: ", targets.device)
