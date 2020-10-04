@@ -79,7 +79,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
         "scheduler_state": scheduler.state_dict(),
         "best_score": best_score,
         "train_losses": losses,
-    }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/'+model_name+'.pt')
+    }, '/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
@@ -89,15 +89,15 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
 
-    #learning_rates = [0.05, 0.005, 0.0005]
-    learning_rates = [0.005]
+    learning_rates = [0.05, 0.005, 0.0005]
+    #learning_rates = [0.005]
 
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
 
-    batch_size = 8
-    val_batch_size = 8
-    num_epoch = 1
+    batch_size = 16
+    val_batch_size = 16
+    num_epoch = 10
 
     torch.manual_seed(2)
     np.random.seed(2)
@@ -154,7 +154,8 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     for lr in learning_rates:
-        model = define_model(num_classes=2,net='mobilenet')
+        model_name = 'mobilenet'
+        model = define_model(num_classes=2,net=model_name)
         model.to(device)
 
         # construct an optimizer
@@ -187,5 +188,5 @@ if __name__ == '__main__':
             if checkpoint > best_map:
                 best_map = checkpoint
             print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
-        save_model(model,"{}".format(lr),n_epochs=num_epoch,optimizer=optimizer,
+        save_model(model,"{}_{}".format(model_name,lr),n_epochs=num_epoch,optimizer=optimizer,
                    scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
