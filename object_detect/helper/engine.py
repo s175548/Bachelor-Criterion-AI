@@ -220,8 +220,8 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
         for j in range(len(ids)):
-            iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'], target=targets[j]['boxes'])
-            df, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=0.5)
+            iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
+            df, AP = get_map2(outputs[j]['boxes'].cpu(), targets[j]['boxes'].cpu(), outputs[j]['scores'].cpu(), iou_list=selected_iou, threshold=0.5)
             mAP.append(AP)
         samples = []
         num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
