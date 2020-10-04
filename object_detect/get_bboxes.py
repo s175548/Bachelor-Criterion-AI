@@ -69,6 +69,16 @@ def new_convert(mask):
         xmax = np.max(pos[1])
         ymin = np.min(pos[0])
         ymax = np.max(pos[0])
+        if xmin == xmax:
+            if xmin < 254:
+                xmax += 1
+            else:
+                xmin -= 1
+        if ymin == ymax:
+            if ymin < 254:
+                ymax += 1
+            else:
+                ymin -= 1
         boxes.append([xmin, ymin, xmax, ymax])
 
     bounding_box_mask = np.empty((new_mask.shape[0], new_mask.shape[1]))
