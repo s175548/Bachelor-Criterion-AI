@@ -10,7 +10,7 @@ from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
-from torchvision.models.detection.rpn import AnchorGenerator
+from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.engine import train_one_epoch2, evaluate
 import object_detect.helper.utils as utils
