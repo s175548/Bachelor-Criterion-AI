@@ -48,7 +48,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
     # advanced indexing
-    sampled_pos_inds_subset = torch.where(labels > 0)[0]
+    sampled_pos_inds_subset = torch.where(labels.cpu() > 0)[0]
     labels_pos = labels[sampled_pos_inds_subset]
     N, num_classes = class_logits.shape
     box_regression = box_regression.reshape(N, -1, 4)
