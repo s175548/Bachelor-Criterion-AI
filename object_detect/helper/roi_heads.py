@@ -38,11 +38,11 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     cl = torch.as_tensor(hj,dtype=torch.float32, device=torch.device('cuda'))
     loss_func = torch.nn.BCELoss()
     classification_loss = loss_func(m(cl),targets)
-    if torch.isnan(classification_loss.detach().cpu()) == True:
-        print("Found a NaN")
-        print("Labels was", labels)
-        print("Target ", regression_targets)
-        print("logits ", class_logits)
+    #if torch.isnan(classification_loss.detach().cpu()) == True:
+    #    print("Found a NaN")
+    #    print("Labels was", labels)
+    #    print("Target ", regression_targets)
+    #    print("logits ", class_logits)
     #classification_loss = F.cross_entropy(class_logits, labels)
 
     # get indices that correspond to the regression targets for
