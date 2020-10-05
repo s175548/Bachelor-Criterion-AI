@@ -54,10 +54,10 @@ def get_samples(samples,model_name,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\{}_val_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_val_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\{}_train_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_train_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
 
 
@@ -109,19 +109,20 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
+        ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
-            if i == 0:
-                samples = []
-                model.eval()
-                outputs = model(images)
-                num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-                num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
-                model.train()
-                samples.append((images, masks, targets, outputs))
-                get_samples(samples,model_name,ids,N=epoch,path_save=path_save,train=True)
+            if i < 5:
+                if N % 5 == 0:
+                    samples = []
+                    model.eval()
+                    outputs = model(images)
+                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
+                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
+                    model.train()
+                    samples.append((images, masks, targets, outputs))
+                    get_samples(samples,model_name,ids,N=epoch,path_save=path_save,train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -165,13 +166,13 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
-            if i == 0:
+            if i < 5:
                 if N % 5 == 0:
                     samples = []
                     model.eval()
                     outputs = model(images)
-                    num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-                    num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
+                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
+                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                     model.train()
                     samples.append((images, masks, targets, outputs))
                     get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
