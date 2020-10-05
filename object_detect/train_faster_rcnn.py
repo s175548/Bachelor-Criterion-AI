@@ -138,7 +138,7 @@ if __name__ == '__main__':
         batch_size = 2
         val_batch_size = 2
 
-        split = round(N_files * 0.3)
+        split = round(N_files * 0.1)
         split_val = round(N_files * 0.9)
 
         #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -212,6 +212,7 @@ if __name__ == '__main__':
     loss_train = []
     risk = False
     best_map = 0
+    best_map2 = 0
     for epoch in range(num_epoch):
         print("About to train")
         curr_loss_train = []
@@ -222,9 +223,13 @@ if __name__ == '__main__':
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, vbox_p, vbox = evaluate(model, val_loader, device=device, N=epoch, risk=risk)
+        mAP, mAP2, vbox_p, vbox = evaluate(model, val_loader, device=device, N=epoch, risk=risk)
 
         checkpoint = mAP
         if checkpoint > best_map:
             best_map = checkpoint
+        if mAP2 > best_map2:
+            best_map2 = mAP2
         print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
+        print("Best mAP for scores for epoch nr. {} : ".format(epoch), best_map2)
+

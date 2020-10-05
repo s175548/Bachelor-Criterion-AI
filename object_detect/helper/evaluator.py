@@ -82,6 +82,8 @@ def get_iou2(boxes,target):
                 pass
             else:
                 new_iou_list[io] = 0
+    if len(new_iou_list)==0:
+        new_iou_list = np.append(new_iou_list, 0)
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,iou_list,threshold=0.5):
@@ -99,9 +101,14 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
     print("True labels[0]: ", true_labels[0])
     print("pred: ", pred)
     mAP = average_precision_score(true_labels[0],pred)
+    if len(scores) == 0:
+        scores2 = np.zeros(6)
+        mAP2 = average_precision_score(true_labels[0],scores2)
+    else:
+        mAP2 = average_precision_score(true_labels[0], scores)
     if np.isnan(mAP)==True:
         mAP = 0
-    return df, mAP
+    return df, mAP, mAP2
 
 def get_map(boxes,target,scores,iou_list,threshold=0.5):
     zipped = zip(scores.numpy(), boxes.numpy(), target.numpy())
