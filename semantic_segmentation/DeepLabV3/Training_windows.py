@@ -82,7 +82,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             else:
                 outputs = model(images)
 
-
+            print(outputs)
             # print(np.unique(labels))
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
@@ -90,7 +90,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
             preds = outputs.detach().max(dim=1)[1].cpu().numpy()
             targets = labels.cpu().numpy()
-
+            print(np.unique(targets))
 
             if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
                 ret_samples.append(

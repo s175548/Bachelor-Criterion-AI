@@ -14,13 +14,13 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 """
 
 def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores_no_include = [1],exclude_no_mask_crops=True,make_binary=True):
-    if visibility_scores != "All":
+    if visibility_scores_no_include != "All":
         visibility_idx=data_loader.get_visibility_score(visibility_scores_no_include)
         idx=visibility_idx
     if labels != "All":
         label_idx=data_loader.get_index_for_label(labels)
         idx=label_idx
-    if (labels != "All") and (visibility_scores != "All"):
+    if (labels != "All") and (visibility_scores_no_include != "All"):
         idx=np.setdiff1d(label_idx,visibility_idx)
 
     for i in idx:
@@ -62,12 +62,16 @@ Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
      # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    data_loader = DataLoader()
-   #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
-    import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
-    #import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_tickbite_vis_2_and_3",visibility_scores=[2,3],labels=['Puntura insetto','Background'],make_binary=True)
+    #data_loader = DataLoader()
+    data_loader = DataLoader(
+         data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+         metadata_path=r'samples/model_comparison.csv')
+
+#import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
+    #import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
+    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
      
-    #data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+ #   data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
      #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[1,2,3],labels=['Puntura insetto','Background'],make_binary=True)
      #import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Puntura insetto','Background'],make_binary=True)
 #    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_30_09",visibility_scores=[2,3],labels=['Puntura insetto'])
