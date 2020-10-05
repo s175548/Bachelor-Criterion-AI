@@ -51,7 +51,7 @@ random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100 # 240 #Helst mange
+N_epochs= 5 # 240 #Helst mange
 
 
 
@@ -87,7 +87,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
             preds = outputs.detach().max(dim=1)[1].cpu().numpy()
             targets = labels.cpu().numpy()
-            print(np.unique(targets))
 
             if ret_samples_ids is not None and i in ret_samples_ids:  # get vis samples
                 ret_samples.append(

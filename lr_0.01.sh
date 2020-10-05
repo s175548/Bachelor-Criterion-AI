@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/DeepLabV3/dataloader.py 0.01
+python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01
 echo "Done"
