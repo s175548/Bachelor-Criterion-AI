@@ -13,20 +13,22 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores_no_include = [1],exclude_no_mask_crops=True,make_binary=True):
-    if visibility_scores_no_include != "All":
-        visibility_idx=data_loader.get_visibility_score(visibility_scores_no_include)
+def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True):
+    if visibility_scores!= "All":
+        visibility_idx=data_loader.get_visibility_score(visibility_scores)
         idx=visibility_idx
     if labels != "All":
         label_idx=data_loader.get_index_for_label(labels)
         idx=label_idx
-    if (labels != "All") and (visibility_scores_no_include != "All"):
-        idx=np.setdiff1d(label_idx,visibility_idx)
-
+    if (labels != "All") and (visibility_scores != "All"):
+        idx=np.intersect1d(label_idx,visibility_idx)
+    int_list=np.empty(0)
     for i in idx:
         i = int(i)
         img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary)
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
+        mask_unique=np.unique(mask)
+        int_list=np.append(int_list,mask_unique)
         for k in range(len(img_crops)):
             if exclude_no_mask_crops:
                 if list(np.setdiff1d(np.unique(mask_crops[k]),[0,121,  98,  62]))==[]:
@@ -37,23 +39,9 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores_no
                     im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
                     mask_pil = Image.fromarray(mask_crops[k])
                     mask_pil.save( os.path.join( path, str(i)+"_"+str(k) + '_mask.png') )
-
-        # bounding_boxes = [convert_mask_to_bounding_box(mask_crops[i]) for i in range(len(mask_crops))]
-
-        #Add whitening, random crop, flip
+    print(np.unique(int_list))
 
 
-
-
-
-    #     os.chdir(directory_path)
-    #     img2 = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)  # cv2 has BGR channels, and Pillow has RGB channels, so they are transformed here
-    #     im_pil = Image.fromarray(img2)
-    #     im_pil.save(str(i)+".jpg")
-    #     os.chdir(r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_mask')
-    #     _, binary = cv2.threshold(mask * 255, 225, 255, cv2.THRESH_BINARY_INV)
-    #     mask_pil = Image.fromarray(binary)
-    #     mask_pil.convert('RGB').save(str(i)+'_mask.png')
 
 
 """TO DO:
