@@ -13,7 +13,7 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True):
+def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True):
     if visibility_scores!= "All":
         visibility_idx=data_loader.get_visibility_score(visibility_scores)
         idx=visibility_idx
@@ -22,13 +22,16 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
         idx=label_idx
     if (labels != "All") and (visibility_scores != "All"):
         idx=np.intersect1d(label_idx,visibility_idx)
-    int_list=np.empty(0)
+    if idx_to_consider != 'All':
+        idx = np.intersect1d(idx_to_consider, idx)
+
+
+
+
     for i in idx:
         i = int(i)
         img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary)
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
-        mask_unique=np.unique(mask)
-        int_list=np.append(int_list,mask_unique)
         for k in range(len(img_crops)):
             if exclude_no_mask_crops:
                 if list(np.setdiff1d(np.unique(mask_crops[k]),[0,121,  98,  62]))==[]:
@@ -39,7 +42,7 @@ def import_data_and_mask(data_loader,labels="All",path=None,visibility_scores = 
                     im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
                     mask_pil = Image.fromarray(mask_crops[k])
                     mask_pil.save( os.path.join( path, str(i)+"_"+str(k) + '_mask.png') )
-    print(np.unique(int_list))
+
 
 
 
