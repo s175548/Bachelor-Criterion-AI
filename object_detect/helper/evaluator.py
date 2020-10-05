@@ -102,7 +102,7 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
     print("pred: ", pred)
     mAP = average_precision_score(true_labels[0],pred)
     if len(scores) == 0:
-        scores2 = np.zeros(6)
+        scores2 = np.zeros(len(true_labels[0]))
         mAP2 = average_precision_score(true_labels[0],scores2)
     else:
         mAP2 = average_precision_score(true_labels[0], scores)
