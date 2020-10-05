@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     overall_best = 0
     for lr in learning_rates:
-        model_name = 'mobilenet'
+        model_name = 'resnet50'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)
