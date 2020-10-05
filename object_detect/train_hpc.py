@@ -105,8 +105,6 @@ if __name__ == '__main__':
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
 
-    batch_size = 16
-    val_batch_size = 16
 
     torch.manual_seed(2)
     np.random.seed(2)
@@ -122,8 +120,8 @@ if __name__ == '__main__':
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
-        batch_size = 2
-        val_batch_size = 2
+        batch_size = 4
+        val_batch_size = 4
         num_epoch = 50
 
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
