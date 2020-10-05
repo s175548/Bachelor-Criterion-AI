@@ -118,7 +118,7 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         num_epoch = 1
         print_freq = 20
-        batch_size = 8
+        batch_size = 2
         val_batch_size = 8
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != "k"])
         N_files = len(file_names)
@@ -141,7 +141,7 @@ if __name__ == '__main__':
         split = round(N_files * 0.1)
         split_val = round(N_files * 0.9)
 
-        device = torch.device('cpu')
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     print("Device: %s" % device)
 

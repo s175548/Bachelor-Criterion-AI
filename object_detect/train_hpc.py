@@ -201,8 +201,9 @@ if __name__ == '__main__':
             if checkpoint > best_map:
                 best_map = checkpoint
             print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
+        save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
     if overall_best < best_map:
         overall_best = best_map
     print("Overall best is: ", overall_best, " for learning rate: ", lr)
-        save_model(model,"{}_{}".format(model_name,lr),n_epochs=num_epoch,optimizer=optimizer,
-                   scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
+
