@@ -46,7 +46,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
     return classification_loss, box_loss
 
-def get_samples(samples,ids,N,path_save,model_name,train=True):
+def get_samples(samples,model_name,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             boxes = p[i]['boxes'].detach().cpu().numpy()
