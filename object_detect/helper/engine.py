@@ -68,7 +68,7 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
     i = 0
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
@@ -237,7 +237,7 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
-    print("mean Average Precision for epoch {}: ".format(N+1), np.mean(mAP))
+    print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
     # accumulate predictions from all images
     torch.set_num_threads(n_threads)
     return np.mean(mAP),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
