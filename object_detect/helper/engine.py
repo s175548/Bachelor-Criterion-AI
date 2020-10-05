@@ -89,18 +89,6 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
             print("Target was: ", targets)
             print(loss_dict_reduced)
             sys.exit(1)
-            for j in range(len(images)):
-                ld = model(images[j], targets[j])
-                l = sum(loss for loss in ld.values())
-
-                # reduce losses over all GPUs for logging purposes
-                ld_reduced = utils.reduce_dict(ld)
-                l_reduced = sum(loss for loss in ld_reduced.values())
-
-                l_value = l_reduced.item()
-                if not math.isfinite(l_value):
-                    print("Failing target was: ", tar)
-            sys.exit(1)
 
         optimizer.zero_grad()
         losses.backward()
@@ -110,8 +98,7 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
             lr_scheduler.step()
 
         ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
-        #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-        #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+
         if risk==True:
             if i < 5:
                 if epoch % 5 == 0:
