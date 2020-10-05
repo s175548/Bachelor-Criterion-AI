@@ -39,7 +39,6 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     loss_func = torch.nn.BCELoss()
     classification_loss = loss_func(m(cl),targets)
     #if torch.isnan(classification_loss.detach().cpu()) == True:
-    #    print("Found a NaN")
     #    print("Labels was", labels)
     #    print("Target ", regression_targets)
     #    print("logits ", class_logits)
