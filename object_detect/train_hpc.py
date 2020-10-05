@@ -100,7 +100,7 @@ if __name__ == '__main__':
     print("Device: %s" % device)
 
     #learning_rates = [0.01, 0.001, 0.0001]
-    learning_rates = [0.005]
+    learning_rates = [0.001]
 
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'

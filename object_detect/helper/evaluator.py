@@ -110,6 +110,7 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
         print("boxes: ", boxes)
         print("targets: ", target)
         print("iou: ", iou_list)
+        print("scores: ", scores)
     return df, mAP, mAP2
 
 def get_map(boxes,target,scores,iou_list,threshold=0.5):
