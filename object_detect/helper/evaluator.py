@@ -93,6 +93,9 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
     pred = np.ones((len(true_labels[0])))
     df.insert(2,"Precision", prec,True)
     df.insert(3,"Recall", rec,True)
+    print("True labels: ", true_labels)
+    print("True labels[0]: ", true_labels[0])
+    print("pred: ", pred)
     mAP = average_precision_score(true_labels[0],pred)
     if np.isnan(mAP)==True:
         mAP = 0
