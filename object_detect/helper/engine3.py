@@ -152,6 +152,7 @@ def evaluate(model, data_loader, device,N,risk=True):
     num_boxes_pred = []
     i = 0
     mAP = []
+    mAP2 = []
     for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in image)
         targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
@@ -169,9 +170,10 @@ def evaluate(model, data_loader, device,N,risk=True):
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
         for j in range(len(ids)):
             iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'], target=targets[j]['boxes'])
-            df, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou,
+            df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou,
                               threshold=0.5)
             mAP.append(AP)
+            mAP2.append(AP2)
         samples = []
         num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
@@ -185,6 +187,7 @@ def evaluate(model, data_loader, device,N,risk=True):
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
     print("mean Average Precision for epoch {}: ".format(N + 1), np.mean(mAP))
+    print("mean Average Precision for scores for epoch {}: ".format(N + 1), np.mean(mAP2))
     # accumulate predictions from all images
     torch.set_num_threads(n_threads)
-    return np.mean(mAP), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes_val))
+    return np.mean(mAP), np.mean(mAP2), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes_val))

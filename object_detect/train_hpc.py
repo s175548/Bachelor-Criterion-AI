@@ -170,7 +170,9 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     overall_best = 0
+    overall_best2 = 0
     best_lr = 0
+    best_lr2 = 0
     model_names = ['mobilenet', 'resnet50']
     for lr in learning_rates:
         model_name = model_names[1]
@@ -193,6 +195,7 @@ if __name__ == '__main__':
         loss_train = []
         risk = True
         best_map = 0
+        best_map2 = 0
         avg_pred_box = []
         avg_target_box = []
         for epoch in range(num_epoch):
@@ -207,7 +210,7 @@ if __name__ == '__main__':
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
-            mAP, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch+1,risk=risk)
+            mAP, mAP2, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch+1,risk=risk)
 
             checkpoint = mAP
             if checkpoint > best_map:
@@ -215,6 +218,9 @@ if __name__ == '__main__':
                 print("Best mAP: ", best_map," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
                 print("Average nr. of predicted boxes: ", avg_pred_box[-1])
                 print("Actual average nr. of boxes: ", avg_target_box[-1])
+            if mAP2 > best_map2:
+                best_map2 = mAP2
+                print("Best mAP with scores: ", best_map2," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
         save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
         print("Average nr. of predicted boxes: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
@@ -223,4 +229,8 @@ if __name__ == '__main__':
         overall_best = best_map
         best_lr = lr
     print("Overall best is: ", overall_best, " for learning rate: ", best_lr, "model ", model_name)
+    if overall_best2 < best_map2:
+        overall_best2 = best_map2
+        best_lr2 = lr
+    print("Overall best with scores is: ", overall_best2, " for learning rate: ", best_lr2, "model ", model_name)
 
