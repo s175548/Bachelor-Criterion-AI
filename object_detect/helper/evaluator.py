@@ -84,7 +84,7 @@ def get_iou2(boxes,target):
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,iou_list,threshold=0.5):
-    sc = np.sort(scores.numpy())
+    sc = np.sort(scores.cpu())
     df = pd.DataFrame(sc,columns=["Scores"])
     true_labels = [iou_list >= threshold]
     df.insert(1,"Correct?",true_labels[0],True)
