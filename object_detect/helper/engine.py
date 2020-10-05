@@ -114,7 +114,7 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
             if i < 5:
-                if N % 5 == 0:
+                if epoch % 5 == 0:
                     samples = []
                     model.eval()
                     outputs = model(images)
