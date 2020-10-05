@@ -133,7 +133,7 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
     model.train()
     lr_scheduler = None
     i = 0
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in data_loader:
@@ -166,14 +166,15 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
             if i == 0:
-                samples = []
-                model.eval()
-                outputs = model(images)
-                num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-                num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
-                model.train()
-                samples.append((images, masks, targets, outputs))
-                get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
+                if N % 5 == 0:
+                    samples = []
+                    model.eval()
+                    outputs = model(images)
+                    num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
+                    num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
+                    model.train()
+                    samples.append((images, masks, targets, outputs))
+                    get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
         i+=1
         print(loss_dict_reduced)
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
@@ -197,7 +198,7 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
     model.eval()
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     num_boxes_val = []
@@ -229,7 +230,8 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         samples.append((images, masks, targets, outputs))
         if risk==True:
             if i < 10:
-                get_samples(samples,ids,N=N,path_save=path_save,train=False)
+                if N % 5 == 0:
+                    get_samples(samples,ids,N=N,path_save=path_save,train=False)
         i+=1
 
     # gather the stats from all processes

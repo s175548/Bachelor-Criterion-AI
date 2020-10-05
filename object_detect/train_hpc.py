@@ -107,7 +107,7 @@ if __name__ == '__main__':
 
     batch_size = 16
     val_batch_size = 16
-    num_epoch = 25
+    num_epoch = 10
 
     torch.manual_seed(2)
     np.random.seed(2)
@@ -163,10 +163,13 @@ if __name__ == '__main__':
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
+    overall_best = 0
     for lr in learning_rates:
-        model_name = 'resnet50'
+        model_name = 'mobilenet'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
+        print("Model: ", model_name)
+        print("Learning rate: ", lr)
 
         # construct an optimizer
         params = [p for p in model.parameters() if p.requires_grad]
@@ -198,5 +201,8 @@ if __name__ == '__main__':
             if checkpoint > best_map:
                 best_map = checkpoint
             print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
+    if overall_best < best_map:
+        overall_best = best_map
+    print("Overall best is: ", overall_best, " for learning rate: ", lr)
         save_model(model,"{}_{}".format(model_name,lr),n_epochs=num_epoch,optimizer=optimizer,
                    scheduler=lr_scheduler,best_score=best_map,losses=loss_train)
