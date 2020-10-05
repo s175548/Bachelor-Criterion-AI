@@ -99,8 +99,8 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
 
-    learning_rates = [0.01, 0.001, 0.0001, 0.00001]
-    #learning_rates = [0.005]
+    #learning_rates = [0.01, 0.001, 0.0001]
+    learning_rates = [0.005]
 
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'

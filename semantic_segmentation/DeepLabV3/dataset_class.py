@@ -62,14 +62,16 @@ class LeatherData(data.Dataset):
                     pass
                 if bounding_box[i] == (0, 0, 256, 256):
                     pass
+                if bounding_box[i] == (0, 0, 200, 200):
+                    pass
                 else:
                     bboxes.append(bounding_box[i])
 
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 2, 2))
+                bboxes.append((0, 0, 200, 200))
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-                labels = torch.ones(1, dtype=torch.int64)
+                labels = torch.zeros(1, dtype=torch.int64)
             else:
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
@@ -77,7 +79,6 @@ class LeatherData(data.Dataset):
             image_id = torch.tensor([img_index])
             # suppose all instances are not crowd
             iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
-
             targets = {}
             targets["boxes"] = boxes
             targets["labels"] = labels

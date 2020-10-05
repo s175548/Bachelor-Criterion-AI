@@ -101,12 +101,12 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
         }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/' + model_name + '.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200)),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 
 HPC =False
-binary=False
+binary=True
 multi=False
-tick_bite=True
+tick_bite=False
 if __name__ == '__main__':
     if HPC:
         if binary:
@@ -128,7 +128,30 @@ if __name__ == '__main__':
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     else:
         if binary:
-            pass
+            path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+            path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+            data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
+                                     metadata_path=r'samples\model_comparison.csv')
+            color_dict = data_loader.color_dict_binary
+            target_dict = data_loader.get_target_dict()
+            annotations_dict = data_loader.annotations_dict
+            batch_size = 8
+            val_batch_size = 8
+            num_epoch = 5
+
+            file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
+            N_files = len(file_names)
+            shuffled_index = np.random.permutation(len(file_names))
+            file_names_img = file_names[shuffled_index]
+
+            train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                                    list_of_filenames=file_names[:round(N_files * 0.80)],
+                                    bbox=True,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                                  list_of_filenames=file_names[round(N_files * 0.80):],
+                                  bbox=True,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         elif multi:
             pass
         else:
@@ -192,7 +215,7 @@ if __name__ == '__main__':
     overall_best2 = 0
     best_lr = 0
     best_lr2 = 0
-    model_names = ['mobilenet', 'resnet50']
+    model_names = ['resnet50']
     lr = 0.005
     for model_name in model_names:
         model = define_model(num_classes=2, net=model_name)
