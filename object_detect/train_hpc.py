@@ -203,7 +203,7 @@ if __name__ == '__main__':
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
-            mAP, vbox_p, vbox = evaluate(model, val_loader, device=device,N=epoch,risk=risk)
+            mAP, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch,risk=risk)
 
             checkpoint = mAP
             if checkpoint > best_map:
