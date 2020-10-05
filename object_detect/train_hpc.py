@@ -124,7 +124,7 @@ if __name__ == '__main__':
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
 
-        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-5] != 'k'])
+        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
         # shuffled_index = np.random.permutation(len(file_names))
         # file_names_img = file_names[shuffled_index]
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     overall_best = 0
     for lr in learning_rates:
-        model_name = 'resnet50'
+        model_name = 'mobilenet'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)
