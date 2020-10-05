@@ -173,7 +173,7 @@ if __name__ == '__main__':
     best_lr = 0
     model_names = ['mobilenet', 'resnet50']
     for lr in learning_rates:
-        model_name = model_names[1]
+        model_name = model_names[0]
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)
@@ -193,13 +193,17 @@ if __name__ == '__main__':
         loss_train = []
         risk = True
         best_map = 0
+        avg_pred_box = []
+        avg_target_box = []
         for epoch in range(num_epoch):
             print("About to train")
             curr_loss_train = []
             # train for one epoch, printing every 10 iterations
-            model, loss, _, _ = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=20,
+            model, loss, pred_box, target_box = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=20,
                                                         loss_list=curr_loss_train,risk=risk)
             loss_train.append(loss)
+            avg_pred_box.append(pred_box)
+            avg_target_box.append(target_box)
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
@@ -209,8 +213,12 @@ if __name__ == '__main__':
             if checkpoint > best_map:
                 best_map = checkpoint
                 print("Best mAP: ", best_map," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
+                print("Average nr. of predicted boxes: ", avg_pred_box[-1])
+                print("Actual average nr. of boxes: ", avg_target_box[-1])
         save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
+        print("Average nr. of predicted boxes: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
+        print("Actual average nr. of boxes: ", avg_target_box[-1])
     if overall_best < best_map:
         overall_best = best_map
         best_lr = lr
