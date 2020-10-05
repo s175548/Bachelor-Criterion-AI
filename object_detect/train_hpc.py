@@ -171,6 +171,7 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     overall_best = 0
+    best_lr = 0
     model_names = ['mobilenet', 'resnet50']
     for lr in learning_rates:
         model_name = model_names[0]
@@ -213,5 +214,6 @@ if __name__ == '__main__':
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
     if overall_best < best_map:
         overall_best = best_map
-    print("Overall best is: ", overall_best, " for learning rate: ", lr, "model ", model_name)
+        best_lr = lr
+    print("Overall best is: ", overall_best, " for learning rate: ", best_lr, "model ", model_name)
 
