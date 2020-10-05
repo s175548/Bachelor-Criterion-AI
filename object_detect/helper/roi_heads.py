@@ -27,28 +27,23 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
     """
 
     labels = torch.cat(labels, dim=0)
-    targets = labels.to(torch.float32)
-    m = torch.nn.Sigmoid()
+    targets = labels.to(torch.long)
     if regression_targets == None:
         her_er_jeg = 0
 
     new_regression_targets = torch.cat(regression_targets, dim=0)
-    j = [class_logits[i] for i in range(len(class_logits))]
-    hj = [j[i][0] for i in range(len(class_logits))]
-    cl = torch.as_tensor(hj,dtype=torch.float32, device=torch.device('cuda'))
-    loss_func = torch.nn.BCELoss()
-    classification_loss = loss_func(m(cl),targets)
-    if torch.isnan(classification_loss.detach().cpu()) == True:
-        print("Found a NaN")
-        print("Labels was", labels)
-        print("Target ", regression_targets)
-        print("logits ", class_logits)
+    loss_func = torch.nn.CrossEntropyLoss()
+    classification_loss = loss_func(class_logits,targets)
+    #if torch.isnan(classification_loss.detach().cpu()) == True:
+    #    print("Labels was", labels)
+    #    print("Target ", regression_targets)
+    #    print("logits ", class_logits)
     #classification_loss = F.cross_entropy(class_logits, labels)
 
     # get indices that correspond to the regression targets for
     # the corresponding ground truth labels, to be used with
     # advanced indexing
-    sampled_pos_inds_subset = torch.where(labels > 0)[0]
+    sampled_pos_inds_subset = torch.where(labels.detach().cpu() > 0)[0]
     labels_pos = labels[sampled_pos_inds_subset]
     N, num_classes = class_logits.shape
     box_regression = box_regression.reshape(N, -1, 4)

@@ -44,7 +44,8 @@ def get_iou2(boxes,target):
     i = 0
     index_list = []
     bbox_index = 0
-
+    print("boxes: ", boxes)
+    print("targets: ", target)
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
@@ -84,8 +85,9 @@ def get_iou2(boxes,target):
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,iou_list,threshold=0.5):
-    sc = np.sort(scores.numpy())
+    sc = np.sort(scores.cpu())
     df = pd.DataFrame(sc,columns=["Scores"])
+    print("iou_list: ", iou_list)
     true_labels = [iou_list >= threshold]
     df.insert(1,"Correct?",true_labels[0],True)
     df.insert(2,"IoU {}".format(threshold),iou_list,True)
@@ -93,6 +95,9 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
     pred = np.ones((len(true_labels[0])))
     df.insert(2,"Precision", prec,True)
     df.insert(3,"Recall", rec,True)
+    print("True labels: ", true_labels)
+    print("True labels[0]: ", true_labels[0])
+    print("pred: ", pred)
     mAP = average_precision_score(true_labels[0],pred)
     if np.isnan(mAP)==True:
         mAP = 0

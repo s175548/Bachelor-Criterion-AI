@@ -46,7 +46,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
     return classification_loss, box_loss
 
-def get_samples(samples,ids,N,path_save,train=True):
+def get_samples(samples,model_name,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             boxes = p[i]['boxes'].detach().cpu().numpy()
@@ -54,21 +54,21 @@ def get_samples(samples,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\_val_{}_{}_prediction.png'.format(N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_val_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\_train_{}_{}_prediction.png'.format(N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_train_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
 
 
-def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
+def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
     i = 0
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions'
+    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
@@ -109,19 +109,20 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
         if lr_scheduler is not None:
             lr_scheduler.step()
 
-        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
+        ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
-            if i == 0:
-                samples = []
-                model.eval()
-                outputs = model(images)
-                num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-                num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
-                model.train()
-                samples.append((images, masks, targets, outputs))
-                get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
+            if i < 5:
+                if epoch % 5 == 0:
+                    samples = []
+                    model.eval()
+                    outputs = model(images)
+                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
+                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
+                    model.train()
+                    samples.append((images, masks, targets, outputs))
+                    get_samples(samples,model_name,ids,N=epoch,path_save=path_save,train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -165,13 +166,13 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
         #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         if risk==True:
-            if i == 0:
+            if i < 5:
                 if N % 5 == 0:
                     samples = []
                     model.eval()
                     outputs = model(images)
-                    num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-                    num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
+                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
+                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                     model.train()
                     samples.append((images, masks, targets, outputs))
                     get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
@@ -193,7 +194,7 @@ def _get_iou_types(model):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
+def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
@@ -231,13 +232,13 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         if risk==True:
             if i < 10:
                 if N % 5 == 0:
-                    get_samples(samples,ids,N=N,path_save=path_save,train=False)
+                    get_samples(samples,model_name,ids,N=N,path_save=path_save,train=False)
         i+=1
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
-    print("mean Average Precision for epoch {}: ".format(N+1), np.mean(mAP))
+    print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
     # accumulate predictions from all images
     torch.set_num_threads(n_threads)
     return np.mean(mAP),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))

@@ -167,6 +167,8 @@ class BoxCoder(object):
         box_sum = 0
         for val in boxes_per_image:
             box_sum += val
+        #if box_sum == 0:
+        #    box_sum = torch.z
         pred_boxes = self.decode_single(
             rel_codes.reshape(box_sum, -1), concat_boxes
         )
