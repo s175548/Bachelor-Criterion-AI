@@ -97,7 +97,7 @@ coverage.xml
 docs/_build/
 semantic_segmentation/DeepLabV3/metrics/__pycache__/stream_metrics.cpython-37.pyc
 semantic_segmentation/DeepLabV3/metrics/__pycache__/__init__.cpython-37.pyc
-semantic_segmentation/DeepLabV3/dataloader.py
+semantic_segmentation/DeepLabV3/experiment_generator.py
 semantic_segmentation/DeepLabV3/__pycache__/Training_windows.cpython-37.pyc
 semantic_segmentation/DeepLabV3/__pycache__/dataset_class.cpython-37.pyc
 data_import/__pycache__/masks_to_bounding_box.cpython-37.pyc

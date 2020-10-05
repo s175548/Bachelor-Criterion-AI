@@ -17,7 +17,7 @@ import object_detect.helper.utils as utils
 
 def init_model(num_classes):
     #load a model pre-trained pre-trained on COCO
-    model = fasterrcnn_resnet50_fpn(pretrained=True)
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
     # replace the classifier with a new one, that has
     # num_classes which is user-defined
     num_classes = num_classes  # 1 class (person) + background
@@ -104,8 +104,9 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200)),et.ExtToTensor()])
 
 HPC =False
-binary=True
-
+binary=False
+multi=False
+tick_bite=True
 if __name__ == '__main__':
     if HPC:
         if binary:
@@ -125,38 +126,57 @@ if __name__ == '__main__':
         split = round(N_files * 0.80)
         split_val = round(N_files * 0.80)
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
     else:
-        path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\mask'
-        path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\img'
+        if binary:
+            pass
+        elif multi:
+            pass
+        else:
+            path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
+            path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
+            data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
+                                     metadata_path=r'samples\model_comparison.csv')
+            color_dict = data_loader.color_dict_binary
+            target_dict = data_loader.get_target_dict()
+            annotations_dict = data_loader.annotations_dict
+            batch_size = 4
+            val_batch_size = 4
+            num_epoch = 10
 
-        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != "k"])
-        N_files = len(file_names)
-        num_epoch = 3
-        print_freq = 10
+            file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
+            N_files = len(file_names)
+            shuffled_index = np.random.permutation(len(file_names))
+            file_names_img = file_names[shuffled_index]
 
-        batch_size = 2
-        val_batch_size = 2
-
-        split = round(N_files * 0.1)
-        split_val = round(N_files * 0.9)
+            train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                                    list_of_filenames=file_names[:round(N_files * 0.80)],
+                                    bbox=True,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                                  list_of_filenames=file_names[round(N_files * 0.80):],
+                                  bbox=True,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
         #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         device = torch.device('cpu')
 
-
     print("Device: %s" % device)
 
-    model0 = init_model(num_classes=2)
-    model0.to(device)
+    train_loader = data.DataLoader(
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+    val_loader = data.DataLoader(
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
+
+    print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
+
+    #model0 = init_model(num_classes=2)
+    #model0.to(device)
 
     model = define_model(num_classes=2,net='resnet50')
     model.to(device)
 
     #model2 = define_model(num_classes=2,net='mobilenet')
     #model2.to(device)
-
-
 
     # construct an optimizer
     params = [p for p in model.parameters() if p.requires_grad]
@@ -168,68 +188,75 @@ if __name__ == '__main__':
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
                                                    step_size=10,
                                                    gamma=0.1)
+    overall_best = 0
+    overall_best2 = 0
+    best_lr = 0
+    best_lr2 = 0
+    model_names = ['mobilenet', 'resnet50']
+    lr = 0.005
+    for model_name in model_names:
+        model = define_model(num_classes=2, net=model_name)
+        model.to(device)
+        print("Model: ", model_name)
+        print("Learning rate: ", lr)
 
-    data_loader = DataLoader(data_path=r'C:\Users\johan\OneDrive\Skrivebord\leather_patches',
-                         metadata_path=r'samples\model_comparison.csv')
+        # construct an optimizer
+        params = [p for p in model.parameters() if p.requires_grad]
+        # params_to_train = params[64:]
+        optimizer = torch.optim.SGD(params, lr=lr,
+                                    momentum=0.9, weight_decay=0.0005)
+        # and a learning rate scheduler which decreases the learning rate by
+        # 10x every 3 epochs
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+                                                       step_size=50,
+                                                       gamma=0.5)
 
-    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+        loss_train = []
+        risk = True
+        best_map = 0
+        best_map2 = 0
+        avg_pred_box = []
+        avg_target_box = []
+        val_boxes = []
+        val_targets = []
+        for epoch in range(num_epoch):
+            print("About to train")
+            curr_loss_train = []
+            # train for one epoch, printing every 10 iterations
+            model, loss, pred_box, target_box = train_one_epoch(model, model_name, optimizer, train_loader, device,
+                                                                 epoch=epoch + 1, print_freq=5,
+                                                                 loss_list=curr_loss_train, risk=risk)
+            loss_train.append(loss)
+            avg_pred_box.append(pred_box)
+            avg_target_box.append(target_box)
+            # update the learning rate
+            lr_scheduler.step()
+            # evaluate on the test dataset
+            mAP, mAP2, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device, N=epoch + 1, risk=risk)
+            val_boxes.append(vbox_p)
+            val_targets.append(vbox)
+            checkpoint = mAP
+            if checkpoint > best_map:
+                best_map = checkpoint
+                print("Best mAP: ", best_map, " epoch nr. : ", epoch + 1, "model: ", model_name, "lr: ", lr)
+                print("Average nr. of predicted boxes in training: ", avg_pred_box[-1])
+                print("Actual average nr. of boxes in training: ", avg_target_box[-1])
+            if mAP2 > best_map2:
+                best_map2 = mAP2
+                print("Best mAP with scores: ", best_map2, " epoch nr. : ", epoch + 1, "model: ", model_name, "lr: ",
+                      lr)
+        save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
+        print("Average nr. of predicted boxes in training: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
+        print("Actual average nr. of boxes in training: ", avg_target_box[-1])
+        print("Average nr. of predicted boxes in test: ", val_boxes[-1])
+        print("Actual average nr. of boxes in test: ", val_targets[-1])
 
-
-    #torch.manual_seed(2)
-    #np.random.seed(2)
-    #random.seed(2)
-
-    #shuffled_index=np.random.permutation(len(file_names))
-    #file_names_img=file_names[shuffled_index]
-    #file_names=file_names[file_names != ".DS_S"]
-
-    if binary:
-        color_dict = data_loader.color_dict_binary
-        target_dict = data_loader.get_target_dict()
-        annotations_dict = data_loader.annotations_dict
-
-    else:
-        color_dict= data_loader.color_dict
-        target_dict=data_loader.get_target_dict(labels)
-        annotations_dict=data_loader.annotations_dict
-
-    #scale = 512
-    # Define dataloaders
-    train_dst = LeatherData(path_mask=path_mask,path_img=path_img,list_of_filenames=file_names[:split],
-                            bbox=True,
-                            transform=transform_function,color_dict=color_dict,target_dict=target_dict)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img,list_of_filenames=file_names[split_val:],
-                          bbox=True,
-                          transform=transform_function,color_dict=color_dict,target_dict=target_dict)
-
-    train_loader = data.DataLoader(
-       train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
-    val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
-
-    print("Train set: %d, Val set: %d" % (len(train_dst), len(val_dst)))
-
-    loss_train = []
-    risk = False
-    best_map = 0
-    best_map2 = 0
-    for epoch in range(num_epoch):
-        print("About to train")
-        curr_loss_train = []
-        # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch(model, optimizer, train_loader, device, epoch, print_freq=5,
-                                             loss_list=curr_loss_train, risk=risk)
-        loss_train.append(loss)
-        # update the learning rate
-        lr_scheduler.step()
-        # evaluate on the test dataset
-        mAP, mAP2, vbox_p, vbox = evaluate(model, val_loader, device=device, N=epoch, risk=risk)
-
-        checkpoint = mAP
-        if checkpoint > best_map:
-            best_map = checkpoint
-        if mAP2 > best_map2:
-            best_map2 = mAP2
-        print("Best mAP for epoch nr. {} : ".format(epoch), best_map)
-        print("Best mAP for scores for epoch nr. {} : ".format(epoch), best_map2)
-
+    if overall_best < best_map:
+        overall_best = best_map
+        best_lr = lr
+    print("Overall best is: ", overall_best, " for learning rate: ", best_lr, "model ", model_name)
+    if overall_best2 < best_map2:
+        overall_best2 = best_map2
+        best_lr2 = lr
+    print("Overall best with scores is: ", overall_best2, " for learning rate: ", best_lr2, "model ", model_name)

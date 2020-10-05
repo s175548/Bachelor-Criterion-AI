@@ -120,8 +120,8 @@ if __name__ == '__main__':
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
-        batch_size = 16
-        val_batch_size = 16
+        batch_size = 4
+        val_batch_size = 4
         num_epoch = 100
 
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
