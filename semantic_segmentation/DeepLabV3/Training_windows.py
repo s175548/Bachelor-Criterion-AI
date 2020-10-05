@@ -51,7 +51,7 @@ random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 5 # 240 #Helst mange
+N_epochs= 50 # 240 #Helst mange
 
 
 
@@ -116,7 +116,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                 pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
                 target=train_images[i][1].cpu().squeeze().numpy()
                 target=convert_to_image(target.squeeze(),color_dict,target_dict)
-                pred=convert_to_image(pred.squeeze(),colosssssr_dict,target_dict)
+                pred=convert_to_image(pred.squeeze(),color_dict,target_dict)
                 image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
                 PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr))),
                                                                  format='PNG')
