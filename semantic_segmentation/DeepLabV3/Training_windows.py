@@ -81,9 +81,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                 outputs = model(images)['out']
             else:
                 outputs = model(images)
-
-            print(outputs)
-            # print(np.unique(labels))
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
 
@@ -99,35 +96,33 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             metrics.update(targets, preds)
 
 
-
-        for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
-            target = convert_to_image(target.squeeze(), color_dict, target_dict)
-            pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
-            image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG' )
-            PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
-            PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
-
-
+        if N%25 == 0:
+            for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
+                target = convert_to_image(target.squeeze(), color_dict, target_dict)
+                pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
+                image = (denorm(image.detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+                PIL.Image.fromarray(image.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_img.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG' )
+                PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_prediction.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
+                PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join( save_path,r'{}_{}_{}_{}_target.png'.format(model_name,N,id,"{}".format(exp_description)+str(lr) )),format='PNG')
 
 
-        for i in range(len(train_images)):
-            image = train_images[i][0].unsqueeze(0)
-            image = image.to(device, dtype=torch.float32)
-            if model_name=='DeepLab':
-                output = model(image)['out']
-            else:
-                output = model(image)
+            for i in range(len(train_images)):
+                image = train_images[i][0].unsqueeze(0)
+                image = image.to(device, dtype=torch.float32)
+                if model_name=='DeepLab':
+                    output = model(image)['out']
+                else:
+                    output = model(image)
 
-            pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
-            target=train_images[i][1].cpu().squeeze().numpy()
-            target=convert_to_image(target.squeeze(),color_dict,target_dict)
-            pred=convert_to_image(pred.squeeze(),color_dict,target_dict)
-            image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr))),
-                                                             format='PNG')
-            PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "{}".format(exp_description) + str(lr)) ), format='PNG')
-            PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr)) ), format='PNG')
+                pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
+                target=train_images[i][1].cpu().squeeze().numpy()
+                target=convert_to_image(target.squeeze(),color_dict,target_dict)
+                pred=convert_to_image(pred.squeeze(),colosssssr_dict,target_dict)
+                image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+                PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,'{}_{}_{}_{}_img_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr))),
+                                                                 format='PNG')
+                PIL.Image.fromarray(pred.astype(np.uint8)).save(os.path.join(save_path , '{}_{}_{}_{}_prediction_train.png'.format(model_name, N, i, "{}".format(exp_description) + str(lr)) ), format='PNG')
+                PIL.Image.fromarray(target.astype(np.uint8)).save(os.path.join( save_path , '{}_{}_{}_{}_mask_train.png'.format(model_name, N, i,"{}".format(exp_description)+str(lr)) ), format='PNG')
 
 
         score = metrics.get_results()
@@ -222,7 +217,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_epochs % np.ceil(N_epochs/4) == 0 or cur_epochs==1:
+                if True:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
