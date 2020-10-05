@@ -122,7 +122,7 @@ if __name__ == '__main__':
         annotations_dict = data_loader.annotations_dict
         batch_size = 4
         val_batch_size = 4
-        num_epoch = 50
+        num_epoch = 20
 
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
