@@ -131,20 +131,45 @@ class DataLoader():
 
     def get_idx_from_single_skin(self,skin='WALKNAPPA'):
         idx_list=[]
-        for path in enumerate(self.valid_annotations[:,2]):
-            if path.lower()[:4]==skin.lower()[:4]:
-                idx_list.append()
+        for idx in self.valid_annotations:
+            path=self.metadata_csv[idx,1]
+            if path.lower()[:3]==skin.lower()[:3]:
+                idx_list.append(idx)
+        return idx_list
 
+    def test_training_split(self,p_value=[0.65,0.01]):
+        train_idx=[]
+        val_idx=[]
+        y_thresh=p_value[0]*65000
+        p_value.reverse()
+        split=self.metadata_csv[0, 1].split('/')[2]
+        for idx in self.valid_annotations[1:]:
+            path = self.metadata_csv[idx, 1].split('/')
+            if (path[0][0]=='W') & (split!=False) :
+                y_thresh=65000*p_value[0]
+                print('yes')
+                p_value.reverse()
+                split=self.metadata_csv[idx, 1].split('/')[2]
+                split=False
+            img_size=path[-1].split('x')
+            img_size_y=img_size[0].split('.')[0]
+            if int(img_size_y)>y_thresh:
+                if p_value[0]>0.5:
+                    train_idx.append(idx)
+                else:
+                    val_idx.append(idx)
+            else:
+                if p_value[0]>0.5:
+                    val_idx.append(idx)
+                else:
+                    train_idx.append(idx)
+        return train_idx,val_idx
 
-
-
-
-
-    def annotation_to_index(self,defect_dict=None):
-        if defect_dict==None:
-            defect_dict=self.valid_annotations
+    def annotation_to_index(self,index_list=[]):
+        if index_list==[]:
+            index_list=self.valid_annotations
         label_dict={key:set() for key in self.annotations_dict.keys()}
-        for idx in defect_dict:
+        for idx in index_list:
             filepath = os.path.join(self.data_path, self.metadata_csv[idx,3][1:])
             seg = self.get_json_file_content(filepath)
             for label in seg["annotations"]:
@@ -333,10 +358,13 @@ def get_background_mask(image):
 
 
 if __name__ == '__main__':
-#    dataloader = DataLoader()
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
-                         metadata_path=r'samples/model_comparison.csv')
-    visibility_idx=data_loader.get_visibility_score([1,2,3])
+                             metadata_path=r'samples/model_comparison.csv')
+    train,val=data_loader.test_training_split()
+    for data in [train,val] :
+        idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))
+        index=data_loader.annotation_to_index(index_list=idx_dict)
+
 
     #label_dict=data_loader.get_image_and_labels([21],labels=['Piega ','Verruca','Puntura insetto'],make_binary=False)
 
