@@ -243,4 +243,4 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
     # accumulate predictions from all images
     torch.set_num_threads(n_threads)
-    return np.mean(mAP),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
+    return np.mean(mAP),np.mean(mAP2),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
