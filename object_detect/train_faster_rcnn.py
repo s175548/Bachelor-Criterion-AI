@@ -135,10 +135,10 @@ if __name__ == '__main__':
         num_epoch = 1
         print_freq = 10
 
-        batch_size = 10
+        batch_size = 2
         val_batch_size = 5
 
-        split = round(N_files * 0.1)
+        split = round(N_files * 0.01)
         split_val = round(N_files * 0.9)
 
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
