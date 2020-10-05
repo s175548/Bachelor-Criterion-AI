@@ -73,6 +73,7 @@ def get_iou2(boxes,target):
         index_list.append(best_index)
         iou_list = np.append(iou_list, best_iou)
         i+=1
+    print("iou_list from function: ", iou_list)
     new_iou_list = np.copy(iou_list)
     for j in index_list:
         all_preds = np.where(np.array(index_list) == j)
@@ -105,7 +106,8 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
         scores2 = np.zeros(len(true_labels[0]))
         mAP2 = average_precision_score(true_labels[0],scores2)
     else:
-        mAP2 = average_precision_score(true_labels[0], scores)
+        print("Scores: ", scores)
+        mAP2 = average_precision_score(true_labels[0], scores.cpu())
     if np.isnan(mAP)==True:
         mAP = 0
     return df, mAP, mAP2
