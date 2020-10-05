@@ -74,6 +74,7 @@ class DataLoader():
                 image=np.array(PIL.Image.open(os.path.join(self.data_path, self.metadata_csv[image_idx,1])))
                 mask=self.read_segmentation_file(os.path.join(self.data_path,self.metadata_csv[image_idx,3][1:]),ignore_good=ignore_good,make_binary=make_binary,labels=labels)
                 back_mask=get_background_mask(image)
+                back_mask[(np.array(back_mask)!=0) & (np.squeeze(mask)!=0)]=0
                 mask=np.squeeze(mask)+np.array(back_mask)/255*self.annotations_dict["Background"]
                 mask_3d=np.dstack((mask,mask,mask))
                 if make_binary:
@@ -128,9 +129,14 @@ class DataLoader():
         label_dict_new['Background']=len(list(label_dict_new.keys()))
         return label_dict_new
 
-    def annotation_to_index(self):
+#    def get_idx_from_single_skin(skin='Walknappa'):
+
+
+    def annotation_to_index(self,defect_dict=None):
+        if defect_dict==None:
+            defect_dict=self.valid_annotations
         label_dict={key:set() for key in self.annotations_dict.keys()}
-        for idx in self.valid_annotations:
+        for idx in defect_dict:
             filepath = os.path.join(self.data_path, self.metadata_csv[idx,3][1:])
             seg = self.get_json_file_content(filepath)
             for label in seg["annotations"]:
