@@ -129,7 +129,15 @@ class DataLoader():
         label_dict_new['Background']=len(list(label_dict_new.keys()))
         return label_dict_new
 
-#    def get_idx_from_single_skin(skin='Walknappa'):
+    def get_idx_from_single_skin(self,skin='WALKNAPPA'):
+        idx_list=[]
+        for path in enumerate(self.valid_annotations[:,2]):
+            if path.lower()[:4]==skin.lower()[:4]:
+                idx_list.append()
+
+
+
+
 
 
     def annotation_to_index(self,defect_dict=None):
