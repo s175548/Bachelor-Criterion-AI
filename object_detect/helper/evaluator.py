@@ -44,7 +44,8 @@ def get_iou2(boxes,target):
     i = 0
     index_list = []
     bbox_index = 0
-
+    print("boxes: ", boxes)
+    print("targets: ", target)
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
