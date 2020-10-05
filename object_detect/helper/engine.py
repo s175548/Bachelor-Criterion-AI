@@ -46,7 +46,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
 
     return classification_loss, box_loss
 
-def get_samples(samples,ids,N,path_save,train=True):
+def get_samples(samples,ids,N,path_save,model_name,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             boxes = p[i]['boxes'].detach().cpu().numpy()
@@ -54,14 +54,14 @@ def get_samples(samples,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\_val_{}_{}_prediction.png'.format(N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\{}_val_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\_train_{}_{}_prediction.png'.format(N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '\{}_train_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
 
 
-def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
+def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -121,7 +121,7 @@ def train_one_epoch2(model, optimizer, data_loader, device, epoch, print_freq, l
                 num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
                 model.train()
                 samples.append((images, masks, targets, outputs))
-                get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
+                get_samples(samples,model_name,ids,N=epoch,path_save=path_save,train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -193,7 +193,7 @@ def _get_iou_types(model):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
+def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
@@ -231,7 +231,7 @@ def evaluate(model, data_loader, device,N,risk=True,threshold=0.5):
         if risk==True:
             if i < 10:
                 if N % 5 == 0:
-                    get_samples(samples,ids,N=N,path_save=path_save,train=False)
+                    get_samples(samples,model_name,ids,N=N,path_save=path_save,train=False)
         i+=1
 
     # gather the stats from all processes

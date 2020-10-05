@@ -199,7 +199,7 @@ if __name__ == '__main__':
             print("About to train")
             curr_loss_train = []
             # train for one epoch, printing every 10 iterations
-            model, loss, _, _ = train_one_epoch2(model, optimizer, train_loader, device, epoch,print_freq=20,
+            model, loss, _, _ = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch,print_freq=20,
                                                         loss_list=curr_loss_train,risk=risk)
             loss_train.append(loss)
             # update the learning rate
