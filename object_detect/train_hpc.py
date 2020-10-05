@@ -93,7 +93,7 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     print("Model saved as "+model_name+'.pt')
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
-binary=False
+binary=True
 if __name__ == '__main__':
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     overall_best = 0
     for lr in learning_rates:
-        model_name = 'resnet50'
+        model_name = 'mobilenet'
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)
