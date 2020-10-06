@@ -51,7 +51,7 @@ random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 50 # 240 #Helst mange
+N_epochs= 100 # 240 #Helst mange
 
 
 
@@ -252,11 +252,13 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         plt.close()
 
         experiment_dict = {}
-        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,model]
-        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','model_backbone']
+        best_metric = metrics.to_str(val_score)
+        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,best_metric,model_name,model]
+        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','best_metric','model_backbone','model architecture']
         for idx,key in enumerate(hyperparams):
             experiment_dict[key] = hyperparams_val[idx]
-        np.save('exp_{}_{}.npy'.format(exp_description,lr), experiment_dict)
+        with open("{}_{}.txt".format(model_name,exp_description), "w") as text_file:
+            text_file.write(str(experiment_dict))
 
 
 

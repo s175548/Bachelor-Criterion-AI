@@ -41,25 +41,25 @@
 # import numpy as np
 #from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 
-from torch.utils import data
+# from torch.utils import data
 #from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 #from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 # from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
-import torch,cv2
-import torch.nn as nn
-from torchvision.models.segmentation import deeplabv3_resnet101
-import os
+# import torch,cv2
+# import torch.nn as nn
+# from torchvision.models.segmentation import deeplabv3_resnet101
+#import os
 import numpy as np
-from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
-from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
+# from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
+# from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 
 # from semantic_segmentation.DeepLabV3.Training_windows import *
 # from semantic_segmentation.DeepLabV3.Training_windows import *
-from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
-import PIL
-import random
-import pickle
-import matplotlib.pyplot as plt
+# from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+# import PIL
+# import random
+# import pickle
+# import matplotlib.pyplot as plt
 
 # model = deeplabv3_resnet101()
 # model.classifier[-1] = torch.nn.Conv2d(256, 2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
@@ -208,7 +208,7 @@ import matplotlib.pyplot as plt
 # output_stride=16
 # save_val_results=False
 # total_itrs=1000#1000
-# # #lr=0.01,0.001,0.0001
+# #lr=0.01,0.001,0.0001
 # lr_policy='step'
 # step_size=10000
 # batch_size= 16 # 16
@@ -220,3 +220,15 @@ import matplotlib.pyplot as plt
 # vis_num_samples= 2 #2
 # enable_vis=True
 # N_epochs= 100 # 240 #Helst mange
+import argparse,os
+save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
+parser = argparse.ArgumentParser(description='Take learning rate parameter')
+parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+', help='a parameter for the training loop')
+parser.add_argument('folder name', metavar='folder', type=str, nargs='+', help='a save folder for the training loop')
+args = vars(parser.parse_args())
+print(save_path,'old')
+save_folder = args['folder name'][0]
+save_path = os.path.join(save_path, save_folder)
+print(save_path,'new')
+lr = args['parameter choice'][0]
+print(args['parameter choice'][0], " this is the chosen parameter")

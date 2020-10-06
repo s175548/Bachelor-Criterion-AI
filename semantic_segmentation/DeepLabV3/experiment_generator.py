@@ -1,11 +1,11 @@
-import sys
+import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
-import argparse,os,json,ast
+import argparse,json,ast
 
 
 
@@ -15,7 +15,7 @@ binary=False
 
 if __name__ == "__main__":
     if HPC:
-        save_path = r'/zhome/87/9/127623/BachelorProject/'
+        save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
         path_model = r'/work3/s173934/Bachelorprojekt/'
         if binary:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -28,10 +28,14 @@ if __name__ == "__main__":
         path_meta_data = r'samples/model_comparison.csv'
 
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
-        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a learning rate for the training loop')
+        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
         args = vars(parser.parse_args())
-        lr = args['learning rate'][0]
-        print(args['learning rate'][0], " this is the learning_rate")
+
+        save_folder = args['folder name'][0]
+        save_path = os.path.join(save_path,save_folder)
+        lr = args['parameter choice'][0]
+        print(args['parameter choice'][0], " this is the chosen parameter")
 
     elif Villads:
         path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
@@ -108,6 +112,6 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
-    #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
+    training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
     training(n_classes=3, model='DeepLab', load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = 'multi_class')
