@@ -26,16 +26,6 @@ import matplotlib.pyplot as plt
 from data_import.data_loader import convert_to_image
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 
-
-
-
-
-
-
-
-
-#Forskellig learning rate, (træn på en klasse, tick bite, multiclass)
-
 num_classes=2
 output_stride=16
 save_val_results=False
@@ -43,7 +33,7 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
+batch_size= 4 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -51,7 +41,7 @@ random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100 # 240 #Helst mange
+N_epochs= 100
 
 
 
@@ -182,6 +172,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         train_loss_values = []
         validation_loss_values=[]
         best_score = 0
+        best_scores = [0,0,0,0,0]
         model.to(device)
         while cur_epochs<N_epochs :  # cur_itrs < opts.total_itrs:
             model.train()
@@ -225,11 +216,18 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     print(metrics.to_str(val_score))
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
+                        best_scores.append(best_score)
+                        best_scores.sort(reverse=True)
+                        best_scores = best_scores[:5]
                         save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
                         print("[Val] Class IoU", val_score['Class IoU'])
+                    elif val_score['Mean IoU'] > min(best_scores):
+                        best_scores.append(val_score['Mean IoU'])
+                        best_scores.sort(reverse=True)
+                        best_scores = best_scores[:5]
                     model.train()
                 scheduler.step()
 
@@ -253,8 +251,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
         experiment_dict = {}
         best_metric = metrics.to_str(val_score)
-        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,best_metric,model_name,model]
-        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','best_metric','model_backbone','model architecture']
+        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,best_metric,best_scores,model_name,model]
+        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','best_metric','best_scores','model_backbone','model architecture']
         for idx,key in enumerate(hyperparams):
             experiment_dict[key] = hyperparams_val[idx]
         with open("{}_{}.txt".format(model_name,exp_description), "w") as text_file:
