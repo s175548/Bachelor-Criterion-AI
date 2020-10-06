@@ -99,8 +99,8 @@ if __name__ == '__main__':
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
 
-    learning_rates = [0.01, 0.001, 0.0001, 0.00001]
-    #learning_rates = [0.005]
+    #learning_rates = [0.01, 0.001, 0.0001]
+    learning_rates = [0.0001]
 
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     best_lr2 = 0
     model_names = ['mobilenet', 'resnet50']
     for lr in learning_rates:
-        model_name = model_names[1]
+        model_name = model_names[0]
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)

@@ -44,8 +44,6 @@ def get_iou2(boxes,target):
     i = 0
     index_list = []
     bbox_index = 0
-    print("boxes: ", boxes)
-    print("targets: ", target)
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
@@ -73,7 +71,6 @@ def get_iou2(boxes,target):
         index_list.append(best_index)
         iou_list = np.append(iou_list, best_iou)
         i+=1
-    print("iou_list from function: ", iou_list)
     new_iou_list = np.copy(iou_list)
     for j in index_list:
         all_preds = np.where(np.array(index_list) == j)
@@ -87,10 +84,9 @@ def get_iou2(boxes,target):
         new_iou_list = np.append(new_iou_list, 0)
     return iou_list, index_list, new_iou_list
 
-def get_map2(boxes,target,scores,iou_list,threshold=0.5):
+def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
     sc = np.sort(scores.cpu())
     df = pd.DataFrame(sc,columns=["Scores"])
-    print("iou_list: ", iou_list)
     true_labels = [iou_list >= threshold]
     df.insert(1,"Correct?",true_labels[0],True)
     df.insert(2,"IoU {}".format(threshold),iou_list,True)
@@ -98,18 +94,23 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.5):
     pred = np.ones((len(true_labels[0])))
     df.insert(2,"Precision", prec,True)
     df.insert(3,"Recall", rec,True)
-    print("True labels: ", true_labels)
-    print("True labels[0]: ", true_labels[0])
-    print("pred: ", pred)
     mAP = average_precision_score(true_labels[0],pred)
     if len(scores) == 0:
         scores2 = np.zeros(len(true_labels[0]))
         mAP2 = average_precision_score(true_labels[0],scores2)
     else:
-        print("Scores: ", scores)
         mAP2 = average_precision_score(true_labels[0], scores.cpu())
     if np.isnan(mAP)==True:
         mAP = 0
+    if print_state==True:
+        print("boxes: ", boxes)
+        print("targets: ", target)
+        print("iou: ", iou_list)
+    if len(boxes) > 0:
+        print("boxes: ", boxes)
+        print("targets: ", target)
+        print("iou: ", iou_list)
+        print("scores: ", scores)
     return df, mAP, mAP2
 
 def get_map(boxes,target,scores,iou_list,threshold=0.5):
