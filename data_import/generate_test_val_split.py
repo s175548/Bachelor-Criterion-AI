@@ -8,14 +8,14 @@ if Villads:
     save_path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
 else:
     data_loader = DataLoader()
-    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi\train'
-    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi\val'
+    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
+    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
 train,val=data_loader.test_training_split()
 
 
 import_data_and_mask(data_loader,idx_to_consider=train,
                      path=save_path_train,
-                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=False)
+                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=True)
 import_data_and_mask(data_loader,idx_to_consider=val,
                      path=save_path_val,
-                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=False)
+                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=True)

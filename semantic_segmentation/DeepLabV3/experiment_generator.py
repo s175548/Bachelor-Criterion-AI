@@ -18,8 +18,10 @@ if __name__ == "__main__":
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
         path_model = r'/work3/s173934/Bachelorprojekt/'
         if binary:
-            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
-            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            # path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            # path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/mask'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3/val'
         else:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
