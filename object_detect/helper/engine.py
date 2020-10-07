@@ -25,7 +25,7 @@ def get_samples(samples,model_name,ids,N,path_save,train=True):
                                                              format='PNG')
 
 
-def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
+def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -84,61 +84,10 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
 
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
 
-def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
-    model.train()
-    lr_scheduler = None
-    i = 0
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
-    num_boxes = []
-    num_boxes_pred = []
-    for (images, labels, masks) in data_loader:
-        images = list(img.to(device, dtype=torch.float32) for img in images)
-        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
-        loss_dict = model(images, targets)
-        losses = sum(loss for loss in loss_dict.values())
-
-        # reduce losses over all GPUs for logging purposes
-        loss_dict_reduced = utils.reduce_dict(loss_dict)
-        losses_reduced = sum(loss for loss in loss_dict_reduced.values())
-
-        loss_value = losses_reduced.item()
-        loss_list.append(loss_value)
-        if not math.isfinite(loss_value):
-            print("Loss is {}, stopping training".format(loss_value))
-            print(loss_dict_reduced)
-            sys.exit(1)
-
-        optimizer.zero_grad()
-        losses.backward()
-        optimizer.step()
-
-        if lr_scheduler is not None:
-            lr_scheduler.step()
-
-        ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
-        #num_boxes.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-        #num_boxes_pred.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
-        if risk==True:
-            if i < 5:
-                if N % 5 == 0:
-                    samples = []
-                    model.eval()
-                    outputs = model(images)
-                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
-                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
-                    model.train()
-                    samples.append((images, masks, targets, outputs))
-                    get_samples(samples,ids,N=epoch,path_save=path_save,train=True)
-        i+=1
-        print(loss_dict_reduced)
-    return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
-
-
-def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk=True,threshold=0.3):
+def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
     n_threads = torch.get_num_threads()
-    # FIXME remove this and make paste_masks_in_image run on the GPU
-    torch.set_num_threads(1)
+    torch.set_num_threads(n_threads)
     model.eval()
     if HPC:
         path_save = save_folder
@@ -166,7 +115,6 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
             res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
             evaluator_time = time.time()
             evaluator_time = time.time() - evaluator_time
-            metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
             for j in range(len(ids)):
                 iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
                 df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold)
@@ -178,6 +126,9 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
             samples.append((images, masks, targets, outputs))
+            if N % 50 == 0:
+                metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
             if risk==True:
                 model.train()
                 loss_dict = model(images, targets)
@@ -195,8 +146,7 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
 
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
-        print("Averaged stats:", metric_logger)
-        print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
-        # accumulate predictions from all images
-        torch.set_num_threads(n_threads)
+        if N % 25 == 0:
+            print("Averaged stats:", metric_logger)
+            print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
     return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))

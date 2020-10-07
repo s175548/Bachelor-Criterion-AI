@@ -13,7 +13,7 @@ import argparse
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.helper.engine import train_one_epoch2, evaluate
+from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 
 def init_model(num_classes):
@@ -267,7 +267,7 @@ if __name__ == '__main__':
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=20,
+        model, loss, _, _ = train_one_epoch(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=200,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
