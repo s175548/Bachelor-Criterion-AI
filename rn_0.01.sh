@@ -1,5 +1,5 @@
 #!/bin/sh
-#BSUB -J resnet
+#BSUB -J resnet_01_
 #BSUB -o resnet%J.out
 #BSUB -q gpuv100
 #BSUB -n 1

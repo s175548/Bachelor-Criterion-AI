@@ -15,6 +15,8 @@ from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
+import matplotlib.pyplot as plt
+
 
 def init_model(num_classes):
     #load a model pre-trained pre-trained on COCO

@@ -1,5 +1,5 @@
 #!/bin/sh
-#BSUB -J mobilenet
+#BSUB -J mobilenet_01_
 #BSUB -o mobilenet%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
