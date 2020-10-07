@@ -107,13 +107,11 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
 
             torch.cuda.synchronize()
             model_time = time.time()
-            print(model.training)
             outputs = model(images)
             outputs = [{k: v.to(device) for k, v in t.items()} for t in outputs]
             model_time = time.time() - model_time
             ids = [targets[i]['image_id'].cpu() for i in range(len(targets))]
 
-            res = {target["image_id"].item(): output for target, output in zip(targets, outputs)}
             evaluator_time = time.time()
             evaluator_time = time.time() - evaluator_time
             for j in range(len(ids)):
@@ -143,6 +141,7 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
                 if i < 10:
                     if N % 25 == 0:
                         get_samples(samples,model_name,ids,N=N,path_save=path_save,train=False)
+                model.eval()
             i+=1
 
         # gather the stats from all processes
