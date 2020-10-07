@@ -136,7 +136,7 @@ transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((40
 HPC=True
 binary=False
 tick_bite=True
-splitted_data=True
+splitted_data=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -201,7 +201,7 @@ if __name__ == '__main__':
                                  metadata_path=path_meta_data)
 
     labels=['Piega', 'Verruca', 'Puntura insetto','Background']
-    
+
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
