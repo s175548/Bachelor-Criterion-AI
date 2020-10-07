@@ -107,6 +107,7 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
 
             torch.cuda.synchronize()
             model_time = time.time()
+            print(model.training)
             outputs = model(images)
             outputs = [{k: v.to(device) for k, v in t.items()} for t in outputs]
             model_time = time.time() - model_time
