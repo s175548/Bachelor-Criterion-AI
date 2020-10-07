@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py
+python3 object_detect/train_hpc.py 0.001 mobilenet
 echo "Done"

@@ -1,5 +1,5 @@
 import math
-import sys
+import sys, os
 import time
 import torch
 import numpy as np
@@ -8,43 +8,7 @@ from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
 import object_detect.helper.utils as utils
 from object_detect.helper.evaluator import get_iou2, get_map2
-
-def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
-    # type: (Tensor, Tensor, List[Tensor], List[Tensor]) -> Tuple[Tensor, Tensor]
-    """
-    Computes the loss for Faster R-CNN.
-    Arguments:
-        class_logits (Tensor)
-        box_regression (Tensor)
-        labels (list[BoxList])
-        regression_targets (Tensor)
-    Returns:
-        classification_loss (Tensor)
-        box_loss (Tensor)
-    """
-
-    labels = torch.cat(labels, dim=0)
-    regression_targets = torch.cat(regression_targets, dim=0)
-
-    classification_loss = F.cross_entropy(class_logits, labels)
-
-    # get indices that correspond to the regression targets for
-    # the corresponding ground truth labels, to be used with
-    # advanced indexing
-    sampled_pos_inds_subset = torch.where(labels > 0)[0]
-    labels_pos = labels[sampled_pos_inds_subset]
-    N, num_classes = class_logits.shape
-    box_regression = box_regression.reshape(N, -1, 4)
-
-    box_loss = det_utils.smooth_l1_loss(
-        box_regression[sampled_pos_inds_subset, labels_pos],
-        regression_targets[sampled_pos_inds_subset],
-        beta=1 / 9,
-        size_average=False,
-    )
-    box_loss = box_loss / labels.numel()
-
-    return classification_loss, box_loss
+import matplotlib.pyplot as plt
 
 def get_samples(samples,model_name,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
@@ -61,14 +25,17 @@ def get_samples(samples,model_name,ids,N,path_save,train=True):
                                                              format='PNG')
 
 
-def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,risk=True):
+def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
     i = 0
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
+    if HPC:
+        path_save = save_folder
+    else:
+        path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
@@ -100,8 +67,8 @@ def train_one_epoch2(model, model_name, optimizer, data_loader, device, epoch, p
         ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
 
         if risk==True:
-            if i < 5:
-                if epoch % 5 == 0:
+            if i < 10:
+                if epoch % 25 == 0:
                     samples = []
                     model.eval()
                     outputs = model(images)
@@ -168,25 +135,15 @@ def train_one_epoch(model, optimizer, data_loader, device, epoch, print_freq, lo
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
 
 
-def _get_iou_types(model):
-    model_without_ddp = model
-    if isinstance(model, torch.nn.parallel.DistributedDataParallel):
-        model_without_ddp = model.module
-    iou_types = ["bbox"]
-    if isinstance(model_without_ddp, torchvision.models.detection.MaskRCNN):
-        iou_types.append("segm")
-    if isinstance(model_without_ddp, torchvision.models.detection.KeypointRCNN):
-        iou_types.append("keypoints")
-    return iou_types
-
-
-@torch.no_grad()
-def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
+def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk=True,threshold=0.3):
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
     model.eval()
-    path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
+    if HPC:
+        path_save = save_folder
+    else:
+        path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
     metric_logger = utils.MetricLogger(delimiter="  ")
     header = 'Test:'
     num_boxes_val = []
@@ -194,6 +151,7 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     i = 0
     mAP = []
     mAP2 = []
+    with torch.no_grad():
     for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
         images = list(img.to(device) for img in image)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
@@ -211,18 +169,27 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
         for j in range(len(ids)):
             iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
-            df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=0.3)
+            df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold)
             mAP.append(AP)
             mAP2.append(AP2)
             if N % 50 == 0:
-                jo,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=0.3, print_state=True)
+                jo,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=threshold, print_state=True)
         samples = []
         num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
         samples.append((images, masks, targets, outputs))
         if risk==True:
+            model.train()
+            loss_dict = model(images, targets)
+
+            # reduce losses over all GPUs for logging purposes
+            loss_dict_reduced = utils.reduce_dict(loss_dict)
+            losses_reduced = sum(loss for loss in loss_dict_reduced.values())
+
+            loss_value = losses_reduced.item()
+            loss_list.append(loss_value)
             if i < 10:
-                if N % 5 == 0:
+                if N % 25 == 0:
                     get_samples(samples,model_name,ids,N=N,path_save=path_save,train=False)
         i+=1
 
@@ -232,4 +199,4 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
     print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
     # accumulate predictions from all images
     torch.set_num_threads(n_threads)
-    return np.mean(mAP),np.mean(mAP2),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
+    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
