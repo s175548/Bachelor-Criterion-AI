@@ -82,7 +82,7 @@ def define_model(num_classes, net, anchors):
 def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,val_losses=None):
     """ save final model
     """
-    if HPC=True:
+    if HPC:
         torch.save({
             "n_epochs": n_epochs,
             "model_state": model.state_dict(),
