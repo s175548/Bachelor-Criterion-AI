@@ -3,12 +3,13 @@ import sys, os
 sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
 
 import torchvision, random
-import os, pickle
+import pickle
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
+import argparse
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
@@ -26,7 +27,6 @@ def init_model(num_classes):
     # replace the pre-trained head with a new one
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
-
 
 def define_model(num_classes, net, anchors):
     if net == 'mobilenet':
@@ -79,64 +79,135 @@ def define_model(num_classes, net, anchors):
                            box_roi_pool=roi_pooler)
     return model
 
-def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,val_losses=None):
     """ save final model
     """
-    torch.save({
-        "n_epochs": n_epochs,
-        "model_state": model.state_dict(),
-        "optimizer_state": optimizer.state_dict(),
-        "scheduler_state": scheduler.state_dict(),
-        "best_score": best_score,
-        "train_losses": losses,
-    }, '/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'+model_name+'.pt')
-    print("Model saved as "+model_name+'.pt')
+    if HPC=True:
+        torch.save({
+            "n_epochs": n_epochs,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict(),
+            "best_score": best_score,
+            "train_losses": losses,
+            "val_losses": val_losses,
+        }, save_path+model_name+'.pt')
+        print("Model saved as "+model_name+'.pt')
+    else:
+        torch.save({
+            "n_epochs": n_epochs,
+            "model_state": model.state_dict(),
+            "optimizer_state": optimizer.state_dict(),
+            "scheduler_state": scheduler.state_dict(),
+            "best_score": best_score,
+            "train_losses": losses,
+            "val_losses": val_losses,
+        }, save_path + model_name + '.pt')
+
+def freeze_layers(model,layers):
+    params = [p for p in model.parameters() if p.requires_grad]
+    if layers=='Classifier':
+        params2freeze = params[:64]
+        for parameter in params2freeze:
+            parameter.requires_grad_(requires_grad=False)
+    elif layers=='RPN':
+        params2freeze = params[:58]
+        for parameter in params2freeze:
+            parameter.requires_grad_(requires_grad=False)
+    else:
+        pass
+
+def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,val_loss=None,exp_description = ''):
+    plt.plot(range(N_epochs), train_loss, '-o')
+    plt.title('Train Loss')
+    plt.xlabel('N_epochs')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
+    plt.close()
+    plt.plot(range(N_epochs), val_loss, '-o')
+    plt.title('Validation Loss')
+    plt.xlabel('N_epochs')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
+    plt.close()
 
 #transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((512)),et.ExtToTensor()])
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
-binary=True
-tick_bite=False
+HPC=True
+binary=False
+tick_bite=True
 multi=False
 load_model=False
 if __name__ == '__main__':
 
-    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    print("Device: %s" % device)
+    random_seed = 1
+    torch.manual_seed(random_seed)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
 
-    #learning_rates = [0.01, 0.001, 0.0001]
-    learning_rates = [0.001]
+    if HPC:
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        base_path = '/zhome/dd/4/128822/Bachelorprojekt/'
+        model_folder = 'faster_rcnn/'
+        save_path_model = os.path.join(base_path,model_folder)
+        path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
+        if binary:
+            path_mask = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
+            path_img = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
+            save_fold = 'binary/'
+        elif tick_bite:
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+            save_fold = 'tick_bite/'
+        else:
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            save_fold = 'multi/'
 
-    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
-    path_meta_data = r'samples/model_comparison.csv'
+        parser = argparse.ArgumentParser(description='Take learning rate parameter')
+        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
+        args = vars(parser.parse_args())
 
-    torch.manual_seed(2)
-    np.random.seed(2)
-    random.seed(2)
-
-    #labels=['Piega', 'Verruca', 'Puntura insetto','Background']
-    # path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
-    # path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
-    if binary:
-        path_mask = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
-        path_img = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
-
-    elif tick_bite:
-        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
-        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+        model_name = args['model name'][0]
+        path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
+        path_save = os.path.join(path_save, save_fold)
+        save_folder = os.path.join(path_save, model_name)
+        exp_description = os.path.join(save_fold,model_name)
+        lr = args['parameter choice'][0]
+        print(args['parameter choice'][0], " this is the chosen parameter")
+        num_epoch = 100
     else:
-        path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-        path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
-        #path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
-        #path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
+        device = torch.device('cpu')
+        lr = 0.01
+        num_epoch = 2
+        path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
+        if binary:
+            path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+            path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+        elif tick_bite:
+            path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
+            path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
+        else:
+            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
+            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+        path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
 
+    print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
     color_dict = data_loader.color_dict_binary
     target_dict = data_loader.get_target_dict()
     annotations_dict = data_loader.annotations_dict
-    batch_size = 4
-    val_batch_size = 4
-    num_epoch = 100
+
+    if tick_bite:
+        batch_size = 4
+        val_batch_size = 4
+    else:
+        batch_size = 16
+        val_batch_size = 16
 
     file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
     N_files = len(file_names)
@@ -150,6 +221,7 @@ if __name__ == '__main__':
     val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
                           bbox=True,
                           transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
@@ -157,72 +229,68 @@ if __name__ == '__main__':
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
+    if HPC:
+        model = define_model(num_classes=2, net=model_name, anchors=((8,), (16,), (32,), (64,), (128,)))
+    else:
+        model_names = ['mobilenet', 'resnet50']
+        model_name = model_names[1]
+        model = define_model(num_classes=2, net=model_name, anchors=((8,), (16,), (32,), (64,), (128,)))
+    model.to(device)
+    print("Model: ", model_name)
+    print("Learning rate: ", lr)
+
+    # construct an optimizer
+    layers = ['Classifier', 'RPN', 'All']
+    params = [p for p in model.parameters() if p.requires_grad]
+    freeze_layers(model, layers=layers[1])
+    params2train = [p for p in model.parameters() if p.requires_grad]
+    weight_decay = 0.0005
+    optimizer = torch.optim.SGD(params2train, lr=lr,
+                                momentum=0.9, weight_decay=weight_decay)
+    print("Layers trained: ", layers[0], " + ", layers[1])
+
+    # and a learning rate scheduler which decreases the learning rate by
+    # 10x every 50 epochs
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+                                                   step_size=500,
+                                                   gamma=0.5)
+    loss_train = []
+    loss_val = []
+    risk = True
     overall_best = 0
-    overall_best2 = 0
-    best_lr = 0
-    best_lr2 = 0
-    model_names = ['mobilenet', 'resnet50']
-
-    if load_model == True:
-
-    for lr in learning_rates:
-        model_name = model_names[0]
-        model = define_model(num_classes=2,net=model_name)
-        model.to(device)
-        print("Model: ", model_name)
-        print("Learning rate: ", lr)
-        if load_model == True:
-            model.l
-        # construct an optimizer
-        params = [p for p in model.parameters() if p.requires_grad]
-        #params_to_train = params[64:]
-        optimizer = torch.optim.SGD(params, lr=lr,
-                                    momentum=0.9, weight_decay=0.0005)
-        # and a learning rate scheduler which decreases the learning rate by
-        # 10x every 3 epochs
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                       step_size=50,
-                                                       gamma=0.5)
-
-        loss_train = []
-        risk = True
-        best_map = 0
-        best_map2 = 0
-        avg_pred_box = []
-        avg_target_box = []
-        for epoch in range(num_epoch):
-            print("About to train")
-            curr_loss_train = []
-            # train for one epoch, printing every 10 iterations
-            model, loss, pred_box, target_box = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=20,
-                                                        loss_list=curr_loss_train,risk=risk)
-            loss_train.append(loss)
-            avg_pred_box.append(pred_box)
-            avg_target_box.append(target_box)
-            # update the learning rate
-            lr_scheduler.step()
-            # evaluate on the test dataset
-            mAP, mAP2, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch+1,risk=risk)
-
-            checkpoint = mAP
-            if checkpoint > best_map:
-                best_map = checkpoint
-                print("Best mAP: ", best_map," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
-                print("Average nr. of predicted boxes: ", avg_pred_box[-1])
-                print("Actual average nr. of boxes: ", avg_target_box[-1])
-            if mAP2 > best_map2:
-                best_map2 = mAP2
-                print("Best mAP with scores: ", best_map2," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
-        #save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
-        #           scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
-        print("Average nr. of predicted boxes: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
-        print("Actual average nr. of boxes: ", avg_target_box[-1])
-    if overall_best < best_map:
-        overall_best = best_map
-        best_lr = lr
-    print("Overall best is: ", overall_best, " for learning rate: ", best_lr, "model ", model_name)
-    if overall_best2 < best_map2:
-        overall_best2 = best_map2
-        best_lr2 = lr
-    print("Overall best with scores is: ", overall_best2, " for learning rate: ", best_lr2, "model ", model_name)
-
+    best_map = 0
+    best_map2 = 0
+    val_boxes = []
+    val_targets = []
+    print("About to train")
+    for epoch in range(num_epoch):
+        curr_loss_train = []
+        curr_loss_val = []
+        # train for one epoch, printing every 10 iterations
+        model, loss, _, _ = train_one_epoch2(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=20,
+                                                    loss_list=curr_loss_train,save_folder=save_folder)
+        loss_train.append(loss)
+        # update the learning rate
+        lr_scheduler.step()
+        # evaluate on the test dataset
+        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch+1,
+                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
+        loss_val.append(val_loss)
+        val_boxes.append(vbox_p)
+        val_targets.append(vbox)
+        if mAP > best_map:
+            best_map = mAP
+        if mAP2 > best_map2:
+            best_map2 = mAP2
+    if HPC:
+        save_model(model, "{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
+        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_model,lr=lr,val_loss=loss_val,exp_description=exp_description)
+    else:
+        save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
+        save_model(model,save_path, "{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
+    print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
+    print("Actual average nr. of boxes: ", val_targets[-1])
+    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)

@@ -101,6 +101,19 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
         }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/' + model_name + '.pt')
     print("Model saved as "+model_name+'.pt')
 
+def freeze_layers(model,layers):
+    params = [p for p in model.parameters() if p.requires_grad]
+    if layers=='Classifier':
+        params2freeze = params[:64]
+        for parameter in params2freeze:
+            parameter.requires_grad_(requires_grad=False)
+    elif layers=='RPN':
+        params2freeze = params[:58]
+        for parameter in params2freeze:
+            parameter.requires_grad_(requires_grad=False)
+    else:
+        pass
+
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
 #transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 
@@ -217,10 +230,11 @@ if __name__ == '__main__':
         model.to(device)
 
         params = [p for p in model.parameters() if p.requires_grad]
-        # params_to_train = params[64:]
+        freeze_layers(model,layers='Classifier')
+        params2train = [p for p in model.parameters() if p.requires_grad]
 
         lr = 0.01
-        optimizer = torch.optim.SGD(params, lr=lr,
+        optimizer = torch.optim.SGD(params2train, lr=lr,
                                     momentum=0.9, weight_decay=0.0005)
         # and a learning rate scheduler which decreases the learning rate by
         # 10x every 3 epochs
@@ -246,20 +260,16 @@ if __name__ == '__main__':
         risk = True
         best_map = 0
         best_map2 = 0
-        avg_pred_box = []
-        avg_target_box = []
         val_boxes = []
         val_targets = []
         for epoch in range(num_epoch):
             print("About to train")
             curr_loss_train = []
             # train for one epoch, printing every 10 iterations
-            model, loss, pred_box, target_box = train_one_epoch(model, model_name, optimizer, train_loader, device,
+            model, loss, _, _ = train_one_epoch(model, model_name, optimizer, train_loader, device,
                                                                  epoch=epoch + 1, print_freq=5,
                                                                  loss_list=curr_loss_train, risk=risk)
             loss_train.append(loss)
-            avg_pred_box.append(pred_box)
-            avg_target_box.append(target_box)
             # update the learning rate
             lr_scheduler.step()
             # evaluate on the test dataset
@@ -278,8 +288,6 @@ if __name__ == '__main__':
                       lr)
         save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
-        print("Average nr. of predicted boxes in training: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
-        print("Actual average nr. of boxes in training: ", avg_target_box[-1])
         print("Average nr. of predicted boxes in test: ", val_boxes[-1])
         print("Actual average nr. of boxes in test: ", val_targets[-1])
 
