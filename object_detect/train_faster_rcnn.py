@@ -27,7 +27,7 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def define_model(num_classes,net):
+def define_model(num_classes,net,anchors):
     if net == 'mobilenet':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
         # FasterRCNN needs to know the number of
@@ -62,7 +62,7 @@ def define_model(num_classes,net):
 
     elif net == 'resnet50':
         resnet50 = init_model(num_classes=num_classes)
-        anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+        anchor_sizes = anchors
         aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
         rpn_anchor_generator = AnchorGenerator(
             anchor_sizes, aspect_ratios
@@ -72,7 +72,7 @@ def define_model(num_classes,net):
         roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
                                                         output_size=7,
                                                         sampling_ratio=2)
-        model = FasterRCNN(resnet50.backbone, min_size=180, max_size=360,
+        model = FasterRCNN(resnet50.backbone, min_size=800, max_size=1333,
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
                            box_roi_pool=roi_pooler)
@@ -101,12 +101,14 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
         }, '/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI/faster_rcnn/' + model_name + '.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
+#transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 
 HPC =False
-binary=True
+binary=False
 multi=False
-tick_bite=False
+tick_bite=True
+load_model=False
 if __name__ == '__main__':
     if HPC:
         if binary:
@@ -162,9 +164,9 @@ if __name__ == '__main__':
             color_dict = data_loader.color_dict_binary
             target_dict = data_loader.get_target_dict()
             annotations_dict = data_loader.annotations_dict
-            batch_size = 4
+            batch_size = 2
             val_batch_size = 4
-            num_epoch = 10
+            num_epoch = 2
 
             file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
             N_files = len(file_names)
@@ -195,31 +197,37 @@ if __name__ == '__main__':
     #model0 = init_model(num_classes=2)
     #model0.to(device)
 
-    model = define_model(num_classes=2,net='resnet50')
-    model.to(device)
+    #model = define_model(num_classes=2,net='resnet50',anchors=((8,), (16,), (32,), (64,), (128,)))
+    #model.to(device)
 
+    #((32,), (64,), (128,), (256,), (512,))
+    #if load_model == True:
+        #model.load_state_dict(state_dict)
     #model2 = define_model(num_classes=2,net='mobilenet')
     #model2.to(device)
 
     # construct an optimizer
-    params = [p for p in model.parameters() if p.requires_grad]
-    #params_to_train = params[64:]
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                momentum=0.9, weight_decay=0.0005)
-    # and a learning rate scheduler which decreases the learning rate by
-    # 10x every 3 epochs
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=10,
-                                                   gamma=0.1)
     overall_best = 0
     overall_best2 = 0
     best_lr = 0
     best_lr2 = 0
     model_names = ['resnet50']
-    lr = 0.005
     for model_name in model_names:
-        model = define_model(num_classes=2, net=model_name)
+        model = define_model(num_classes=2, net=model_name,anchors=((8,), (16,), (32,), (64,), (128,)))
         model.to(device)
+
+        params = [p for p in model.parameters() if p.requires_grad]
+        # params_to_train = params[64:]
+
+        lr = 0.01
+        optimizer = torch.optim.SGD(params, lr=lr,
+                                    momentum=0.9, weight_decay=0.0005)
+        # and a learning rate scheduler which decreases the learning rate by
+        # 10x every 3 epochs
+        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
+                                                       step_size=10,
+                                                       gamma=0.1)
+
         print("Model: ", model_name)
         print("Learning rate: ", lr)
 

@@ -82,6 +82,7 @@ def get_iou2(boxes,target):
                 new_iou_list[io] = 0
     if len(new_iou_list)==0:
         new_iou_list = np.append(new_iou_list, 0)
+        iou_list = np.append(iou_list, 0)
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
@@ -106,11 +107,12 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
         print("boxes: ", boxes)
         print("targets: ", target)
         print("iou: ", iou_list)
-    if len(boxes) > 0:
-        print("boxes: ", boxes)
-        print("targets: ", target)
-        print("iou: ", iou_list)
         print("scores: ", scores)
+    #if len(boxes) > 0:
+        #print("boxes: ", boxes)
+        #print("targets: ", target)
+        #print("iou: ", iou_list)
+        #print("scores: ", scores)
     return df, mAP, mAP2
 
 def get_map(boxes,target,scores,iou_list,threshold=0.5):

@@ -58,20 +58,26 @@ class LeatherData(data.Dataset):
             bmask, bounding_box = new_convert(mask)
             bboxes = []
             for i in range(np.shape(bounding_box)[0]):
-                if bounding_box[i] == (0, 0, 255, 255):
-                    pass
-                if bounding_box[i] == (0, 0, 256, 256):
-                    pass
-                if bounding_box[i] == (0, 0, 200, 200):
-                    pass
-                else:
-                    bboxes.append(bounding_box[i])
+                #if bounding_box[i] == (0, 0, 255, 255):
+                #    pass
+                #if bounding_box[i] == (0, 0, 256, 256):
+                #    pass
+                #if bounding_box[i] == (0, 0, 200, 200):
+                #    pass
+
+                bboxes.append(bounding_box[i])
 
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 256, 256))
+                bboxes.append((0, 0, 512, 512))
+                #em = np.empty(0)
+                #boxes = torch.tensor(em, dtype=torch.float32)
+                #area = torch.tensor(em, dtype=torch.float32)
+                #labels = torch.tensor(em, dtype=torch.int64)
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.zeros(1, dtype=torch.int64)
+                #targets = None
+                #return img, targets, mask
             else:
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])

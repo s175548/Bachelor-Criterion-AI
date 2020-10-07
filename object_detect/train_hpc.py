@@ -28,7 +28,7 @@ def init_model(num_classes):
     return model
 
 
-def define_model(num_classes, net):
+def define_model(num_classes, net, anchors):
     if net == 'mobilenet':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
         # FasterRCNN needs to know the number of
@@ -56,14 +56,14 @@ def define_model(num_classes, net):
                                                         sampling_ratio=2)
 
         # put the pieces together inside a FasterRCNN model
-        model = FasterRCNN(backbone, min_size=180, max_size=360,
+        model = FasterRCNN(backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=anchor_generator,
                            box_roi_pool=roi_pooler)
 
     elif net == 'resnet50':
         resnet50 = init_model(num_classes=num_classes)
-        anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+        anchor_sizes = anchors
         aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
         rpn_anchor_generator = AnchorGenerator(
             anchor_sizes, aspect_ratios
@@ -73,7 +73,7 @@ def define_model(num_classes, net):
         roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
                                                         output_size=7,
                                                         sampling_ratio=2)
-        model = FasterRCNN(resnet50.backbone, min_size=180, max_size=360,
+        model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
                            box_roi_pool=roi_pooler)
@@ -92,76 +92,64 @@ def save_model(model,model_name=None,n_epochs=None, optimizer=None,scheduler=Non
     }, '/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'+model_name+'.pt')
     print("Model saved as "+model_name+'.pt')
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256)),et.ExtToTensor()])
+#transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((512)),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 binary=True
+tick_bite=False
+multi=False
+load_model=False
 if __name__ == '__main__':
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     print("Device: %s" % device)
 
     #learning_rates = [0.01, 0.001, 0.0001]
-    learning_rates = [0.0001]
+    learning_rates = [0.001]
 
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
-
 
     torch.manual_seed(2)
     np.random.seed(2)
     random.seed(2)
 
-    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
-
+    #labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+    # path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
+    # path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
     if binary:
+        path_mask = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
+        path_img = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
+
+    elif tick_bite:
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
-        data_loader = DataLoader(data_path=path_original_data,
-                                 metadata_path=path_meta_data)
-        color_dict = data_loader.color_dict_binary
-        target_dict = data_loader.get_target_dict()
-        annotations_dict = data_loader.annotations_dict
-        batch_size = 4
-        val_batch_size = 4
-        num_epoch = 100
-
-        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
-        N_files = len(file_names)
-        shuffled_index = np.random.permutation(len(file_names))
-        file_names_img = file_names[shuffled_index]
-
-        train_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[:round(N_files*0.80)],
-                                bbox=True,
-                                transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files*0.80):],
-                              bbox=True,
-                              transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-
     else:
         path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
         path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
         #path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
         #path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_multi'
 
-        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[:-4] != ".DS_S"])
-        N_files = len(file_names)
-        shuffled_index = np.random.permutation(len(file_names))
-        file_names_img = file_names[shuffled_index]
-        file_names = file_names[file_names != ".DS_S"]
+    data_loader = DataLoader(data_path=path_original_data,
+                                 metadata_path=path_meta_data)
+    color_dict = data_loader.color_dict_binary
+    target_dict = data_loader.get_target_dict()
+    annotations_dict = data_loader.annotations_dict
+    batch_size = 4
+    val_batch_size = 4
+    num_epoch = 100
 
-        batch_size = 16
-        val_batch_size = 16
-        num_epoch = 10
+    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
+    N_files = len(file_names)
+    shuffled_index = np.random.permutation(len(file_names))
+    file_names_img = file_names[shuffled_index]
 
-        # Define dataloaders
-        train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                                list_of_filenames=file_names[:round(N_files * 0.80)],
-                                bbox=True,
-                                transform=transform_function)
-        val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                              list_of_filenames=file_names[round(N_files * 0.80):],
-                              bbox=True,
-                              transform=transform_function)
-
+    train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                            list_of_filenames=file_names[:round(N_files * 0.80)],
+                            bbox=True,
+                            transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+    val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
+                          bbox=True,
+                          transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
@@ -174,13 +162,17 @@ if __name__ == '__main__':
     best_lr = 0
     best_lr2 = 0
     model_names = ['mobilenet', 'resnet50']
+
+    if load_model == True:
+
     for lr in learning_rates:
         model_name = model_names[0]
         model = define_model(num_classes=2,net=model_name)
         model.to(device)
         print("Model: ", model_name)
         print("Learning rate: ", lr)
-
+        if load_model == True:
+            model.l
         # construct an optimizer
         params = [p for p in model.parameters() if p.requires_grad]
         #params_to_train = params[64:]
@@ -221,8 +213,8 @@ if __name__ == '__main__':
             if mAP2 > best_map2:
                 best_map2 = mAP2
                 print("Best mAP with scores: ", best_map2," epoch nr. : ", epoch+1, "model: ", model_name, "lr: ", lr)
-        save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
+        #save_model(model, "{}_{}".format(model_name, lr), n_epochs=num_epoch, optimizer=optimizer,
+        #           scheduler=lr_scheduler, best_score=best_map, losses=loss_train)
         print("Average nr. of predicted boxes: ", avg_pred_box[-1], " model = ", model_name, "lr = ", lr)
         print("Actual average nr. of boxes: ", avg_target_box[-1])
     if overall_best < best_map:

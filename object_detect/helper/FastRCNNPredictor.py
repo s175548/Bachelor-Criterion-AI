@@ -12,7 +12,7 @@ from torch.hub import load_state_dict_from_url
 from torchvision.models.detection.generalized_rcnn import GeneralizedRCNN
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead, RegionProposalNetwork
 from object_detect.helper.roi_heads import RoIHeads
-from torchvision.models.detection.transform import GeneralizedRCNNTransform
+from object_detect.helper.transform import GeneralizedRCNNTransform
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
 
 

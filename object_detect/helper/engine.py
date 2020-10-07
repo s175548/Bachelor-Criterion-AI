@@ -211,11 +211,11 @@ def evaluate(model, model_name, data_loader, device,N,risk=True,threshold=0.5):
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
         for j in range(len(ids)):
             iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
-            df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=0.3)
+            df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=0.3)
             mAP.append(AP)
             mAP2.append(AP2)
             if N % 50 == 0:
-                _,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=0.3, print_state=True)
+                jo,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=0.3, print_state=True)
         samples = []
         num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
         num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))

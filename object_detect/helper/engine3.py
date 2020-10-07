@@ -73,7 +73,12 @@ def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, pr
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
-        targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
+        none_targets = list(0 for t in labels if t == None)
+        if len(none_targets)>0:
+            tar = list(labels)
+            loss_dict = model(images, tar)
+        targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels if t != None)
+
 
         loss_dict = model(images, targets)
         losses = sum(loss for loss in loss_dict.values())
@@ -161,7 +166,7 @@ def evaluate(model, model_name, data_loader, device,N,risk=True):
         for j in range(len(ids)):
             iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
             df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
-                                   iou_list=selected_iou, threshold=0.5)
+                                   iou_list=iou, threshold=0.3)
             mAP.append(AP)
             mAP2.append(AP2)
         samples = []
