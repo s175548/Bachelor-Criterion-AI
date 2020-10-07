@@ -9,11 +9,12 @@ import argparse,json,ast
 
 
 
-HPC =False
+HPC =True
 Villads=False
 binary=False
 model_name = ''
-
+optimizer = ''
+exp_descrip = ''
 if __name__ == "__main__":
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
@@ -28,16 +29,21 @@ if __name__ == "__main__":
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
-        parser = argparse.ArgumentParser(description='Take learning rate parameter')
-        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser = argparse.ArgumentParser(description='Take parameters')
+        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
         args = vars(parser.parse_args())
 
+        lr = args['learning rate'][0]
+        optimizer = args['optimizer name'][0]
         model_name = args['model name'][0]
+        exp_descrip = args['experiment description']
         save_folder = args['folder name'][0]
         save_path = os.path.join(save_path,save_folder)
-        lr = args['parameter choice'][0]
+
         print(args['parameter choice'][0], " this is the chosen parameter")
 
     elif Villads:
@@ -117,7 +123,11 @@ if __name__ == "__main__":
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     if model_name == '':
         model_name = 'MobileNet'
-        #model_name = 'DeepLab'
+        #model_name =
+    if optimizer == '':
+        optimizer = 'SGD'
+    if exp_descrip == '':
+        exp_descrip = 'no_decrip'
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
-    training(n_classes=3, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = 'multi_class_lr')
+    training(n_classes=3, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer)

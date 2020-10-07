@@ -33,7 +33,7 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 4 # 16
+batch_size= 16 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -122,7 +122,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None,val_loader=None,train_dst=None, val_dst=None,
-             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = ''):
+             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = '',optim='SGD'):
 
 
     model_dict={}
@@ -153,10 +153,22 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
     metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer
-    optimizer = torch.optim.SGD(params=[
-        {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
-        {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-    ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    if optim == 'SGD':
+        optimizer = torch.optim.SGD(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    elif optim == 'Adam':
+        optimizer = torch.optim.Adam(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.RMSprop(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
     criterion = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
