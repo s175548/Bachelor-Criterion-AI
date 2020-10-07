@@ -199,6 +199,9 @@ if __name__ == '__main__':
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
+
+    labels=['Piega', 'Verruca', 'Puntura insetto','Background']
+    
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
