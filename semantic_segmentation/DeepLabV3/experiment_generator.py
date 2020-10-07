@@ -44,8 +44,6 @@ if __name__ == "__main__":
         save_folder = args['folder name'][0]
         save_path = os.path.join(save_path,save_folder)
 
-        print(args['parameter choice'][0], " this is the chosen parameter")
-
     elif Villads:
         path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
         path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
