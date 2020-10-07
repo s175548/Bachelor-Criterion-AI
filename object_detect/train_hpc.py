@@ -136,6 +136,7 @@ transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((40
 HPC=True
 binary=False
 tick_bite=True
+splitted_data=True
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -153,8 +154,8 @@ if __name__ == '__main__':
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         if binary:
-            path_mask = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
-            path_img = r'/zhome/dd/4/128822/Bachelorprojekt/binary'
+            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
             save_fold = 'binary/'
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -198,9 +199,15 @@ if __name__ == '__main__':
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
-    color_dict = data_loader.color_dict_binary
-    target_dict = data_loader.get_target_dict()
-    annotations_dict = data_loader.annotations_dict
+    if binary:
+        color_dict = data_loader.color_dict_binary
+        target_dict = data_loader.get_target_dict()
+        annotations_dict = data_loader.annotations_dict
+
+    else:
+        color_dict= data_loader.color_dict
+        target_dict=data_loader.get_target_dict(labels)
+        annotations_dict=data_loader.annotations_dict
 
     if tick_bite:
         batch_size = 4
@@ -209,18 +216,32 @@ if __name__ == '__main__':
         batch_size = 16
         val_batch_size = 16
 
-    file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
-    N_files = len(file_names)
-    shuffled_index = np.random.permutation(len(file_names))
-    file_names_img = file_names[shuffled_index]
+    if splitted_data:
+        file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
+        N_files = len(file_names_train)
+        shuffled_index = np.random.permutation(len(file_names_train))
+        file_names_train = file_names_train[shuffled_index]
+        file_names_train = file_names_train[file_names_train != ".DS_S"]
 
-    train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                            list_of_filenames=file_names[:round(N_files * 0.80)],
-                            bbox=True,
-                            transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-    val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
-                          bbox=True,
-                          transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+        N_files = len(file_names_val)
+
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+                                transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                              transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+    else:
+        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
+        N_files = len(file_names)
+        shuffled_index = np.random.permutation(len(file_names))
+        file_names_img = file_names[shuffled_index]
+        train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
+                                list_of_filenames=file_names[:round(N_files * 0.80)],
+                                bbox=True,
+                                transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
+                              bbox=True,
+                              transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
@@ -242,7 +263,10 @@ if __name__ == '__main__':
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
     params = [p for p in model.parameters() if p.requires_grad]
-    freeze_layers(model, layers=layers[1])
+    if model_name=='mobilenet':
+        freeze_layers(model, layers=layers[2])
+    else:
+        freeze_layers(model, layers=layers[1])
     params2train = [p for p in model.parameters() if p.requires_grad]
     weight_decay = 0.0005
     optimizer = torch.optim.SGD(params2train, lr=lr,
