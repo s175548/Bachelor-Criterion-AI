@@ -120,7 +120,8 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
                 mAP.append(AP)
                 mAP2.append(AP2)
                 if N % 50 == 0:
-                    jo,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=threshold, print_state=True)
+                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=threshold, print_state=True)
+                    print(df2)
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
@@ -149,4 +150,5 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
         if N % 25 == 0:
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
+            print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
     return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))

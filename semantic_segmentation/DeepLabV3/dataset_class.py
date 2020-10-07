@@ -68,7 +68,7 @@ class LeatherData(data.Dataset):
                 bboxes.append(bounding_box[i])
 
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 512, 512))
+                bboxes.append((0, 0, 400, 400))
                 #em = np.empty(0)
                 #boxes = torch.tensor(em, dtype=torch.float32)
                 #area = torch.tensor(em, dtype=torch.float32)

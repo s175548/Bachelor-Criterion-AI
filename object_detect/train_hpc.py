@@ -131,8 +131,8 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,val_loss=None
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
     plt.close()
 
-#transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((512)),et.ExtToTensor()])
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
+#transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 HPC=True
 binary=False
 tick_bite=True
@@ -283,7 +283,8 @@ if __name__ == '__main__':
         if mAP2 > best_map2:
             best_map2 = mAP2
     if HPC:
-        save_model(model, "{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
+        save_model(model=model, save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=HPC,
+                   model_name="{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_model,lr=lr,val_loss=loss_val,exp_description=exp_description)
     else:
