@@ -71,11 +71,11 @@ class StreamSegMetrics(_StreamMetrics):
         fwavacc = (freq[freq > 0] * iu[freq > 0]).sum()
         cls_iu = dict(zip(range(self.n_classes), iu))
         #F1 calculation
-        for i in range(len(hist)):
-            #True positives for class i is located at hist[i,i]
-            #False negatives for class i is the sum of values in the corresponding row excluding TP!(prediction axis)
-            #False positives for class i is the sum of the values in the corresponding column excluding TP!(truth axis)
-            # True negatives is the sum of the whole confusion matrix excluding the row and column i.
+        # for i in range(len(hist)):
+        #True positives for class i is located at hist[i,i]
+        #False negatives for class i is the sum of values in the corresponding row excluding TP!(prediction axis)
+        #False positives for class i is the sum of the values in the corresponding column excluding TP!(truth axis)
+        # True negatives is the sum of the whole confusion matrix excluding the row and column i.
         return {
                 "Overall Acc": acc,
                 "Mean Acc": acc_cls,
