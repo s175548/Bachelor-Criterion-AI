@@ -95,6 +95,8 @@ def train_one_epoch(model, model_name, optim_name, optimizer, data_loader, devic
 def evaluate(model, model_name, optim_name, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
     n_threads = torch.get_num_threads()
     torch.set_num_threads(n_threads)
+    if N % 25 == 0:
+        print("N_threads: ", n_threads)
     model.eval()
     if HPC:
         path_save = save_folder
