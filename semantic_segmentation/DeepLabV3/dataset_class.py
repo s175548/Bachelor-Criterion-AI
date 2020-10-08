@@ -7,7 +7,7 @@ import shutil
 import numpy as np
 from data_import.masks_to_bounding_box import convert_mask_to_bounding_box
 from PIL import Image
-from object_detect.get_bboxes import new_convert, convert_mask_to_bbox
+from object_detect.get_bboxes import new_convert, convert_mask_to_bbox, get_multi_bboxes
 import torch
 
 
@@ -16,7 +16,7 @@ import torch
 class LeatherData(data.Dataset):
 
     def __init__(self,
-                 path_mask,path_img,list_of_filenames,bbox=False,
+                 path_mask,path_img,list_of_filenames,bbox=False,multi=False,
                  transform=None,color_dict=None,target_dict=None):
 
 
@@ -26,14 +26,15 @@ class LeatherData(data.Dataset):
         self.color_dict=color_dict
         self.target_dict=target_dict
         self.bbox = bbox
+        self.multi = multi
 
 
         file_names_mask=os.listdir(self.path_mask)
         file_names_img=os.listdir(self.path_img)
         file_names=list_of_filenames
 
-        self.images = [os.path.join(self.path_img, x+ '.png') for x in file_names]
-        self.masks = [os.path.join(self.path_mask, x+ '_mask.png') for x in file_names]
+        self.images = [os.path.join(self.path_img, x + '.png') for x in file_names]
+        self.masks = [os.path.join(self.path_mask, x + '_mask.png') for x in file_names]
         assert (len(self.images) == len(self.masks))
 
     def __getitem__(self, index):
@@ -46,25 +47,30 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
         img_for_bbox = Image.open(self.images[index]).convert('RGB')
-        mask_for_bbox = Image.open(self.masks[index]).convert('L')
+        mask2 = np.array(Image.open(self.masks[index]).convert('L'))
         img_index = index
 
+        for key,value in self.target_dict.items():
+            value=self.color_dict[key]
+            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
+            target[index,:]=self.target_dict[key]
+
+        #for key,value in self.target_dict.items():
+        #    value=self.color_dict[key]
+        #    index= (mask2[:,:,0]==value[0]) & (mask2[:,:,1]==value[1]) & (mask2[:,:,2]==value[2])
+        #    mask2[index,:]=self.target_dict[key]
 
         if self.bbox == True:
             if self.transform is not None:
-                img, target = self.transform(img_for_bbox, mask_for_bbox)
-            mask = target.numpy()
-            #shape = check_mask(mask=mask, name="SHAPE2")
-            bmask, bounding_box = new_convert(mask)
+                target2 = Image.fromarray(mask2)
+                img, target2 = self.transform(img_for_bbox, target2)
+            mask = target2.numpy()
+            if self.multi:
+                bmask, bounding_box = get_multi_bboxes(mask)
+            else:
+                bmask, bounding_box = new_convert(mask)
             bboxes = []
             for i in range(np.shape(bounding_box)[0]):
-                #if bounding_box[i] == (0, 0, 255, 255):
-                #    pass
-                #if bounding_box[i] == (0, 0, 256, 256):
-                #    pass
-                #if bounding_box[i] == (0, 0, 200, 200):
-                #    pass
-
                 bboxes.append(bounding_box[i])
 
             if len(bboxes) == 0:
@@ -93,11 +99,6 @@ class LeatherData(data.Dataset):
             targets["area"] = area
             targets["iscrowd"] = iscrowd
             return img, targets, mask
-
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
 
 
         if self.transform is not None:

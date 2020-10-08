@@ -203,16 +203,16 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
         if binary:
-            path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
-            path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
             dataset = "binary"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             dataset = "tick_bite"
         else:
-            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
             dataset = "multi"
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
@@ -238,24 +238,29 @@ if __name__ == '__main__':
         batch_size = 4
         val_batch_size = 4
     else:
-        batch_size = 16
-        val_batch_size = 4
+        if HPC:
+            batch_size = 16
+            val_batch_size = 4
+        else:
+            batch_size = 1
+            val_batch_size = 1
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
-        shuffled_index = np.random.permutation(len(file_names_train))
-        file_names_train = file_names_train[shuffled_index]
-        file_names_train = file_names_train[file_names_train != ".DS_S"]
-
+        #shuffled_index = np.random.permutation(len(file_names_train))
+        #file_names_train = file_names_train[shuffled_index]
+        #file_names_train = file_names_train[file_names_train != ".DS_S"]
+        files_of_interest = [np.where(file_names_train == '589_8'), np.where(file_names_train== '590_0')]
+        files_of_interest = np.array(files_of_interest)
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                                bbox=True,
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[285:287],
+                                bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                              bbox=True,
+                              bbox=True, multi=multi,
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
@@ -271,7 +276,7 @@ if __name__ == '__main__':
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
@@ -334,14 +339,14 @@ if __name__ == '__main__':
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, optimizer=optimizer,
+        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, optimizer=optimizer,
                                             data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, data_loader=val_loader,
+        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
         loss_val.append(val_loss)
