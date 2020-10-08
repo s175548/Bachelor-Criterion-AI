@@ -55,14 +55,9 @@ class LeatherData(data.Dataset):
             index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
             target[index,:]=self.target_dict[key]
 
-        #for key,value in self.target_dict.items():
-        #    value=self.color_dict[key]
-        #    index= (mask2[:,:,0]==value[0]) & (mask2[:,:,1]==value[1]) & (mask2[:,:,2]==value[2])
-        #    mask2[index,:]=self.target_dict[key]
-
         if self.bbox == True:
             if self.transform is not None:
-                target2 = Image.fromarray(mask2)
+                target2 = Image.fromarray(target)
                 img, target2 = self.transform(img_for_bbox, target2)
             mask = target2.numpy()
             if self.multi:
