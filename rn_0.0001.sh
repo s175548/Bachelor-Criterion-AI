@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J mobilenet_05_
-#BSUB -o mobilenet%J.out
+#BSUB -J resnet_0001_
+#BSUB -o resnet_0001_J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py 0.05 mobilenet
+python3 object_detect/train_hpc.py 0.05 resnet50 SGD
 echo "Done"

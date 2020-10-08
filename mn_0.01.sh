@@ -1,6 +1,6 @@
 #!/bin/sh
 #BSUB -J mobilenet_01_
-#BSUB -o mobilenet%J.out
+#BSUB -o mobilenet_01_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
