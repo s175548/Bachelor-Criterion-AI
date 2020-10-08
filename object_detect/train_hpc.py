@@ -239,7 +239,7 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         batch_size = 16
-        val_batch_size = 16
+        val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
