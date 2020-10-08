@@ -127,8 +127,8 @@ def evaluate(model, model_name, optim_name, data_loader, device,N,loss_list,save
                 mAP.append(AP)
                 mAP2.append(AP2)
                 if N % 50 == 0:
-                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=selected_iou, threshold=threshold, print_state=True)
-                    print(df2)
+                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold, print_state=True)
+                    #print(df2)
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))

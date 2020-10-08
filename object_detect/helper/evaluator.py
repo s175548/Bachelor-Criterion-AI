@@ -98,6 +98,9 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
     if len(scores) == 0:
         scores2 = np.zeros(len(true_labels[0]))
         mAP2 = average_precision_score(true_labels[0],scores2)
+    for j in range(len(scores)):
+        if torch.isnan(scores[j].detach().cpu()) == True:
+            scores[j] = 0
     else:
         mAP2 = average_precision_score(true_labels[0], scores.cpu())
     if np.isnan(mAP)==True:
@@ -160,9 +163,9 @@ if __name__ == '__main__':
                           [158.8094, 249.3433, 166.4100, 259.2597],
                          [164.4904, 245.0411, 176.3329, 252.5500]],dtype=torch.float32)
     target = torch.tensor([[162, 248, 176, 261]],dtype=torch.float32)
-    scores = torch.tensor([0.7861, 0.7633, 0.6983, 0.3056, 0.1391],dtype=torch.float32)
+    scores = torch.tensor([0.7861, 0.7633, 0.6983, 0.3056, float('NaN')],dtype=torch.float32)
     iou, index, selected_iou = get_iou2(boxes=boxes,target=target)
     #best_bboxes = boxes[index]
-    df, mAP = get_map2(boxes,target,scores,iou_list=iou,threshold=0.3)
+    df, mAP, mAP2 = get_map2(boxes,target,scores,iou_list=iou,threshold=0.3,print_state=True)
     print("IoU is; ", iou)
     print("mAP is: ", mAP)
