@@ -142,9 +142,12 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
 
 HPC=True
-binary=False
 tick_bite=True
-splitted_data=False
+if tick_bite:
+    splitted_data = False
+else:
+    splitted_data = True
+binary=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -190,7 +193,7 @@ if __name__ == '__main__':
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
-        num_epoch = 100
+        num_epoch = 50
     else:
         device = torch.device('cpu')
         lr = 0.01
