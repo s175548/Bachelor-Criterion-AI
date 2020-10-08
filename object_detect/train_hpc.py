@@ -248,15 +248,15 @@ if __name__ == '__main__':
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
-        #shuffled_index = np.random.permutation(len(file_names_train))
-        #file_names_train = file_names_train[shuffled_index]
-        #file_names_train = file_names_train[file_names_train != ".DS_S"]
+        shuffled_index = np.random.permutation(len(file_names_train))
+        file_names_train = file_names_train[shuffled_index]
+        file_names_train = file_names_train[file_names_train != ".DS_S"]
         files_of_interest = [np.where(file_names_train == '589_8'), np.where(file_names_train== '590_0')]
         files_of_interest = np.array(files_of_interest)
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[285:287],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,

@@ -54,10 +54,10 @@ class LeatherData(data.Dataset):
             if self.transform is not None:
                 img, target2 = self.transform(img_for_bbox, mask_for_bbox)
             mask = target2.numpy()
-            if self.multi:
-                bmask, bounding_box = get_multi_bboxes(mask)
-            else:
-                bmask, bounding_box = new_convert(mask)
+            #if self.multi:
+                #bmask, bounding_box = get_multi_bboxes(mask)
+
+            bmask, bounding_box = new_convert(mask)
             bboxes = []
             for i in range(np.shape(bounding_box)[0]):
                 bboxes.append(bounding_box[i])
