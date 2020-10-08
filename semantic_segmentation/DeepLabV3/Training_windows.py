@@ -85,7 +85,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             metrics.update(targets, preds)
 
 
-        if N-1%25 == 0:
+        if N%10 == 0 or N==1:
             for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
                 target = convert_to_image(target.squeeze(), color_dict, target_dict)
                 pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
