@@ -142,7 +142,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
 
-HPC=False
+HPC=True
 tick_bite=False
 if tick_bite:
     splitted_data = False
