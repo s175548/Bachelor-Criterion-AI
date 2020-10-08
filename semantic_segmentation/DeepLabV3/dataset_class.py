@@ -47,18 +47,12 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
         img_for_bbox = Image.open(self.images[index]).convert('RGB')
-        mask2 = np.array(Image.open(self.masks[index]).convert('L'))
+        mask_for_bbox = Image.open(self.masks[index]).convert('L')
         img_index = index
-
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
 
         if self.bbox == True:
             if self.transform is not None:
-                target2 = Image.fromarray(target)
-                img, target2 = self.transform(img_for_bbox, target2)
+                img, target2 = self.transform(img_for_bbox, mask_for_bbox)
             mask = target2.numpy()
             if self.multi:
                 bmask, bounding_box = get_multi_bboxes(mask)
@@ -95,6 +89,10 @@ class LeatherData(data.Dataset):
             targets["iscrowd"] = iscrowd
             return img, targets, mask
 
+        for key,value in self.target_dict.items():
+            value=self.color_dict[key]
+            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
+            target[index,:]=self.target_dict[key]
 
         if self.transform is not None:
             target = Image.fromarray(target)
