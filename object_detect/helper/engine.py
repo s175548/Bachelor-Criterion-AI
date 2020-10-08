@@ -18,10 +18,10 @@ def get_samples(samples,model_name,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_val_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_val_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_train_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_train_{}_{}_prediction.png'.format(model_name,N, id),
                                                              format='PNG')
 
 
@@ -33,7 +33,7 @@ def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, pr
     lr_scheduler = None
     i = 0
     if HPC:
-        path_save = save_folder
+        path_save = os.path.join(save_folder,model_name)
     else:
         path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
     num_boxes = []
@@ -90,7 +90,7 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
     torch.set_num_threads(n_threads)
     model.eval()
     if HPC:
-        path_save = save_folder
+        path_save = os.path.join(save_folder,model_name)
     else:
         path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
     metric_logger = utils.MetricLogger(delimiter="  ")

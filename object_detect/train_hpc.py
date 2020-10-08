@@ -162,18 +162,22 @@ if __name__ == '__main__':
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
             save_fold = 'binary/'
+            dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             save_fold = 'tick_bite/'
+            dataset = "tick_bite"
         else:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
             save_fold = 'multi/'
+            dataset = "multu"
 
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
         parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
+        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, ADAM or RMS')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
@@ -182,7 +186,7 @@ if __name__ == '__main__':
         save_folder = os.path.join(path_save, model_name)
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
-        print(args['parameter choice'][0], " this is the chosen parameter")
+        optim = args['optimizer name'][0]
         num_epoch = 100
     else:
         device = torch.device('cpu')
@@ -267,19 +271,29 @@ if __name__ == '__main__':
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
+    print("Optimizer: ", optim)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
     params = [p for p in model.parameters() if p.requires_grad]
+
     if model_name=='mobilenet':
         freeze_layers(model, layers=layers[2])
+        print("Layers trained: ", layers[2])
     else:
         freeze_layers(model, layers=layers[1])
+        print("Layers trained: ", layers[0], " + ", layers[1])
+
     params2train = [p for p in model.parameters() if p.requires_grad]
     weight_decay = 0.0005
-    optimizer = torch.optim.SGD(params2train, lr=lr,
-                                momentum=0.9, weight_decay=weight_decay)
-    print("Layers trained: ", layers[0], " + ", layers[1])
+
+    # Set up optimizer
+    if optim == 'SGD':
+        optimizer = torch.optim.SGD(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
+    elif optim == 'Adam':
+        optimizer = torch.optim.Adam(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.RMSprop(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
 
     # and a learning rate scheduler which decreases the learning rate by
     # 10x every 50 epochs
@@ -315,13 +329,13 @@ if __name__ == '__main__':
         if mAP2 > best_map2:
             best_map2 = mAP2
     if HPC:
-        save_model(model=model, save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=HPC,
-                   model_name="{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
+        save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+                   model_name="{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, "{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
+        save_model(model,save_path, "{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
