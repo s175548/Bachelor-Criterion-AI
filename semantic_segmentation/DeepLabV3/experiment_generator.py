@@ -25,7 +25,7 @@ if __name__ == "__main__":
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
         else:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3/val'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
