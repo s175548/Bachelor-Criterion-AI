@@ -142,7 +142,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
 
-HPC=True
+HPC=False
 tick_bite=False
 if tick_bite:
     splitted_data = False
@@ -251,8 +251,7 @@ if __name__ == '__main__':
         shuffled_index = np.random.permutation(len(file_names_train))
         file_names_train = file_names_train[shuffled_index]
         file_names_train = file_names_train[file_names_train != ".DS_S"]
-        files_of_interest = [np.where(file_names_train == '589_8'), np.where(file_names_train== '590_0')]
-        files_of_interest = np.array(files_of_interest)
+
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
