@@ -61,23 +61,25 @@ def define_model(num_classes, net, anchors):
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=anchor_generator,
+                           rpn_fg_iou_thresh=0.7, rpn_bg_iou_thresh=0.3,
                            box_roi_pool=roi_pooler)
 
     elif net == 'resnet50':
         resnet50 = init_model(num_classes=num_classes)
         anchor_sizes = anchors
         aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
-        rpn_anchor_generator = AnchorGenerator(
-            anchor_sizes, aspect_ratios
-        )
+        rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
         rpn_head = RPNHead(
                 resnet50.backbone.out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
+
         roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
                                                         output_size=7,
                                                         sampling_ratio=2)
         model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
+                           rpn_fg_iou_thresh=0.7, rpn_bg_iou_thresh=0.3,
                            box_roi_pool=roi_pooler)
     return model
 
@@ -125,6 +127,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,val_loss=None
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
+    #plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
     plt.plot(range(N_epochs), val_loss, '-o')
     plt.title('Validation Loss')
@@ -177,14 +180,14 @@ if __name__ == '__main__':
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
         save_folder = os.path.join(path_save, model_name)
-        exp_description = os.path.join(save_fold,model_name)
+        save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         print(args['parameter choice'][0], " this is the chosen parameter")
         num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
-        num_epoch = 2
+        num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         if binary:
@@ -315,7 +318,7 @@ if __name__ == '__main__':
         save_model(model=model, save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=HPC,
                    model_name="{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
-        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_model,lr=lr,val_loss=loss_val,exp_description=exp_description)
+        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
         save_model(model,save_path, "{}_{}_{}".format(model_name, lr,"tick_bite"), n_epochs=num_epoch, optimizer=optimizer,
