@@ -18,10 +18,10 @@ def get_samples(samples,model_name,optim_name,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_val_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data()),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_val_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data()),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data),
                                                              format='PNG')
 
 

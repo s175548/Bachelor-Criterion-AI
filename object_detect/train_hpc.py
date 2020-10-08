@@ -87,7 +87,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='bina
                            box_roi_pool=roi_pooler)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -96,7 +96,8 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
             "scheduler_state": scheduler.state_dict(),
-            "best_score": best_score,
+            "best_map": best_map,
+            "best_map_w_score": best_score,
             "train_losses": losses,
             "val_losses": val_losses,
         }, save_path+model_name+optim_name+'.pt')
@@ -142,12 +143,12 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
 
 HPC=True
-tick_bite=False
+tick_bite=True
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
-binary=True
+binary=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -183,7 +184,7 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
         parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
-        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, ADAM or RMS')
+        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
@@ -350,7 +351,7 @@ if __name__ == '__main__':
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
+                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
     else:
