@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J version0001
-#BSUB -o version0001%J.out
+#BSUB -J versionDL0001
+#BSUB -o versionDL0001%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -16,5 +16,4 @@ cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
 python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.001 DeepLab SGD lr_exp lr/001
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.001 MobileNet SGD lr_exp lr/001
 echo "Done"

@@ -85,7 +85,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             metrics.update(targets, preds)
 
 
-        if N-1%25 == 0:
+        if N%10 == 0 or N==1:
             for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
                 target = convert_to_image(target.squeeze(), color_dict, target_dict)
                 pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
@@ -122,20 +122,26 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None,val_loader=None,train_dst=None, val_dst=None,
-             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = '',optim='SGD'):
+             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = '',optim='SGD',default_scope = True):
 
 
     model_dict={}
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
-        grad_check(model_dict[model])
+        if default_scope:
+            grad_check(model_dict[model])
+        else:
+            grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
-        grad_check(model_dict[model],model_layers='All')
+        if default_scope:
+            grad_check(model_dict[model],model_layers='All')
+        else:
+            grad_check(model_dict[model])
 
 
 
@@ -185,6 +191,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         validation_loss_values=[]
         best_score = 0
         best_scores = [0,0,0,0,0]
+        best_classIoU = [0,0,0,0,0]
         model.to(device)
         while cur_epochs<N_epochs :  # cur_itrs < opts.total_itrs:
             model.train()
@@ -229,6 +236,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     if val_score['Mean IoU'] > best_score:  # save best model
                         best_score = val_score['Mean IoU']
                         best_scores.append(best_score)
+                        best_classIoU.append([val_score['Class IoU']])
+                        best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU),reverse=True)][:5]
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
                         save_ckpt(model=model,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
@@ -238,6 +247,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                         print("[Val] Class IoU", val_score['Class IoU'])
                     elif val_score['Mean IoU'] > min(best_scores):
                         best_scores.append(val_score['Mean IoU'])
+                        best_classIoU.append(val_score['Class IoU'])
+                        best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU),reverse=True)][:5]
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
                     model.train()
@@ -263,8 +274,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
         experiment_dict = {}
         best_metric = metrics.to_str(val_score)
-        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,optim,random_seed,best_metric,best_scores,model_name,model]
-        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','optimizer','random_seed','best_metric','best_scores','model_backbone','model architecture']
+        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,optim,random_seed,best_metric,best_scores,best_classIoU,model_name,default_scope,model]
+        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','optimizer','random_seed','best_metric','best_scores','best_classIoU','model_backbone','default_scope','model architecture']
         for idx,key in enumerate(hyperparams):
             experiment_dict[key] = hyperparams_val[idx]
         with open("{}/{}_{}.txt".format(save_path,model_name,exp_description), "w") as text_file:
@@ -276,9 +287,11 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
 def grad_check(model,model_layers='Classifier'):
     if model_layers=='Classifier':
+        print('Classifier only')
         for parameter in model.classifier.parameters():
             parameter.requires_grad_(requires_grad=True)
     else:
+        print('Whole model')
         for parameter in model.parameters():
             parameter.requires_grad_(requires_grad=True)
 

@@ -11,10 +11,11 @@ import argparse,json,ast
 
 HPC =True
 Villads=False
-binary=True
+binary=False
 model_name = ''
 optimizer = ''
 exp_descrip = ''
+train_scope = ''
 if __name__ == "__main__":
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
@@ -24,7 +25,7 @@ if __name__ == "__main__":
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
         else:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3/val'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
@@ -40,7 +41,7 @@ if __name__ == "__main__":
         lr = args['learning rate'][0]
         optimizer = args['optimizer name'][0]
         model_name = args['model name'][0]
-        exp_descrip = args['experiment description']
+        exp_descrip = args['experiment description'][0]
         save_folder = args['folder name'][0]
         save_path = os.path.join(save_path,save_folder)
 
@@ -126,6 +127,8 @@ if __name__ == "__main__":
         optimizer = 'SGD'
     if exp_descrip == '':
         exp_descrip = 'no_decrip'
+    if train_scope == '':
+        train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
-    training(n_classes=3, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer)
+    training(n_classes=3, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
