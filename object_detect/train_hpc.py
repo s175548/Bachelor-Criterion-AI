@@ -127,7 +127,6 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,val_loss=None
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
-    #plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
     plt.plot(range(N_epochs), val_loss, '-o')
     plt.title('Validation Loss')
