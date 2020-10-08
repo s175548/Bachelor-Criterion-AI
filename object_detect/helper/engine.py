@@ -47,8 +47,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, d
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
-        tgt = [targets[l]['boxes'].cpu() for l in range(len(targets))]
-        print("Targets: ", tgt)
         loss_dict = model(images, targets)
         losses = sum(loss for loss in loss_dict.values())
 
