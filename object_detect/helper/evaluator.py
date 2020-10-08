@@ -154,11 +154,15 @@ def precision_recall(pred):
 
 
 if __name__ == '__main__':
-    boxes = torch.tensor([[17,20,200,200],[350,250,450,350],[10,10,20,20], [1,2,100,200],[34,58,280,108],[57,39,394,72]],dtype=torch.float32)
-    target = torch.tensor([[35,40,235,240],[370,270,470,370],[17,17,27,27],[7,50,95,190],[360,290,410,320]],dtype=torch.float32)
-    scores = torch.tensor([[0.75],[0.63],[0.45],[0.37],[0.52],[0.23]],dtype=torch.float32)
+    boxes = torch.tensor([[160.7921, 248.3389, 173.2974, 260.0414],
+                          [161.3609, 247.1133, 173.5587, 254.6450],
+                          [158.1664, 246.5395, 178.3249, 262.9370],
+                          [158.8094, 249.3433, 166.4100, 259.2597],
+                         [164.4904, 245.0411, 176.3329, 252.5500]],dtype=torch.float32)
+    target = torch.tensor([[162, 248, 176, 261]],dtype=torch.float32)
+    scores = torch.tensor([0.7861, 0.7633, 0.6983, 0.3056, 0.1391],dtype=torch.float32)
     iou, index, selected_iou = get_iou2(boxes=boxes,target=target)
     #best_bboxes = boxes[index]
-    df, mAP = get_map2(boxes,target,scores,iou_list=selected_iou,threshold=0.4)
+    df, mAP = get_map2(boxes,target,scores,iou_list=iou,threshold=0.3)
     print("IoU is; ", iou)
     print("mAP is: ", mAP)

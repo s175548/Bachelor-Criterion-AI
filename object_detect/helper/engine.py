@@ -32,10 +32,7 @@ def train_one_epoch(model, model_name, optim_name, optimizer, data_loader, devic
     header = 'Epoch: [{}]'.format(epoch)
     lr_scheduler = None
     i = 0
-    if HPC:
-        path_save = save_folder
-    else:
-        path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+    path_save = save_folder
     num_boxes = []
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
@@ -68,7 +65,17 @@ def train_one_epoch(model, model_name, optim_name, optimizer, data_loader, devic
 
         if risk==True:
             if i < 5:
-                if epoch % 25 == 0:
+                if HPC:
+                    if epoch % 25 == 0:
+                        samples = []
+                        model.eval()
+                        outputs = model(images)
+                        num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
+                        num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
+                        model.train()
+                        samples.append((images, masks, targets, outputs))
+                        get_samples(samples,model_name,optim_name,ids,N=epoch,path_save=path_save,train=True)
+                else:
                     samples = []
                     model.eval()
                     outputs = model(images)
@@ -76,7 +83,7 @@ def train_one_epoch(model, model_name, optim_name, optimizer, data_loader, devic
                     num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                     model.train()
                     samples.append((images, masks, targets, outputs))
-                    get_samples(samples,model_name,optim_name,ids,N=epoch,path_save=path_save,train=True)
+                    get_samples(samples, model_name, optim_name, ids, N=epoch, path_save=path_save, train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -140,14 +147,22 @@ def evaluate(model, model_name, optim_name, data_loader, device,N,loss_list,save
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
                 if i < 5:
-                    if N % 25 == 0:
-                        get_samples(samples,model_name,optim_name,ids,N=N,path_save=path_save,train=False)
+                    if HPC:
+                        if N % 25 == 0:
+                            get_samples(samples,model_name,optim_name,ids,N=N,path_save=path_save,train=False)
+                    else:
+                        get_samples(samples, model_name, optim_name, ids, N=N, path_save=path_save, train=False)
                 model.eval()
             i+=1
 
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
-        if N % 25 == 0:
+        if HPC:
+            if N % 25 == 0:
+                print("Averaged stats:", metric_logger)
+                print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
+                print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
+        else:
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
             print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))

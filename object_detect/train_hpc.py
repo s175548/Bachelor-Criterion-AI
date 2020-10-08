@@ -194,13 +194,14 @@ if __name__ == '__main__':
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
-        num_epoch = 100
+        num_epoch = 25
     else:
         device = torch.device('cpu')
         lr = 0.01
         num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
+        optim = "SGD"
         if binary:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
@@ -215,6 +216,7 @@ if __name__ == '__main__':
             dataset = "multi"
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
+        save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
@@ -284,12 +286,13 @@ if __name__ == '__main__':
                                  data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     else:
         model_names = ['mobilenet', 'resnet50']
-        model_name = model_names[1]
-        model = define_model(num_classes=2, net=model_name, anchors=((8,), (16,), (32,), (64,), (128,)))
+        model_name = model_names[0]
+        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
     print("Optimizer: ", optim)
+    print("Number of epochs: ", num_epoch)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
@@ -332,7 +335,7 @@ if __name__ == '__main__':
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
         model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, optimizer=optimizer,
-                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=200,
+                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
@@ -350,14 +353,16 @@ if __name__ == '__main__':
             best_map2 = mAP2
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
+                   model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+                   n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, "{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
+        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+                   n_epochs=num_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
