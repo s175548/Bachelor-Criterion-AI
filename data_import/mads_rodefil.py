@@ -220,15 +220,28 @@ import numpy as np
 # vis_num_samples= 2 #2
 # enable_vis=True
 # N_epochs= 100 # 240 #Helst mange
-import argparse,os
-save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
-parser = argparse.ArgumentParser(description='Take learning rate parameter')
-parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+', help='a parameter for the training loop')
-parser.add_argument('folder name', metavar='folder', type=str, nargs='+', help='a save folder for the training loop')
-args = vars(parser.parse_args())
-print(save_path,'old')
-save_folder = args['folder name'][0]
-save_path = os.path.join(save_path, save_folder)
-print(save_path,'new')
-lr = args['parameter choice'][0]
-print(args['parameter choice'][0], " this is the chosen parameter")
+# import argparse,os
+# save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
+# parser = argparse.ArgumentParser(description='Take learning rate parameter')
+# parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+', help='a parameter for the training loop')
+# parser.add_argument('folder name', metavar='folder', type=str, nargs='+', help='a save folder for the training loop')
+# args = vars(parser.parse_args())
+# print(save_path,'old')
+# save_folder = args['folder name'][0]
+# save_path = os.path.join(save_path, save_folder)
+# print(save_path,'new')
+# lr = args['parameter choice'][0]
+# print(args['parameter choice'][0], " this is the chosen parameter")
+save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet'
+model_name = 'DeepLab'
+exp_description = 'Test'
+lr = 0.01
+import numpy as np,os
+import matplotlib.pyplot as plt
+plt.plot(np.linspace(1,10),np.arange(len(np.linspace(1,10))))
+plt.title('Validation Loss')
+plt.xlabel('N_epochs')
+plt.ylabel('Loss')
+plt.show()
+plt.savefig(os.path.join(save_path,exp_description+(str(lr))+'_val_loss'),format='png')
+plt.close()
