@@ -61,7 +61,7 @@ def define_model(num_classes, net, anchors):
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=anchor_generator,
-                           rpn_fg_iou_thresh=0.7, rpn_bg_iou_thresh=0.3,
+                           rpn_fg_iou_thresh=0.5, rpn_bg_iou_thresh=0.2,
                            box_roi_pool=roi_pooler)
 
     elif net == 'resnet50':
@@ -79,7 +79,7 @@ def define_model(num_classes, net, anchors):
         model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
-                           rpn_fg_iou_thresh=0.7, rpn_bg_iou_thresh=0.3,
+                           rpn_fg_iou_thresh=0.5, rpn_bg_iou_thresh=0.2,
                            box_roi_pool=roi_pooler)
     return model
 
