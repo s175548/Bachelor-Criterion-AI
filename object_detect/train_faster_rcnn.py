@@ -178,7 +178,7 @@ if __name__ == '__main__':
             target_dict = data_loader.get_target_dict()
             annotations_dict = data_loader.annotations_dict
             batch_size = 2
-            val_batch_size = 4
+            val_batch_size = 2
             num_epoch = 2
 
             file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
@@ -187,7 +187,7 @@ if __name__ == '__main__':
             file_names_img = file_names[shuffled_index]
 
             train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                                    list_of_filenames=file_names[:round(N_files * 0.80)],
+                                    list_of_filenames=file_names[:round(N_files * 0.10)],
                                     bbox=True,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_mask, path_img=path_img,
@@ -195,8 +195,8 @@ if __name__ == '__main__':
                                   bbox=True,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
-        #device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        device = torch.device('cpu')
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        #device = torch.device('cpu')
 
     print("Device: %s" % device)
 

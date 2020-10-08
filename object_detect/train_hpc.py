@@ -30,7 +30,7 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def define_model(num_classes, net, anchors):
+def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='binary'):
     if net == 'mobilenet':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
         # FasterRCNN needs to know the number of
@@ -43,8 +43,12 @@ def define_model(num_classes, net, anchors):
         # ratios. We have a Tuple[Tuple[int]] because each feature
         # map could potentially have different sizes and
         # aspect ratios>
-        anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
-                                           aspect_ratios=((0.5, 1.0, 2.0),))
+        if data == 'tick_bite':
+            anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
+                                               aspect_ratios=((0.5, 1.0, 2.0),))
+        else:
+            anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
+                                               aspect_ratios=((0.5, 1.0, 2.0),))
 
         # let's define what are the feature maps that we will
         # use to perform the region of interest cropping, as well as
@@ -61,7 +65,7 @@ def define_model(num_classes, net, anchors):
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=anchor_generator,
-                           rpn_fg_iou_thresh=0.5, rpn_bg_iou_thresh=0.2,
+                           rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
                            box_roi_pool=roi_pooler)
 
     elif net == 'resnet50':
@@ -79,11 +83,11 @@ def define_model(num_classes, net, anchors):
         model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
-                           rpn_fg_iou_thresh=0.5, rpn_bg_iou_thresh=0.2,
+                           rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
                            box_roi_pool=roi_pooler)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_score=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -95,8 +99,8 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "best_score": best_score,
             "train_losses": losses,
             "val_losses": val_losses,
-        }, save_path+model_name+'.pt')
-        print("Model saved as "+model_name+'.pt')
+        }, save_path+model_name+optim_name+'.pt')
+        print("Model saved as "+model_name+optim_name+'.pt')
     else:
         torch.save({
             "n_epochs": n_epochs,
@@ -106,7 +110,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "best_score": best_score,
             "train_losses": losses,
             "val_losses": val_losses,
-        }, save_path + model_name + '.pt')
+        }, save_path + model_name + optim_name + '.pt')
 
 def freeze_layers(model,layers):
     params = [p for p in model.parameters() if p.requires_grad]
@@ -121,22 +125,22 @@ def freeze_layers(model,layers):
     else:
         pass
 
-def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,val_loss=None,exp_description = ''):
+def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=None,val_loss=None,exp_description = ''):
     plt.plot(range(N_epochs), train_loss, '-o')
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_train_loss.png'), format='png')
     plt.close()
     plt.plot(range(N_epochs), val_loss, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
-#transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+
 HPC=True
 binary=False
 tick_bite=True
@@ -171,7 +175,7 @@ if __name__ == '__main__':
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
             save_fold = 'multi/'
-            dataset = "multu"
+            dataset = "multi"
 
         parser = argparse.ArgumentParser(description='Take learning rate parameter')
         parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
@@ -196,12 +200,16 @@ if __name__ == '__main__':
         if binary:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary'
+            dataset = "binary"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
+            dataset = "tick_bite"
         else:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            dataset = "multi"
+
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
 
     print("Device: %s" % device)
@@ -262,7 +270,12 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     if HPC:
-        model = define_model(num_classes=2, net=model_name, anchors=((8,), (16,), (32,), (64,), (128,)))
+        if tick_bite:
+            model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+        else:
+            model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[1]
@@ -284,7 +297,7 @@ if __name__ == '__main__':
         print("Layers trained: ", layers[0], " + ", layers[1])
 
     params2train = [p for p in model.parameters() if p.requires_grad]
-    weight_decay = 0.0005
+    weight_decay = 0.0001
 
     # Set up optimizer
     if optim == 'SGD':
@@ -312,13 +325,15 @@ if __name__ == '__main__':
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch(model, model_name, optimizer, train_loader, device, epoch=epoch+1,print_freq=200,
+        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, optimizer=optimizer,
+                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=200,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, val_loader, device=device,N=epoch+1,
+        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, data_loader=val_loader,
+                                                     device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
@@ -331,7 +346,8 @@ if __name__ == '__main__':
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_score=best_map, losses=loss_train, val_losses=loss_val)
-        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,val_loss=loss_val,exp_description=model_name)
+        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+                  val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
         save_model(model,save_path, "{}_{}_{}".format(model_name, lr,dataset), n_epochs=num_epoch, optimizer=optimizer,

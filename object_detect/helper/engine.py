@@ -10,7 +10,7 @@ import object_detect.helper.utils as utils
 from object_detect.helper.evaluator import get_iou2, get_map2
 import matplotlib.pyplot as plt
 
-def get_samples(samples,model_name,ids,N,path_save,train=True):
+def get_samples(samples,model_name,optim_name,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             boxes = p[i]['boxes'].detach().cpu().numpy()
@@ -18,14 +18,14 @@ def get_samples(samples,model_name,ids,N,path_save,train=True):
             # image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
             # Image.fromarray(img[i].numpy().astype(np.uint8)).save(path_save+'\_{}_img'.format(id),format='png')
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_val_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_val_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data()),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '{}_train_{}_{}_prediction.png'.format(model_name,N, id),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,N, id.data()),
                                                              format='PNG')
 
 
-def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
+def train_one_epoch(model, model_name, optim_name, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -67,7 +67,7 @@ def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, pr
         ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
 
         if risk==True:
-            if i < 10:
+            if i < 5:
                 if epoch % 25 == 0:
                     samples = []
                     model.eval()
@@ -76,7 +76,7 @@ def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, pr
                     num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                     model.train()
                     samples.append((images, masks, targets, outputs))
-                    get_samples(samples,model_name,ids,N=epoch,path_save=path_save,train=True)
+                    get_samples(samples,model_name,optim_name,ids,N=epoch,path_save=path_save,train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -85,7 +85,7 @@ def train_one_epoch(model, model_name, optimizer, data_loader, device, epoch, pr
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
 
 
-def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
+def evaluate(model, model_name, optim_name, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
     n_threads = torch.get_num_threads()
     torch.set_num_threads(n_threads)
     model.eval()
@@ -139,9 +139,9 @@ def evaluate(model, model_name, data_loader, device,N,loss_list,save_folder,risk
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
-                if i < 10:
+                if i < 5:
                     if N % 25 == 0:
-                        get_samples(samples,model_name,ids,N=N,path_save=path_save,train=False)
+                        get_samples(samples,model_name,optim_name,ids,N=N,path_save=path_save,train=False)
                 model.eval()
             i+=1
 
