@@ -100,7 +100,7 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
         mAP2 = average_precision_score(true_labels[0],scores2)
     for j in range(len(scores)):
         if torch.isnan(scores[j].detach().cpu()) == True:
-            scores[j] = 0
+            scores[j] = torch.tensor(0, dtype =torch.float32)
     else:
         mAP2 = average_precision_score(true_labels[0], scores.cpu())
     if np.isnan(mAP)==True:
