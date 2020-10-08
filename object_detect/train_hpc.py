@@ -194,7 +194,7 @@ if __name__ == '__main__':
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
-        num_epoch = 25
+        num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
