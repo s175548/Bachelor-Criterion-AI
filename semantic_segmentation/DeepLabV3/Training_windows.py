@@ -85,7 +85,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             metrics.update(targets, preds)
 
 
-        if N%25 == 0:
+        if N-1%25 == 0:
             for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
                 target = convert_to_image(target.squeeze(), color_dict, target_dict)
                 pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
@@ -162,7 +162,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         optimizer = torch.optim.Adam(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
             {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+        ], lr=lr, weight_decay=weight_decay)
     else:
         optimizer = torch.optim.RMSprop(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
@@ -258,16 +258,16 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         plt.title('Validation Loss')
         plt.xlabel('N_epochs')
         plt.ylabel('Loss')
-        plt.savefig(os.path.join(save_path,exp_description+(str(lr))+'_val_loss'),format='png')
+        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
         plt.close()
 
         experiment_dict = {}
         best_metric = metrics.to_str(val_score)
-        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,random_seed,best_metric,best_scores,model_name,model]
-        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','random_seed','best_metric','best_scores','model_backbone','model architecture']
+        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,optim,random_seed,best_metric,best_scores,model_name,model]
+        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','optimizer','random_seed','best_metric','best_scores','model_backbone','model architecture']
         for idx,key in enumerate(hyperparams):
             experiment_dict[key] = hyperparams_val[idx]
-        with open("{}_{}.txt".format(model_name,exp_description), "w") as text_file:
+        with open("{}/{}_{}.txt".format(save_path,model_name,exp_description), "w") as text_file:
             text_file.write(str(experiment_dict))
 
 

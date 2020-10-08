@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 
     else:
-        save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt'
+        save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet'
         path_model = save_path
         path_original_data = r'C:\Users\Mads-\Desktop\leather_patches'
         if binary:
