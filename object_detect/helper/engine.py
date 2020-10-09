@@ -30,7 +30,7 @@ def get_samples(samples,model_name,optim_name,lr,ids,N,path_save,train=True):
                     format='PNG')
             if N == 100:
                 image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
-                Image.fromarray(image).save(path_save + '\{}_{}_{}_img.png'.format(model_name,lr,id), format='png')
+                Image.fromarray(image).save(path_save + '{}_{}_img.png'.format(lr,id), format='png')
 
 
 def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
