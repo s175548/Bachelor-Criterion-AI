@@ -156,9 +156,9 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
-                if i < 20:
+                if i < 100:
                     if HPC:
-                        if N % 25 == 0:
+                        if N % 100 == 0:
                             get_samples(samples,model_name,optim_name,lr,ids,N=N,path_save=path_save,train=False)
                     else:
                         get_samples(samples, model_name, optim_name, lr, ids, N=N, path_save=path_save, train=False)
