@@ -25,7 +25,7 @@ def get_samples(samples,model_name,optim_name,lr,ids,N,path_save,train=True):
             else:
                 Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,lr,N, id.data),
                                                              format='PNG')
-                Image.fromarray(bmask.astype(np.uint8)).save(
+                Image.fromarray(bmask2.astype(np.uint8)).save(
                     path_save + '/{}_{}_{}_truth_train_{}_{}_prediction.png'.format(model_name, optim_name, lr, N, id.data),
                     format='PNG')
             if N == 100:
