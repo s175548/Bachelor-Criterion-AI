@@ -86,30 +86,41 @@ def get_iou2(boxes,target):
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
-    df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
-    true_labels = [iou_list >= threshold]
-    df.insert(1,"Correct?",true_labels[0],True)
-    df.insert(2,"IoU {}".format(threshold),iou_list,True)
-    prec, rec = precision_recall(true_labels[0])
-    pred = np.ones((len(true_labels[0])))
-    df.insert(2,"Precision", prec,True)
-    df.insert(3,"Recall", rec,True)
-    mAP = average_precision_score(true_labels[0],pred)
     if len(scores) == 0:
-        scores2 = np.zeros(len(true_labels[0]))
-        mAP2 = average_precision_score(true_labels[0],scores2)
+        if len(target) == 0:
+            mAP = 1
+            mAP2 = 1
+            df = pd.DataFrame()
+        else:
+            mAP = 0
+            mAP2 = 0
+            df = pd.DataFrame()
+        return df, mAP, mAP2
     else:
-        mAP2 = average_precision_score(true_labels[0], scores.cpu())
-    if np.isnan(mAP)==True:
-        mAP = 0
-    if np.isnan(mAP2) == True:
-        mAP2 = 0
-    if print_state==True:
-        print("boxes: ", boxes)
-        print("targets: ", target)
-        print("iou: ", iou_list)
-        print("scores: ", scores)
-    #if len(boxes) > 0:
+        df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
+        true_labels = [iou_list >= threshold]
+        df.insert(1,"Correct?",true_labels[0],True)
+        df.insert(2,"IoU {}".format(threshold),iou_list,True)
+        prec, rec = precision_recall(true_labels[0])
+        pred = np.ones((len(true_labels[0])))
+        df.insert(2,"Precision", prec,True)
+        df.insert(3,"Recall", rec,True)
+        mAP = average_precision_score(true_labels[0],pred)
+        if len(scores) == 0:
+            scores2 = np.zeros(len(true_labels[0]))
+            mAP2 = average_precision_score(true_labels[0],scores2)
+        else:
+            mAP2 = average_precision_score(true_labels[0], scores.cpu())
+        if np.isnan(mAP)==True:
+            mAP = 0
+        if np.isnan(mAP2) == True:
+            mAP2 = 0
+        if print_state==True:
+            print("boxes: ", boxes)
+            print("targets: ", target)
+            print("iou: ", iou_list)
+            print("scores: ", scores)
+        #if len(boxes) > 0:
         #print("boxes: ", boxes)
         #print("targets: ", target)
         #print("iou: ", iou_list)
