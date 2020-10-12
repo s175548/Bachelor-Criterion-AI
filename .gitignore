@@ -104,3 +104,4 @@ data_import/__pycache__/masks_to_bounding_box.cpython-37.pyc
 data_import/__pycache__/draw_contours.cpython-37.pyc
 data_import/__pycache__/data_loader.cpython-37.pyc
 .idea/Bachelor-Criterion-AI.iml
+*.pyc
