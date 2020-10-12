@@ -25,12 +25,12 @@ def get_samples(samples,model_name,optim_name,lr,ids,N,path_save,train=True):
             else:
                 Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,lr,N, id.data),
                                                              format='PNG')
-                Image.fromarray(bmask.astype(np.uint8)).save(
+                Image.fromarray(bmask2.astype(np.uint8)).save(
                     path_save + '/{}_{}_{}_truth_train_{}_{}_prediction.png'.format(model_name, optim_name, lr, N, id.data),
                     format='PNG')
             if N == 100:
                 image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
-                Image.fromarray(image).save(path_save + '\{}_{}_{}_img.png'.format(model_name,lr,id), format='png')
+                Image.fromarray(image).save(path_save + '{}_{}_img.png'.format(lr,id), format='png')
 
 
 def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
@@ -156,9 +156,9 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
-                if i < 20:
+                if i < 100:
                     if HPC:
-                        if N % 25 == 0:
+                        if N % 100 == 0:
                             get_samples(samples,model_name,optim_name,lr,ids,N=N,path_save=path_save,train=False)
                     else:
                         get_samples(samples, model_name, optim_name, lr, ids, N=N, path_save=path_save, train=False)
