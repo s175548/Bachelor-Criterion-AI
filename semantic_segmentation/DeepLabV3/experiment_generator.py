@@ -11,7 +11,7 @@ import argparse,json,ast
 
 HPC =True
 Villads=False
-binary=True
+binary=False
 model_name = ''
 optimizer = ''
 exp_descrip = ''
