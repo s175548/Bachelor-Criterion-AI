@@ -59,7 +59,7 @@ class LeatherData(data.Dataset):
                 img, tgt = self.transform(img, mask_for_bbox)
             if self.transform is not None:
                 target3 = Image.fromarray(target).convert('L')
-                img3, tgt3 = self.transform(img_for_bbox, target3)
+                img3, tgt3 = self.transform(img, target3)
             mask = tgt.numpy()
             mask3 = tgt3.numpy()
             if self.multi:
