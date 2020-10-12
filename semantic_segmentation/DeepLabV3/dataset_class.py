@@ -47,6 +47,7 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
         mask_for_bbox = Image.open(self.masks[index]).convert('L')
+        img_for_bbox = Image.open(self.images[index]).convert('RGB')
         img_index = index
 
         for key, value in self.target_dict.items():
@@ -56,10 +57,10 @@ class LeatherData(data.Dataset):
 
         if self.bbox == True:
             if self.transform is not None:
-                img, tgt = self.transform(img, mask_for_bbox)
+                img, tgt = self.transform(img_for_bbox, mask_for_bbox)
             if self.transform is not None:
                 target3 = Image.fromarray(target).convert('L')
-                img3, tgt3 = self.transform(img, target3)
+                img3, tgt3 = self.transform(img_for_bbox, target3)
             mask = tgt.numpy()
             mask3 = tgt3.numpy()
             if self.multi:
