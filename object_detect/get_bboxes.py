@@ -10,6 +10,27 @@ from data_import.draw_contours import draw_contours2
 from PIL import Image
 from scipy import ndimage
 
+def create_boxes(masks,num_objs):
+    boxes = []
+    for i in range(num_objs):
+        pos = np.where(masks[i])
+        xmin = np.min(pos[1])
+        xmax = np.max(pos[1])
+        ymin = np.min(pos[0])
+        ymax = np.max(pos[0])
+        if xmin == xmax:
+            if xmin < 254:
+                xmax += 1
+            else:
+                xmin -= 1
+        if ymin == ymax:
+            if ymin < 254:
+                ymax += 1
+            else:
+                ymin -= 1
+        boxes.append([xmin, ymin, xmax, ymax])
+    return boxes
+
 def check_mask(mask,name):
     j = np.shape(mask)
     np.save(name,j)
@@ -37,38 +58,70 @@ def convert_mask_to_bbox(mask):
 
     return bounding_box_mask,bounding_box_coordinates
 
-def get_multi_bboxes(mask):
+def transform_image(mask,mask_new,label):
+    for i in range(np.shape(mask_new)[0]):
+        for j in range(np.shape(mask_new)[0]):
+            if mask[i, j] == label:
+                pass
+            else:
+                mask_new[i, j] = 0
+    return mask_new
+
+def get_multi_bboxes(mask,colours):
     """input: mask
     output: bounding boxes
     """
-    new_mask = np.copy(mask)
+    s = ndimage.generate_binary_structure(2,2)
+    new_mask, num_features = ndimage.label(mask, structure=s)
 
-    obj_ids = np.unique(mask)
+    labels = np.unique(mask)
+    obj_ids = np.unique(new_mask)
+
     # first id is the background, so remove it
-    #obj_ids = obj_ids[1:]
+    labels = labels[1:]
+    obj_ids = obj_ids[1:]
 
     # split the color-encoded mask into a set
     # of binary masks
-    masks = mask == obj_ids[None, None, :]
+    masks = new_mask == obj_ids[:, None, None]
 
     # get bounding box coordinates for each mask
     num_objs = len(obj_ids)
-    boxes = []
-    for i in obj_ids:
-        pos = np.where(masks[i])
-        xmin = np.min(pos[1])
-        xmax = np.max(pos[1])
-        ymin = np.min(pos[0])
-        ymax = np.max(pos[0])
-        boxes.append([xmin, ymin, xmax, ymax])
+    num_labels = len(labels)
+
+    boxes = create_boxes(masks,num_objs)
 
     bounding_box_mask = np.empty((new_mask.shape[0], new_mask.shape[1]))
     for box in boxes:
         x1, y1, x2, y2 = box
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
-    #boxes = torch.as_tensor(boxes, dtype=torch.float32)
 
-    return bounding_box_mask, boxes
+    bboxes_labels = []
+    bboxes = []
+    obj_per_label = []
+    for l in range(len(labels)):
+        mask_new = np.copy(new_mask)
+        mask_new = transform_image(new_mask,mask_new,l+1)
+        num_objects = np.unique(mask_new)
+        num_objects = num_objects[1:]
+        masks_new = mask_new == num_objects[:, None, None]
+        bbox = create_boxes(masks_new,len(num_objects))
+        bboxes.append(bbox[0])
+        for k in range(len(num_objects)):
+            bboxes_labels.append(labels[l])
+        obj_per_label.append(k+1)
+
+    bounding_box_mask2 = np.empty((new_mask.shape[0], new_mask.shape[1]))
+    colours = colours[1:]
+
+    #for i in range(num_labels):
+    #    start_index = u
+    #    for box in bboxes[:]:
+    #        x1, y1, x2, y2 = box
+    #        bounding_box_mask2 = cv2.rectangle(bounding_box_mask2.copy(), (x1, y1), (x2, y2), (100, 255, 255), 3)
+
+    #Image._show(Image.fromarray(bounding_box_mask2))
+    return bounding_box_mask, boxes, bboxes_labels
 
 def new_convert(mask):
     """input: mask
