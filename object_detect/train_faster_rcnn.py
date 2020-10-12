@@ -143,13 +143,13 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
 
 HPC=False
-tick_bite=False
+tick_bite=True
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
 binary=False
-multi=True
+multi=False
 load_model=False
 if __name__ == '__main__':
 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[285:290],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
