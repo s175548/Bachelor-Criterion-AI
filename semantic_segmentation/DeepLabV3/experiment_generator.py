@@ -28,7 +28,7 @@ if __name__ == "__main__":
         parser.add_argument('train scope', metavar='scope', type=bool, nargs='+',help='train whole model or only classifier')
         parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
-        parser.add_argument('binary setup', metavar='setup', type=bool, nargs='+', help='binary or multiclass')
+        parser.add_argument('binary_setup', metavar='setup', type=bool, nargs='+', help='binary or multiclass')
         args = vars(parser.parse_args())
 
         lr = args['learning rate'][0]
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         model_name = args['model name'][0]
         exp_descrip = args['experiment description'][0]
         save_folder = args['folder name'][0]
-        binary = args['binary setup'][0]
+        binary = args['binary_setup'][0]
         print("save folder: ",save_folder)
         print("binary: ", binary)
         save_path = os.path.join(save_path, save_folder)
