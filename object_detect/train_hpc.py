@@ -316,7 +316,7 @@ if __name__ == '__main__':
     if optim == 'SGD':
         optimizer = torch.optim.SGD(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
     elif optim == 'Adam':
-        optimizer = torch.optim.Adam(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
+        optimizer = torch.optim.Adam(params=params2train, lr=lr, weight_decay=weight_decay)
     else:
         optimizer = torch.optim.RMSprop(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
 
