@@ -14,7 +14,7 @@ def boolean_string(s):
 
 HPC =True
 Villads=False
-binary=False
+binary=True
 model_name = ''
 optimizer = ''
 exp_descrip = ''
@@ -48,11 +48,9 @@ if __name__ == "__main__":
         save_path = os.path.join(save_path, save_folder)
 
         if binary:
-            print('binary training set loading')
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
         else:
-            print('multi training set loading')
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
         path2 = r'/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation/DeepLabV3/outfile.jpg'
@@ -109,13 +107,11 @@ if __name__ == "__main__":
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
     if binary:
-        print('binary class dicts loading')
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
         annotations_dict = data_loader.annotations_dict
 
     else:
-        print('multi class dicts loading')
         color_dict= data_loader.color_dict
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
@@ -139,18 +135,13 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     if model_name == '':
-        print('default',model_name)
         model_name = 'MobileNet'
         #model_name =
     if optimizer == '':
-        print('default', optimizer)
         optimizer = 'SGD'
     if exp_descrip == '':
-        print('default', exp_descrip)
         exp_descrip = 'no_decrip'
     if train_scope == '':
-        print('default', train_scope)
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
-    print("binary: ",binary)
     training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
