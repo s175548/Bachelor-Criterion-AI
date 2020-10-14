@@ -140,7 +140,7 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
                 mAP2.append(AP2)
                 if N % 50 == 0:
                     df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
-                                       outputs[j]['labels'], targets[j]['labels'], iou_list=iou, threshold=threshold,
+                                       outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                        print_state=True)
                     #print(df2)
             samples = []
