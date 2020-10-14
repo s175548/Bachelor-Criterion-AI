@@ -71,7 +71,7 @@ class LeatherData(data.Dataset):
             for i in range(np.shape(bounding_box)[0]):
                 bboxes.append(bounding_box[i])
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 399, 399))
+                bboxes.append((0, 0, 255, 255))
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.zeros(1, dtype=torch.int64)
