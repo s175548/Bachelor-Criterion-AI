@@ -86,6 +86,8 @@ def get_iou2(boxes,targets, pred, labels):
     return iou_list, index_list, new_iou_list
 
 def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=False):
+    map = []
+    map2 = []
     if len(scores) == 0:
         if len(target) == 0:
             mAP = 1
@@ -93,11 +95,17 @@ def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=
             df = pd.DataFrame()
             print("Detected None, target None! :-) ")
         else:
-            if labels == torch.zeros(1):
-                mAP = 1
-                mAP2 = 1
-                df = pd.DataFrame()
-                print("Detected None, target None! :-) ")
+            if len(labels) == 1:
+                if labels == torch.zeros(1):
+                    mAP = 1
+                    mAP2 = 1
+                    df = pd.DataFrame()
+                    print("Detected None, target None! :-) ")
+                else:
+                    mAP = 0
+                    mAP2 = 0
+                    df = pd.DataFrame()
+                    print("Detected None, target true :-( ")
             else:
                 mAP = 0
                 mAP2 = 0
