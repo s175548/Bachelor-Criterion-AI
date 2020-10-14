@@ -140,7 +140,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200,200)),et.ExtToTensor()])
 
 HPC=False
 tick_bite=True
@@ -234,16 +234,12 @@ if __name__ == '__main__':
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    if tick_bite:
-        batch_size = 4
+    if HPC:
+        batch_size = 16
         val_batch_size = 4
     else:
-        if HPC:
-            batch_size = 16
-            val_batch_size = 4
-        else:
-            batch_size = 1
-            val_batch_size = 1
+        batch_size = 4
+        val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -255,7 +251,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:50],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -267,7 +263,7 @@ if __name__ == '__main__':
         shuffled_index = np.random.permutation(len(file_names))
         file_names_img = file_names[shuffled_index]
         train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                                list_of_filenames=file_names[:round(N_files * 0.80)],
+                                list_of_filenames=file_names[:round(N_files * 0.40)],
                                 bbox=True,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
@@ -339,7 +335,7 @@ if __name__ == '__main__':
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
         model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, optimizer=optimizer,
-                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
+                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=5,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate

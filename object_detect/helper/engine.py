@@ -132,12 +132,16 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
             evaluator_time = time.time()
             evaluator_time = time.time() - evaluator_time
             for j in range(len(ids)):
-                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
-                df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold)
+                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
+                                                    pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
+                df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                                       outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
                 mAP.append(AP)
                 mAP2.append(AP2)
                 if N % 50 == 0:
-                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold, print_state=True)
+                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                                       outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
+                                       print_state=True)
                     #print(df2)
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))

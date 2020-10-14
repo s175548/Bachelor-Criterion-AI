@@ -47,37 +47,38 @@ class LeatherData(data.Dataset):
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
         mask_for_bbox = Image.open(self.masks[index]).convert('L')
+        img_for_bbox = Image.open(self.images[index]).convert('RGB')
         img_index = index
 
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
+        for key, value in self.target_dict.items():
+            value = self.color_dict[key]
+            index = (target[:, :, 0] == value[0]) & (target[:, :, 1] == value[1]) & (target[:, :, 2] == value[2])
+            target[index, :] = self.target_dict[key]
 
         if self.bbox == True:
             if self.transform is not None:
-                img, tgt = self.transform(img, mask_for_bbox)
+                img, tgt = self.transform(img_for_bbox, mask_for_bbox)
             if self.transform is not None:
                 target3 = Image.fromarray(target).convert('L')
                 img3, tgt3 = self.transform(img_for_bbox, target3)
             mask = tgt.numpy()
             mask3 = tgt3.numpy()
             if self.multi:
-                bmask, bounding_box, bbox_labels = get_multi_bboxes(mask3, np.unique(mask))
+                bmask, bounding_box, bbox_labels, bmask2 = get_multi_bboxes(mask3)
             else:
                 bmask, bounding_box = new_convert(mask)
             bboxes = []
             for i in range(np.shape(bounding_box)[0]):
                 bboxes.append(bounding_box[i])
             if len(bboxes) == 0:
-                bboxes.append((0, 0, 399, 399))
+                bboxes.append((0, 0, 199, 199))
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 labels = torch.zeros(1, dtype=torch.int64)
             else:
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-                if multi:
+                if self.multi:
                     labels = torch.ones(bbox_labels, dtype=torch.int64)
                 else:
                     labels = torch.ones((len(bboxes),), dtype=torch.int64)
@@ -92,10 +93,6 @@ class LeatherData(data.Dataset):
             targets["iscrowd"] = iscrowd
             return img, targets, mask
 
-        for key,value in self.target_dict.items():
-            value=self.color_dict[key]
-            index= (target[:,:,0]==value[0]) & (target[:,:,1]==value[1]) & (target[:,:,2]==value[2])
-            target[index,:]=self.target_dict[key]
 
         if self.transform is not None:
             target = Image.fromarray(target)

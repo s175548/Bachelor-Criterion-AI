@@ -67,7 +67,7 @@ def transform_image(mask,mask_new,label):
                 mask_new[i, j] = 0
     return mask_new
 
-def get_multi_bboxes(mask,colours):
+def get_multi_bboxes(mask):
     """input: mask
     output: bounding boxes
     """
@@ -91,7 +91,7 @@ def get_multi_bboxes(mask,colours):
 
     boxes = create_boxes(masks,num_objs)
 
-    bounding_box_mask = np.empty((new_mask.shape[0], new_mask.shape[1]))
+    bounding_box_mask = np.zeros((new_mask.shape[0], new_mask.shape[1]))
     for box in boxes:
         x1, y1, x2, y2 = box
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
@@ -111,17 +111,22 @@ def get_multi_bboxes(mask,colours):
             bboxes_labels.append(labels[l])
         obj_per_label.append(k+1)
 
-    bounding_box_mask2 = np.empty((new_mask.shape[0], new_mask.shape[1]))
-    colours = colours[1:]
+    bounding_box_mask2 = np.zeros((new_mask.shape[0], new_mask.shape[1]))
+    #colours = colours[1:]
 
-    #for i in range(num_labels):
-    #    start_index = u
-    #    for box in bboxes[:]:
-    #        x1, y1, x2, y2 = box
-    #        bounding_box_mask2 = cv2.rectangle(bounding_box_mask2.copy(), (x1, y1), (x2, y2), (100, 255, 255), 3)
+    nl = list(labels)
+    count = [[x,nl.count(x)] for x in set(nl)]
 
-    #Image._show(Image.fromarray(bounding_box_mask2))
-    return bounding_box_mask, boxes, bboxes_labels
+    clist = [75, 150, 225]
+    k = 0
+    for i in range(num_labels):
+        k2 = count[i][1]
+        colour = count[i][0]-1
+        for box in bboxes[k:k2]:
+                x1, y1, x2, y2 = box
+                bounding_box_mask2 = cv2.rectangle(bounding_box_mask2.copy(), (x1, y1), (x2, y2), (clist[colour], 255, 255), 3)
+        k = k2
+    return bounding_box_mask, boxes, bboxes_labels, bounding_box_mask2
 
 def new_convert(mask):
     """input: mask
