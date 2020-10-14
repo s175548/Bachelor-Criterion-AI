@@ -7,7 +7,10 @@ from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 import argparse,json,ast
 
-
+def boolean_string(s):
+    if s not in {'False', 'True'}:
+        raise ValueError('Not a valid boolean string')
+    return s == 'True'
 
 HPC =True
 Villads=False
@@ -28,7 +31,9 @@ if __name__ == "__main__":
         parser.add_argument('train scope', metavar='scope', type=bool, nargs='+',help='train whole model or only classifier')
         parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
-        parser.add_argument('binary_setup', metavar='setup', type=bool, nargs='+', help='binary or multiclass')
+        parser.add_argument('--bool', default=True, action='store_false', help='Bool type')
+
+        parser.add_argument('binary_setup',default=True, metavar='setup', type=bool,action='store_false', nargs='+', help='binary or multiclass')
         args = vars(parser.parse_args())
 
         lr = args['learning rate'][0]
