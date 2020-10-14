@@ -132,7 +132,7 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
             evaluator_time = time.time()
             evaluator_time = time.time() - evaluator_time
             for j in range(len(ids)):
-                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu(),
+                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                     pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
                 df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                        outputs[j]['labels'], targets[j]['labels'], iou_list=iou, threshold=threshold)
