@@ -38,6 +38,7 @@ if __name__ == "__main__":
         exp_descrip = args['experiment description'][0]
         save_folder = args['folder name'][0]
         binary = args['binary_setup'][0]
+        print("train_scope: ", train_scope)
         print("save folder: ",save_folder)
         print("binary: ", binary)
         save_path = os.path.join(save_path, save_folder)
