@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionRes_whole
-#BSUB -o versionRes_whole%J.out
+#BSUB -J versionRes_multi
+#BSUB -o versionRes_multi%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
