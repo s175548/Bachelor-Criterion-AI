@@ -20,6 +20,26 @@ if __name__ == "__main__":
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
         path_model = r'/work3/s173934/Bachelorprojekt/'
+
+        parser = argparse.ArgumentParser(description='Take parameters')
+        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('train scope', metavar='scope', type=bool, nargs='+',help='train whole model or only classifier')
+        parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
+        parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
+        parser.add_argument('binary setup', metavar='setup', type=bool, nargs='+', help='binary or multiclass')
+        args = vars(parser.parse_args())
+
+        lr = args['learning rate'][0]
+        optimizer = args['optimizer name'][0]
+        train_scope = args['train scope'][0]
+        model_name = args['model name'][0]
+        exp_descrip = args['experiment description'][0]
+        save_folder = args['folder name'][0]
+        binary = args['binary setup'][0]
+        save_path = os.path.join(save_path, save_folder)
+
         if binary:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
@@ -30,24 +50,7 @@ if __name__ == "__main__":
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
-        parser = argparse.ArgumentParser(description='Take parameters')
-        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
-        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
-        parser.add_argument('train scope', metavar='scope', type=bool, nargs='+', help='train whole model or only classifier')
-        parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
-        parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
-        parser.add_argument('binary setup', metavar='setup', type=bool, nargs='+',help='binary or multiclass')
-        args = vars(parser.parse_args())
 
-        lr = args['learning rate'][0]
-        optimizer = args['optimizer name'][0]
-        train_scope = args['train scope'][0]
-        model_name = args['model name'][0]
-        exp_descrip = args['experiment description'][0]
-        save_folder = args['folder name'][0]
-        binary = args['binary setup'][0]
-        save_path = os.path.join(save_path,save_folder)
 
     elif Villads:
         path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
