@@ -128,13 +128,17 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     if model_name == '':
+        print('default',model_name)
         model_name = 'MobileNet'
         #model_name =
     if optimizer == '':
+        print('default', optimizer)
         optimizer = 'SGD'
     if exp_descrip == '':
+        print('default', exp_descrip)
         exp_descrip = 'no_decrip'
     if train_scope == '':
+        print('default', train_scope)
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
 
