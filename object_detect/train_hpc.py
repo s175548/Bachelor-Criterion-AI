@@ -30,7 +30,7 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='binary'):
+def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=0.3,data='binary'):
     if net == 'mobilenet':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
         # FasterRCNN needs to know the number of
@@ -66,7 +66,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='bina
                            num_classes=num_classes,
                            rpn_anchor_generator=anchor_generator,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
-                           box_roi_pool=roi_pooler)
+                           box_roi_pool=roi_pooler, box_score_thresh=box_score)
 
     elif net == 'resnet50':
         resnet50 = init_model(num_classes=num_classes)
@@ -84,7 +84,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='bina
                            num_classes=num_classes,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
-                           box_roi_pool=roi_pooler)
+                           box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
 def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,losses=None,val_losses=None):
