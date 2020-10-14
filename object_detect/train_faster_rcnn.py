@@ -251,7 +251,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:50],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -263,7 +263,7 @@ if __name__ == '__main__':
         shuffled_index = np.random.permutation(len(file_names))
         file_names_img = file_names[shuffled_index]
         train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                                list_of_filenames=file_names[:round(N_files * 0.80)],
+                                list_of_filenames=file_names[:round(N_files * 0.40)],
                                 bbox=True,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],

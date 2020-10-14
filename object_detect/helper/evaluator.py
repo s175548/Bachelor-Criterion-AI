@@ -39,7 +39,7 @@ def get_iou(boxes,target):
         i+=1
     return iou_list, index_list
 
-def get_iou2(boxes,target):
+def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
     i = 0
     index_list = []
@@ -51,9 +51,9 @@ def get_iou2(boxes,target):
 
         index = 0
         best_index = 0
-        for label in target:
+        for target in targets:
 
-            x1, y1, x2, y2 = label.unbind(0)
+            x1, y1, x2, y2 = target.unbind(0)
             target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
             xA = max(xmin, x1)
             yA = max(ymin, y1)
@@ -64,9 +64,9 @@ def get_iou2(boxes,target):
             interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
             iou = interArea / float(bbox_area + target_area - interArea)
             if iou > best_iou:
-                best_iou = iou
-                best_index = index
-
+                if labels[index] == pred[i]:
+                    best_iou = iou
+                    best_index = index
             index +=1
         index_list.append(best_index)
         iou_list = np.append(iou_list, best_iou)
@@ -85,7 +85,7 @@ def get_iou2(boxes,target):
         iou_list = np.append(iou_list, 0)
     return iou_list, index_list, new_iou_list
 
-def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
+def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=False):
     if len(scores) == 0:
         if len(target) == 0:
             mAP = 1
@@ -93,10 +93,16 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
             df = pd.DataFrame()
             print("Detected None, target None! :-) ")
         else:
-            mAP = 0
-            mAP2 = 0
-            df = pd.DataFrame()
-            print("Detected None, target true :-( ")
+            if labels == torch.zeros(1):
+                mAP = 1
+                mAP2 = 1
+                df = pd.DataFrame()
+                print("Detected None, target None! :-) ")
+            else:
+                mAP = 0
+                mAP2 = 0
+                df = pd.DataFrame()
+                print("Detected None, target true :-( ")
         return df, mAP, mAP2
     else:
         df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
@@ -122,6 +128,8 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
             print("targets: ", target)
             print("iou: ", iou_list)
             print("scores: ", scores)
+            print("predictions: ", pred)
+            print("labels: ", labels)
         #if len(boxes) > 0:
         #print("boxes: ", boxes)
         #print("targets: ", target)
