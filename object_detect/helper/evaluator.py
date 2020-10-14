@@ -91,10 +91,12 @@ def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
             mAP = 1
             mAP2 = 1
             df = pd.DataFrame()
+            print("Detected None, target None! :-) ")
         else:
             mAP = 0
             mAP2 = 0
             df = pd.DataFrame()
+            print("Detected None, target true :-( ")
         return df, mAP, mAP2
     else:
         df = pd.DataFrame(scores.cpu().data,columns=["Scores"])

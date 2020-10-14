@@ -64,7 +64,7 @@ class LeatherData(data.Dataset):
             mask = tgt.numpy()
             mask3 = tgt3.numpy()
             if self.multi:
-                bmask, bounding_box, bbox_labels = get_multi_bboxes(mask3, np.unique(mask))
+                bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
             else:
                 bmask, bounding_box = new_convert(mask)
             bboxes = []

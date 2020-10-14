@@ -140,7 +140,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200,200)),et.ExtToTensor()])
 
 HPC=False
 tick_bite=True
@@ -234,16 +234,12 @@ if __name__ == '__main__':
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    if tick_bite:
-        batch_size = 4
+    if HPC:
+        batch_size = 16
         val_batch_size = 4
     else:
-        if HPC:
-            batch_size = 16
-            val_batch_size = 4
-        else:
-            batch_size = 1
-            val_batch_size = 1
+        batch_size = 4
+        val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -339,7 +335,7 @@ if __name__ == '__main__':
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
         model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, optimizer=optimizer,
-                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
+                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=5,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
