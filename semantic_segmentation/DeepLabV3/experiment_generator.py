@@ -28,6 +28,7 @@ if __name__ == "__main__":
         parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
         parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('train scope', default=True, type=boolean_string, nargs='+', help='train whole model or only classifier')
         parser.add_argument('train scope', metavar='scope', type=bool, nargs='+',help='train whole model or only classifier')
         parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
