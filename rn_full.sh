@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J resnet_SGD_
-#BSUB -o resnet_SGD_%J.out
+#BSUB -J resnet_full_
+#BSUB -o resnet_full_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
