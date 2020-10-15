@@ -39,11 +39,27 @@ def get_iou(boxes,target):
         i+=1
     return iou_list, index_list
 
+def get_class_iou(iou_list,label_list):
+    c1, c2, c3 = [], [], []
+    index = 0
+    for l in label_list:
+        if l == 1:
+            c1.append(iou_list[index])
+        elif l == 2:
+            c2.append(iou_list[index])
+        elif l == 3:
+            c3.append(iou_list[index])
+        index += 1
+    c = np.array([np.mean(c1),np.mean(c2),np.mean(c3)])
+
 def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
+    class_iou = np.zeros(len(labels))
     i = 0
     index_list = []
     bbox_index = 0
+    iou_label_index = []
+    iou_dict = {}
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
@@ -69,6 +85,7 @@ def get_iou2(boxes,targets, pred, labels):
                     best_index = index
             index +=1
         index_list.append(best_index)
+        iou_label_index.append(labels[best_index])
         iou_list = np.append(iou_list, best_iou)
         i+=1
     new_iou_list = np.copy(iou_list)

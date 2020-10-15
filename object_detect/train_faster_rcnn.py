@@ -30,7 +30,7 @@ def init_model(num_classes):
     model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
     return model
 
-def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='binary'):
+def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=0.3,data='binary'):
     if net == 'mobilenet':
         backbone = torchvision.models.mobilenet_v2(pretrained=True).features
         # FasterRCNN needs to know the number of
@@ -64,9 +64,10 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='bina
         # put the pieces together inside a FasterRCNN model
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
+                           min_size=256, max_size=512,
                            rpn_anchor_generator=anchor_generator,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
-                           box_roi_pool=roi_pooler)
+                           box_roi_pool=roi_pooler, box_score_thresh=box_score)
 
     elif net == 'resnet50':
         resnet50 = init_model(num_classes=num_classes)
@@ -82,9 +83,10 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,data='bina
                                                         sampling_ratio=2)
         model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
+                           min_size=256, max_size=512,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
-                           box_roi_pool=roi_pooler)
+                           box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
 def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,losses=None,val_losses=None):
@@ -116,11 +118,11 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
 def freeze_layers(model,layers):
     params = [p for p in model.parameters() if p.requires_grad]
     if layers=='Classifier':
-        params2freeze = params[:64]
+        params2freeze = params[:-8]
         for parameter in params2freeze:
             parameter.requires_grad_(requires_grad=False)
     elif layers=='RPN':
-        params2freeze = params[:58]
+        params2freeze = params[:-14]
         for parameter in params2freeze:
             parameter.requires_grad_(requires_grad=False)
     else:
@@ -140,16 +142,16 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((200,200)),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
 
 HPC=False
-tick_bite=True
+tick_bite=False
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
 binary=False
-multi=False
+multi=True
 load_model=False
 if __name__ == '__main__':
 
@@ -251,10 +253,10 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:50],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[6:50],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:20],
                               bbox=True, multi=multi,
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
@@ -276,23 +278,30 @@ if __name__ == '__main__':
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
-
+    if multi:
+        num_classes = 4
+    else:
+        num_classes = 2
     if HPC:
         if tick_bite:
-            model = define_model(num_classes=2, net=model_name,
+            model = define_model(num_classes=num_classes, net=model_name,
                                  data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
         else:
-            model = define_model(num_classes=2, net=model_name,
+            model = define_model(num_classes=num_classes, net=model_name,
                                  data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     else:
         model_names = ['mobilenet', 'resnet50']
-        model_name = model_names[0]
-        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model_name = model_names[1]
+        if multi:
+            model = define_model(num_classes=num_classes, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        else:
+            model = define_model(num_classes=num_classes, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
     print("Optimizer: ", optim)
     print("Number of epochs: ", num_epoch)
+    print("Number of classes: ", num_classes)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
@@ -312,7 +321,7 @@ if __name__ == '__main__':
     if optim == 'SGD':
         optimizer = torch.optim.SGD(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
     elif optim == 'Adam':
-        optimizer = torch.optim.Adam(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
+        optimizer = torch.optim.Adam(params=params2train, lr=lr, weight_decay=weight_decay)
     else:
         optimizer = torch.optim.RMSprop(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
 

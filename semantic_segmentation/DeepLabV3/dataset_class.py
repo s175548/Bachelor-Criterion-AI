@@ -79,7 +79,7 @@ class LeatherData(data.Dataset):
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
                 if self.multi:
-                    labels = torch.ones(bbox_labels, dtype=torch.int64)
+                    labels = torch.tensor(bbox_labels, dtype=torch.int64)
                 else:
                     labels = torch.ones((len(bboxes),), dtype=torch.int64)
             image_id = torch.tensor([img_index])

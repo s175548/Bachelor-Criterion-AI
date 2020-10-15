@@ -341,7 +341,7 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
     roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
                                                     output_size=7,
                                                     sampling_ratio=2)
-    model = FasterRCNN(backbone, min_size=180, max_size=360, num_classes=num_classes, **kwargs)
+    model = FasterRCNN(backbone, min_size=256, max_size=512, num_classes=num_classes, **kwargs)
     #model = FasterRCNN(backbone,min_size=180,max_size=360,
     #                   num_classes=num_classes,
     #                   rpn_anchor_generator=anchor_generator,

@@ -100,15 +100,19 @@ def get_multi_bboxes(mask):
     bboxes = []
     obj_per_label = []
     for l in range(len(labels)):
-        mask_new = np.copy(new_mask)
-        mask_new = transform_image(new_mask,mask_new,l+1)
-        num_objects = np.unique(mask_new)
+        mask_new = np.copy(mask)
+        mask_new = transform_image(mask,mask_new,labels[l])
+        nm, _ = ndimage.label(mask_new, structure=s)
+        num_objects = np.unique(nm)
         num_objects = num_objects[1:]
-        masks_new = mask_new == num_objects[:, None, None]
+        masks_new = nm == num_objects[:, None, None]
         bbox = create_boxes(masks_new,len(num_objects))
         bboxes.append(bbox[0])
         for k in range(len(num_objects)):
-            bboxes_labels.append(labels[l])
+            if labels[l] == 4:
+                bboxes_labels.append(3)
+            else:
+                bboxes_labels.append(labels[l])
         obj_per_label.append(k+1)
 
     bounding_box_mask2 = np.zeros((new_mask.shape[0], new_mask.shape[1]))
@@ -116,16 +120,19 @@ def get_multi_bboxes(mask):
 
     nl = list(labels)
     count = [[x,nl.count(x)] for x in set(nl)]
-
-    clist = [75, 150, 225]
+    count2 = [[x,bboxes_labels.count(x)] for x in set(bboxes_labels)]
+    if len(bboxes) > len(bboxes_labels):
+        print("REACHED")
+    clist = [55, 110, 165, 220]
     k = 0
     for i in range(num_labels):
-        k2 = count[i][1]
-        colour = count[i][0]-1
-        for box in bboxes[k:k2]:
+        k2 = count2[i][1]
+        colour = count2[i][0]-1
+        for box in bboxes[k:k+k2]:
                 x1, y1, x2, y2 = box
                 bounding_box_mask2 = cv2.rectangle(bounding_box_mask2.copy(), (x1, y1), (x2, y2), (clist[colour], 255, 255), 3)
         k = k2
+    jo = 0
     return bounding_box_mask, boxes, bboxes_labels, bounding_box_mask2
 
 def new_convert(mask):

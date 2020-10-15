@@ -116,11 +116,11 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
 def freeze_layers(model,layers):
     params = [p for p in model.parameters() if p.requires_grad]
     if layers=='Classifier':
-        params2freeze = params[:64]
+        params2freeze = params[:-8]
         for parameter in params2freeze:
             parameter.requires_grad_(requires_grad=False)
     elif layers=='RPN':
-        params2freeze = params[:58]
+        params2freeze = params[:-14]
         for parameter in params2freeze:
             parameter.requires_grad_(requires_grad=False)
     else:
@@ -185,6 +185,7 @@ if __name__ == '__main__':
         parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
         parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
+        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
@@ -194,10 +195,12 @@ if __name__ == '__main__':
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
+        layers_to_train = args['trained layers'][0]
         num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
+        layers_to_train = 'classifier'
         num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
@@ -286,8 +289,12 @@ if __name__ == '__main__':
             model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
         else:
-            model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+            if multi:
+                model = define_model(num_classes=4, net=model_name,
+                                     data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+            else:
+                model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
@@ -297,12 +304,13 @@ if __name__ == '__main__':
     print("Learning rate: ", lr)
     print("Optimizer: ", optim)
     print("Number of epochs: ", num_epoch)
+    print("Trained network: ", layers_to_train)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
     params = [p for p in model.parameters() if p.requires_grad]
 
-    if model_name=='mobilenet':
+    if layers_to_train == 'full':
         freeze_layers(model, layers=layers[2])
         print("Layers trained: ", layers[2])
     else:
@@ -338,14 +346,16 @@ if __name__ == '__main__':
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, optimizer=optimizer,
+        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+                                            optimizer=optimizer,
                                             data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, data_loader=val_loader,
+        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+                                                     data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
         loss_val.append(val_loss)
@@ -357,17 +367,17 @@ if __name__ == '__main__':
             best_map2 = mAP2
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
                    n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
                    n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
