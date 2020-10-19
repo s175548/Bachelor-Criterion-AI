@@ -126,6 +126,7 @@ def get_multi_bboxes(mask):
     clist = [55, 110, 165, 220]
     k = 0
     for i in range(num_labels):
+        print("Shape: ", np.shape(count2))
         k2 = count2[i][1]
         colour = count2[i][0]-1
         for box in bboxes[k:k+k2]:
