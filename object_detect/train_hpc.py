@@ -148,8 +148,8 @@ if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
-binary=True
-multi=False
+binary=False 
+multi=True
 load_model=False
 if __name__ == '__main__':
 
