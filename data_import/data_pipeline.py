@@ -13,7 +13,7 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True):
+def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True,ignore_good=False,crop=False):
     if visibility_scores!= "All":
         visibility_idx=data_loader.get_visibility_score(visibility_scores)
         idx=visibility_idx
@@ -26,22 +26,28 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
         idx = np.intersect1d(idx_to_consider, idx)
 
 
-
-
     for i in idx:
         i = int(i)
-        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary)
+        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary,ignore_good=ignore_good)
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
-        for k in range(len(img_crops)):
-            if exclude_no_mask_crops:
-                if list(np.setdiff1d(np.unique(mask_crops[k]),[0,121,  98,  62]))==[]:
-                    pass
-                else:
-                    k = int(k)
-                    im_pil = Image.fromarray(img_crops[k])
-                    im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
-                    mask_pil = Image.fromarray(mask_crops[k])
-                    mask_pil.save( os.path.join( path, str(i)+"_"+str(k) + '_mask.png') )
+        if crop==True:
+            for k in range(len(img_crops)):
+                if exclude_no_mask_crops:
+                    if list(np.setdiff1d(np.unique(mask_crops[k]),[0,121,  98,  62]))==[]:
+                        pass
+                    else:
+                        k = int(k)
+                        im_pil = Image.fromarray(img_crops[k])
+                        im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
+                        mask_pil = Image.fromarray(mask_crops[k])
+                        mask_pil.save(os.path.join( path, str(i)+"_"+str(k) + '_mask.png'))
+        else:
+            im_pil = Image.fromarray(img[0])
+            im_pil.save(os.path.join(path, str(i) +".png"))
+            mask_pil = Image.fromarray(mask[0])
+            mask_pil.save(os.path.join(path, str(i) + '_mask.png'))
+
+
 
 
 
@@ -60,7 +66,7 @@ if __name__ == "__main__":
 
 #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
     #import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
-    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=True)
+    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",make_binary=True)
      
  #   data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
      #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[1,2,3],labels=['Puntura insetto','Background'],make_binary=True)

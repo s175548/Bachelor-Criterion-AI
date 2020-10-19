@@ -182,6 +182,8 @@ class DataLoader():
         colors = np.array([[np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255)] for _ in
                   range(60)])
         for color,label in zip(colors,np.sort(list(self.annotations_dict.values()))):
+            if label[:4] == "Good":
+                color_dict[label]=np.array([0,0,0])
             color_dict[label]=color
         return color_dict
 
@@ -360,10 +362,10 @@ def get_background_mask(image):
 if __name__ == '__main__':
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
-    train,val=data_loader.test_training_split()
-    for data in [train,val] :
-        idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))
-        index=data_loader.annotation_to_index(index_list=idx_dict)
+    #train,val=data_loader.test_training_split()
+    #for data in [train,val] :
+    #    idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))
+    #    index=data_loader.annotation_to_index(index_list=idx_dict)
 
 
     #label_dict=data_loader.get_image_and_labels([21],labels=['Piega ','Verruca','Puntura insetto'],make_binary=False)

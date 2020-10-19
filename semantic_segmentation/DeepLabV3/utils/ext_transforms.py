@@ -418,11 +418,8 @@ class ExtRandomCrop(object):
             desired size to avoid raising an exception.
     """
 
-    def __init__(self, size, padding=0, pad_if_needed=False):
-        if isinstance(size, numbers.Number):
-            self.size = (int(size), int(size))
-        else:
-            self.size = size
+    def __init__(self, scale=0.7, padding=0, pad_if_needed=False):
+        self.scale = scale
         self.padding = padding
         self.pad_if_needed = pad_if_needed
 
@@ -453,6 +450,7 @@ class ExtRandomCrop(object):
             PIL Image: Cropped image.
             PIL Image: Cropped label.
         """
+        self.size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale) )
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
         if self.padding > 0:
             img = F.pad(img, self.padding)
