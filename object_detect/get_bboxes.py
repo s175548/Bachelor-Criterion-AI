@@ -107,11 +107,13 @@ def get_multi_bboxes(mask):
         num_objects = num_objects[1:]
         masks_new = nm == num_objects[:, None, None]
         bbox = create_boxes(masks_new,len(num_objects))
-        bboxes.append(bbox[0])
+        #bboxes.append(bbox[0])
         for k in range(len(num_objects)):
             if labels[l] == 4:
-                bboxes_labels.append(3)
+                #bboxes_labels.append(3)
+                pass
             else:
+                bboxes.append(bbox[0])
                 bboxes_labels.append(labels[l])
         obj_per_label.append(k+1)
 
