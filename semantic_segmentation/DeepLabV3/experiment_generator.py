@@ -104,7 +104,7 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
     if binary:
         color_dict = data_loader.color_dict_binary
