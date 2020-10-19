@@ -5,7 +5,7 @@ sys.path.append('/zhome/dd/4/128822/Bachelorprojekt/Bachelor-Criterion-AI')
 import torchvision, random
 import pickle
 import numpy as np
-from object_detect.leather_data import LeatherData
+from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
@@ -64,7 +64,6 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
         # put the pieces together inside a FasterRCNN model
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
-                           min_size=256, max_size=512,
                            rpn_anchor_generator=anchor_generator,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
@@ -83,7 +82,6 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                                                         sampling_ratio=2)
         model = FasterRCNN(resnet50.backbone,
                            num_classes=num_classes,
-                           min_size=256, max_size=512,
                            rpn_anchor_generator=rpn_anchor_generator, rpn_head = rpn_head,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
@@ -142,8 +140,8 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((400,400)),et.ExtToTensor()])
-
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+#et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
 tick_bite=False
 if tick_bite:
@@ -178,8 +176,8 @@ if __name__ == '__main__':
             save_fold = 'tick_bite/'
             dataset = "tick_bite"
         else:
-            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
             save_fold = 'multi/'
             dataset = "multi"
 
@@ -187,6 +185,7 @@ if __name__ == '__main__':
         parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
         parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
+        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
@@ -196,10 +195,12 @@ if __name__ == '__main__':
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
+        layers_to_train = args['trained layers'][0]
         num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
+        layers_to_train = 'classifier'
         num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
@@ -236,27 +237,31 @@ if __name__ == '__main__':
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    if HPC:
-        batch_size = 16
-        val_batch_size = 4
-    else:
+    if tick_bite:
         batch_size = 4
         val_batch_size = 4
+    else:
+        if HPC:
+            batch_size = 16
+            val_batch_size = 4
+        else:
+            batch_size = 1
+            val_batch_size = 1
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
-        #shuffled_index = np.random.permutation(len(file_names_train))
-        #file_names_train = file_names_train[shuffled_index]
-        #file_names_train = file_names_train[file_names_train != ".DS_S"]
+        shuffled_index = np.random.permutation(len(file_names_train))
+        file_names_train = file_names_train[shuffled_index]
+        file_names_train = file_names_train[file_names_train != ".DS_S"]
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[6:50],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:20],
+        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                               bbox=True, multi=multi,
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
@@ -265,7 +270,7 @@ if __name__ == '__main__':
         shuffled_index = np.random.permutation(len(file_names))
         file_names_img = file_names[shuffled_index]
         train_dst = LeatherData(path_mask=path_mask, path_img=path_img,
-                                list_of_filenames=file_names[:round(N_files * 0.40)],
+                                list_of_filenames=file_names[:round(N_files * 0.80)],
                                 bbox=True,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_mask, path_img=path_img, list_of_filenames=file_names[round(N_files * 0.80):],
@@ -273,41 +278,39 @@ if __name__ == '__main__':
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
-    if multi:
-        num_classes = 4
-    else:
-        num_classes = 2
+
     if HPC:
         if tick_bite:
-            model = define_model(num_classes=num_classes, net=model_name,
+            model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
         else:
-            model = define_model(num_classes=num_classes, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+            if multi:
+                model = define_model(num_classes=4, net=model_name,
+                                     data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+            else:
+                model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
     else:
         model_names = ['mobilenet', 'resnet50']
-        model_name = model_names[1]
-        if multi:
-            model = define_model(num_classes=num_classes, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
-        else:
-            model = define_model(num_classes=num_classes, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model_name = model_names[0]
+        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
     print("Optimizer: ", optim)
     print("Number of epochs: ", num_epoch)
-    print("Number of classes: ", num_classes)
+    print("Trained network: ", layers_to_train)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
     params = [p for p in model.parameters() if p.requires_grad]
 
-    if model_name=='mobilenet':
+    if layers_to_train == 'full':
         freeze_layers(model, layers=layers[2])
         print("Layers trained: ", layers[2])
     else:
@@ -343,14 +346,16 @@ if __name__ == '__main__':
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
-        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, optimizer=optimizer,
-                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=5,
+        model, loss, _, _ = train_one_epoch(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+                                            optimizer=optimizer,
+                                            data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, data_loader=val_loader,
+        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+                                                     data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
         loss_val.append(val_loss)
@@ -362,17 +367,17 @@ if __name__ == '__main__':
             best_map2 = mAP2
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
                    n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
     else:
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}".format(model_name, lr,dataset), optim_name=optim,
+        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
                    n_epochs=num_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)

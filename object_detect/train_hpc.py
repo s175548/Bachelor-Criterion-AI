@@ -141,7 +141,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.close()
 
 transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
-#et.ExtRandomCrop((256,256))
+#et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=True
 tick_bite=False
 if tick_bite:
