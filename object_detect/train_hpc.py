@@ -140,16 +140,16 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtRandomCrop((256,256)),et.ExtToTensor()])
-
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+#et.ExtRandomCrop((256,256))
 HPC=True
 tick_bite=False
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
-binary=True
-multi=False
+binary=False
+multi=True
 load_model=False
 if __name__ == '__main__':
 
@@ -176,8 +176,8 @@ if __name__ == '__main__':
             save_fold = 'tick_bite/'
             dataset = "tick_bite"
         else:
-            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
             save_fold = 'multi/'
             dataset = "multi"
 

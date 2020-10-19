@@ -60,7 +60,7 @@ def convert_mask_to_bbox(mask):
 
 def transform_image(mask,mask_new,label):
     for i in range(np.shape(mask_new)[0]):
-        for j in range(np.shape(mask_new)[0]):
+        for j in range(np.shape(mask_new)[1]):
             if mask[i, j] == label:
                 pass
             else:
