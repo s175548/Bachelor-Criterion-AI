@@ -278,6 +278,38 @@ class DataLoader():
         img=img.enhance(2.0)
         return np.array(img)
 
+    def pad_tif(self,image,extra_shape = 50):
+        h,w,c = image.shape[0]+extra_shape,image.shape[1]+extra_shape,3
+        extra_h= h - image.shape[0] % h
+        extra_w = w- image.shape[1] % w
+        padded_img = np.pad(image, (extra_h, extra_w), 'reflect')
+        return padded_img
+
+    def generate_tif_patches(self, img, patch_size=512,padding = 100,with_pad = False):
+        crop_count_height = img.shape[0] // patch_size
+        crop_count_width = img.shape[1] // patch_size
+        n_imgs = crop_count_height * crop_count_width
+
+        split_dimensions = (patch_size, patch_size, 3)
+        split_imgs = np.empty((n_imgs, *split_dimensions))
+        if with_pad:
+            pad_split_dimensions = (img.shape[0]+padding, img.shape[1]+padding, 3)
+            pad_split_imgs = np.empty((n_imgs, *pad_split_dimensions))
+            padded_img = self.pad_tif(img, padding//2)
+        else:
+            pad_split_imgs = np.empty([0])
+
+
+        for i in range(crop_count_height):
+            for j in range(crop_count_width):
+                image = img[i * patch_size:(i + 1) * patch_size, j * patch_size:(j + 1) * patch_size]
+                split_imgs[i*crop_count_width+j] = image
+                if with_pad:
+                    large_img = padded_img[i * patch_size:(i + 1) * patch_size+padding, j * patch_size:(j + 1) * patch_size+padding]
+                    pad_split_imgs[i*crop_count_width+j] = large_img
+
+        return split_imgs, (crop_count_height,crop_count_width ), pad_split_imgs
+
 def convert_to_image(pred,color_dict,target_dict):
     rgb_pred = np.dstack((pred, pred, pred))
     for key, value in target_dict.items():

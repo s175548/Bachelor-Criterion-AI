@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionMN_whole
-#BSUB -o versionMN_whole%J.out
+#BSUB -J versionMN_multi
+#BSUB -o versionMN_multi%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,6 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD False binary_exp binary_vs_multi/binary/MN True 
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD False binary_exp binary_vs_multi/multi/MN False
+python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD True binary_exp binary_vs_multi/multi/MN False
 echo "Done"

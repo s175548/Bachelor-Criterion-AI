@@ -10,7 +10,7 @@ import object_detect.helper.utils as utils
 from object_detect.helper.evaluator import get_iou2, get_map2
 import matplotlib.pyplot as plt
 
-def get_samples(samples,model_name,optim_name,lr,ids,N,path_save,train=True):
+def get_samples(samples,model_name,optim_name,lr,layers,ids,N,path_save,train=True):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             boxes = p[i]['boxes'].detach().cpu().numpy()
@@ -18,22 +18,22 @@ def get_samples(samples,model_name,optim_name,lr,ids,N,path_save,train=True):
             bmask = get_bbox_mask(mask=m[i], bbox=boxes)
             bmask2 = get_bbox_mask(mask=m[i], bbox=targets)
             if train == False:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_val_{}_{}_prediction.png'.format(model_name,optim_name,lr,N, id.data),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_{}_val_{}_{}_prediction.png'.format(model_name,layers,optim_name,lr,N, id.data),
                                                              format='PNG')
-                Image.fromarray(bmask2.astype(np.uint8)).save(path_save + '/{}_{}_{}_truth_val_{}_{}_prediction.png'.format(model_name,optim_name,lr,N, id.data),
+                Image.fromarray(bmask2.astype(np.uint8)).save(path_save + '/{}_{}_{}_{}_truth_val_{}_{}_prediction.png'.format(model_name,layers,optim_name,lr,N, id.data),
                                                              format='PNG')
             else:
-                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_train_{}_{}_prediction.png'.format(model_name,optim_name,lr,N, id.data),
+                Image.fromarray(bmask.astype(np.uint8)).save(path_save + '/{}_{}_{}_{}_train_{}_{}_prediction.png'.format(model_name,layers,optim_name,lr,N, id.data),
                                                              format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
-                    path_save + '/{}_{}_{}_truth_train_{}_{}_prediction.png'.format(model_name, optim_name, lr, N, id.data),
+                    path_save + '/{}_{}_{}_{}_truth_train_{}_{}_prediction.png'.format(model_name, layers, optim_name, lr, N, id.data),
                     format='PNG')
             if N == 100:
                 image = (img[i].detach().cpu().numpy()).transpose(1, 2, 0).astype(np.uint8)
                 Image.fromarray(image).save(path_save + '{}_{}_img.png'.format(lr,id), format='png')
 
 
-def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
+def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_loader, device, epoch, print_freq, loss_list,save_folder,risk=True,HPC=True):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -46,6 +46,14 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, d
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
+
+        nb = []
+        nt = []
+        nb.append(np.mean([len(targets[j]['boxes']) for j in range(len(targets))]))
+        nt.append(np.mean([len(targets[j]['labels']) for j in range(len(targets))]))
+
+        if nb > nt:
+            print("Something wrong.. hmm")
 
         loss_dict = model(images, targets)
         losses = sum(loss for loss in loss_dict.values())
@@ -66,6 +74,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, d
         losses.backward()
         optimizer.step()
 
+
         if lr_scheduler is not None:
             lr_scheduler.step()
 
@@ -82,7 +91,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, d
                         num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                         model.train()
                         samples.append((images, masks, targets, outputs))
-                        get_samples(samples,model_name,optim_name,lr,ids,N=epoch,path_save=path_save,train=True)
+                        get_samples(samples,model_name,optim_name,lr,layers,ids,N=epoch,path_save=path_save,train=True)
                 else:
                     samples = []
                     model.eval()
@@ -100,7 +109,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, data_loader, d
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
 
 
-def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
+def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,threshold=0.3):
     n_threads = torch.get_num_threads()
     torch.set_num_threads(n_threads)
     if N % 25 == 0:
@@ -132,12 +141,16 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
             evaluator_time = time.time()
             evaluator_time = time.time() - evaluator_time
             for j in range(len(ids)):
-                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), target=targets[j]['boxes'].cpu())
-                df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold)
+                iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
+                                                    pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
+                df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                                       outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
                 mAP.append(AP)
                 mAP2.append(AP2)
                 if N % 50 == 0:
-                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'], iou_list=iou, threshold=threshold, print_state=True)
+                    df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                                       outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
+                                       print_state=True)
                     #print(df2)
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
@@ -159,9 +172,9 @@ def evaluate(model, model_name, optim_name, lr, data_loader, device,N,loss_list,
                 if i < 100:
                     if HPC:
                         if N % 100 == 0:
-                            get_samples(samples,model_name,optim_name,lr,ids,N=N,path_save=path_save,train=False)
+                            get_samples(samples,model_name,optim_name,lr,layers,ids,N=N,path_save=path_save,train=False)
                     else:
-                        get_samples(samples, model_name, optim_name, lr, ids, N=N, path_save=path_save, train=False)
+                        get_samples(samples, model_name, optim_name, lr, layers,ids, N=N, path_save=path_save, train=False)
                 model.eval()
             i+=1
 

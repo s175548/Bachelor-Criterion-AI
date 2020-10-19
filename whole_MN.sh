@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD True backbone_exp backbone/whole_network/MN
+python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD True backbone_exp backbone/whole_network/MN True
 echo "Done"

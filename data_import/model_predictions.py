@@ -21,7 +21,7 @@ from torch.utils import data
 batch_size= 16 # 16
 val_batch_size= 4 #4
 
-Villads=True
+Villads=False
 if Villads:
     path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
     path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
@@ -29,10 +29,17 @@ if Villads:
     path_meta_data = r'samples/model_comparison.csv'
     save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
     model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_multi_exp0.001.pt'
+else:
+    path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
+    path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
+    path_val = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
+    path_meta_data = r'samples/model_comparison.csv'
+    save_path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet\predictions'
+    model_path=r'E:\downloads_hpc_bachelor\exp_results\backbone\classifier_only\ResNet\DeepLab_backbone_exp0.01.pt'
 
 checkpoint=torch.load(model_path,map_location=torch.device('cpu'))
 model_name='DeepLab'
-n_classes=3
+n_classes=1
 if model_name=='DeepLab':
     model=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
     model.classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
@@ -55,7 +62,7 @@ file_names_train = file_names_train[file_names_train != ".DS_S"]
 file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((256, 256)), et.ExtToTensor(),
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((1000, 1000)), et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])

@@ -39,11 +39,27 @@ def get_iou(boxes,target):
         i+=1
     return iou_list, index_list
 
-def get_iou2(boxes,target):
+def get_class_iou(iou_list,label_list):
+    c1, c2, c3 = [], [], []
+    index = 0
+    for l in label_list:
+        if l == 1:
+            c1.append(iou_list[index])
+        elif l == 2:
+            c2.append(iou_list[index])
+        elif l == 3:
+            c3.append(iou_list[index])
+        index += 1
+    c = np.array([np.mean(c1),np.mean(c2),np.mean(c3)])
+
+def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
+    class_iou = np.zeros(len(labels))
     i = 0
     index_list = []
     bbox_index = 0
+    iou_label_index = []
+    iou_dict = {}
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
@@ -51,9 +67,9 @@ def get_iou2(boxes,target):
 
         index = 0
         best_index = 0
-        for label in target:
+        for target in targets:
 
-            x1, y1, x2, y2 = label.unbind(0)
+            x1, y1, x2, y2 = target.unbind(0)
             target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
             xA = max(xmin, x1)
             yA = max(ymin, y1)
@@ -64,11 +80,12 @@ def get_iou2(boxes,target):
             interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
             iou = interArea / float(bbox_area + target_area - interArea)
             if iou > best_iou:
-                best_iou = iou
-                best_index = index
-
+                if labels[index] == pred[i]:
+                    best_iou = iou
+                    best_index = index
             index +=1
         index_list.append(best_index)
+        iou_label_index.append(labels[best_index])
         iou_list = np.append(iou_list, best_iou)
         i+=1
     new_iou_list = np.copy(iou_list)
@@ -85,31 +102,60 @@ def get_iou2(boxes,target):
         iou_list = np.append(iou_list, 0)
     return iou_list, index_list, new_iou_list
 
-def get_map2(boxes,target,scores,iou_list,threshold=0.3,print_state=False):
-    df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
-    true_labels = [iou_list >= threshold]
-    df.insert(1,"Correct?",true_labels[0],True)
-    df.insert(2,"IoU {}".format(threshold),iou_list,True)
-    prec, rec = precision_recall(true_labels[0])
-    pred = np.ones((len(true_labels[0])))
-    df.insert(2,"Precision", prec,True)
-    df.insert(3,"Recall", rec,True)
-    mAP = average_precision_score(true_labels[0],pred)
+def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=False):
+    map = []
+    map2 = []
     if len(scores) == 0:
-        scores2 = np.zeros(len(true_labels[0]))
-        mAP2 = average_precision_score(true_labels[0],scores2)
+        if len(target) == 0:
+            mAP = 1
+            mAP2 = 1
+            df = pd.DataFrame()
+            print("Detected None, target None! :-) ")
+        else:
+            if len(labels) == 1:
+                if labels == torch.zeros(1):
+                    mAP = 1
+                    mAP2 = 1
+                    df = pd.DataFrame()
+                    print("Detected None, target None! :-) ")
+                else:
+                    mAP = 0
+                    mAP2 = 0
+                    df = pd.DataFrame()
+                    print("Detected None, target true :-( ")
+            else:
+                mAP = 0
+                mAP2 = 0
+                df = pd.DataFrame()
+                print("Detected None, target true :-( ")
+        return df, mAP, mAP2
     else:
-        mAP2 = average_precision_score(true_labels[0], scores.cpu())
-    if np.isnan(mAP)==True:
-        mAP = 0
-    if np.isnan(mAP2) == True:
-        mAP2 = 0
-    if print_state==True:
-        print("boxes: ", boxes)
-        print("targets: ", target)
-        print("iou: ", iou_list)
-        print("scores: ", scores)
-    #if len(boxes) > 0:
+        df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
+        true_labels = [iou_list >= threshold]
+        df.insert(1,"Correct?",true_labels[0],True)
+        df.insert(2,"IoU {}".format(threshold),iou_list,True)
+        prec, rec = precision_recall(true_labels[0])
+        pred = np.ones((len(true_labels[0])))
+        df.insert(2,"Precision", prec,True)
+        df.insert(3,"Recall", rec,True)
+        mAP = average_precision_score(true_labels[0],pred)
+        if len(scores) == 0:
+            scores2 = np.zeros(len(true_labels[0]))
+            mAP2 = average_precision_score(true_labels[0],scores2)
+        else:
+            mAP2 = average_precision_score(true_labels[0], scores.cpu())
+        if np.isnan(mAP)==True:
+            mAP = 0
+        if np.isnan(mAP2) == True:
+            mAP2 = 0
+        if print_state==True:
+            print("boxes: ", boxes)
+            print("targets: ", target)
+            print("iou: ", iou_list)
+            print("scores: ", scores)
+            print("predictions: ", pred)
+            print("labels: ", labels)
+        #if len(boxes) > 0:
         #print("boxes: ", boxes)
         #print("targets: ", target)
         #print("iou: ", iou_list)

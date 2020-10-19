@@ -1,3 +1,11 @@
+# save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images'
+# import numpy as np,os
+# from PIL import Image
+# for i in range(86):
+#     test = np.zeros((2048,2048,3))
+#     im_pil = Image.fromarray( (test* 255).astype(np.uint8))
+#     im_pil.save(os.path.join(save_path, str(i) + "_mask.png"))
+
 #
 #     self.binary_class_dictionary = self.generate_binary_class_dictionary()
 #
