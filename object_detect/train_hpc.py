@@ -148,7 +148,7 @@ if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
-binary=False 
+binary=False
 multi=True
 load_model=False
 if __name__ == '__main__':
@@ -176,8 +176,8 @@ if __name__ == '__main__':
             save_fold = 'tick_bite/'
             dataset = "tick_bite"
         else:
-            path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/mask'
-            path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_28_09/img'
+            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
             save_fold = 'multi/'
             dataset = "multi"
 
