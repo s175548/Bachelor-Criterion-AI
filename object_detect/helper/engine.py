@@ -144,7 +144,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 if multi:
                     iou, label_list = iou_multi(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
-                    df, AP, AP2, c = get_class_iou(iou=iou,label_list=label_list,scores=outputs[j]['scores'].cpu(),
+                    df, AP, AP2, c = get_class_iou(iou_list=iou,label_list=label_list,scores=outputs[j]['scores'].cpu(),
                                                    preds=outputs[j]['labels'].cpu(),threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
