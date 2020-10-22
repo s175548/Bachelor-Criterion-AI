@@ -291,7 +291,7 @@ if __name__ == '__main__':
         else:
             if multi:
                 model = define_model(num_classes=4, net=model_name,
-                                     data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+                                     data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
             else:
                 model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
