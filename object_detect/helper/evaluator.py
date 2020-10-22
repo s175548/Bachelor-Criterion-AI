@@ -30,39 +30,54 @@ def check_empty(scores,target,labels):
                 print("Detected None, target true :-( ")
     return df, mAP, mAP2
 
-def get_iou(boxes,target):
-    iou_list = np.array([])
-    i = 0
-    index_list = []
-    for label in target:
-        best_iou = 0
-
-        x1, y1, x2, y2 = label.unbind(0)
-        target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
-        index = 0
-        best_index = 0
-        for bbox in boxes:
-
-            xmin, ymin, xmax, ymax = bbox.unbind(0)
-            bbox_area = (xmax - xmin + 1) * (ymax - ymin + 1)
-
-            xA = max(xmin, x1)
-            yA = max(ymin, y1)
-            xB = min(xmax, x2)
-            yB = min(ymax, y2)
-
-            # compute the area of intersection rectangle
-            interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
-            iou = interArea / float(bbox_area + target_area - interArea)
-            if iou > best_iou:
-                best_iou = iou
-                best_index = index
-
-            index +=1
-        index_list.append(best_index)
-        iou_list = np.append(iou_list, best_iou)
-        i+=1
-    return iou_list, index_list
+def classifier_metric(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
+    """ acc_image = [ """""
+    acc_image = [None, None] # [No defects accuracy, defects accuray]
+    acc_defect = None
+    if len(target) == 0:
+        if len(scores) == 0:
+            acc_image = [1, 0]
+        else:
+            acc_image = [0, 0]
+            acc_defect = 0
+    else:
+        num_obj = len(target)
+        true_labels = [iou_list >= threshold]
+        counter = 0
+        for i in range(num_obj):
+            if true_labels == True:
+                counter += 1
+            else:
+                pass
+        if counter >= 1:
+            acc_defect = counter/num_obj
+            acc_image = [None, 1]
+    else:
+        true_labels = [iou_list >= threshold]
+        df.insert(1,"Correct?",true_labels[0],True)
+        df.insert(2,"IoU {}".format(threshold),iou_list,True)
+        prec, rec = precision_recall(true_labels[0])
+        df.insert(2,"Precision", prec,True)
+        df.insert(3,"Recall", rec,True)
+        mAP = average_precision_score(true_labels[0],preds.cpu())
+        if len(scores) == 0:
+            scores2 = np.zeros(len(true_labels[0]))
+            mAP2 = average_precision_score(true_labels[0],scores2)
+        else:
+            mAP2 = average_precision_score(true_labels[0], scores.cpu())
+        if np.isnan(mAP)==True:
+            mAP = 0
+        if np.isnan(mAP2) == True:
+            mAP2 = 0
+        if print_state==True:
+            print("boxes: ", boxes)
+            print("targets: ", target)
+            print("iou: ", iou_list)
+            print("scores: ", scores)
+            print("predictions: ", preds)
+            print("labels: ", labels)
+            print("class iou: ", c)
+    return df, mAP, mAP2, c
 
 def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
     c1, c2, c3 = [], [], []
@@ -155,12 +170,9 @@ def iou_multi(boxes, targets, pred, labels):
 
 def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
-    class_iou = np.zeros(len(labels))
     i = 0
     index_list = []
-    bbox_index = 0
     iou_label_index = []
-    iou_dict = {}
     for bbox in boxes:
         best_iou = 0
         xmin, ymin, xmax, ymax = bbox.unbind(0)
@@ -241,29 +253,6 @@ def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=
         #print("iou: ", iou_list)
         #print("scores: ", scores)
     return df, mAP, mAP2
-
-def get_map(boxes,target,scores,iou_list,threshold=0.5):
-    zipped = zip(scores.numpy(), boxes.numpy(), target.numpy())
-    #sort_zip = sorted(zipped)
-    sorted_zip = sorted(zipped, key=lambda x: x[0], reverse=True)
-    df = pd.DataFrame(sorted_zip,columns=["Scores","Boxes","Target"])
-    sc, bo, ta = [], [], []
-    for i in range(len(sorted_zip)):
-        sc.append(sorted_zip[i][0])
-        bo.append(sorted_zip[i][1])
-        ta.append(sorted_zip[i][2])
-    sc, bo, ta = np.array(sc), np.array(bo), np.array(ta)
-    true_labels = [iou_list >= threshold]
-    df.insert(0,"Correct?",true_labels[0],True)
-    df.insert(1,"IoU {}".format(threshold),iou_list,True)
-    prec, rec = precision_recall(true_labels[0])
-    pred = np.ones((len(true_labels[0])))
-    df.insert(1,"Precision", prec,True)
-    df.insert(2,"Recall", rec,True)
-    mAP = average_precision_score(true_labels[0],pred)
-    if np.isnan(mAP)==True:
-        mAP = 0
-    return df, mAP
 
 def precision_recall(pred):
     precision, recall = np.zeros((len(pred))), np.zeros((len(pred)))
