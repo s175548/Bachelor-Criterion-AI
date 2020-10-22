@@ -64,7 +64,7 @@ def get_iou(boxes,target):
         i+=1
     return iou_list, index_list
 
-def get_class_iou(iou_list,label_list,scores,preds,threshold=0.3,print_state=False):
+def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
     c1, c2, c3 = [], [], []
     index = 0
     for l in label_list:
