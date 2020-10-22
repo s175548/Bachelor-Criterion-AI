@@ -153,7 +153,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
 
-                    pass
                 else:
                     iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
