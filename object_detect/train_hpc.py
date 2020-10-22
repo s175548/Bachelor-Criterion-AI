@@ -176,8 +176,8 @@ if __name__ == '__main__':
             save_fold = 'tick_bite/'
             dataset = "tick_bite"
         else:
-            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
+            path_train = r'/zhome/dd/4/128822/Bachelorprojekt/multi/train'
+            path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
             save_fold = 'multi/'
             dataset = "multi"
 

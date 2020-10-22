@@ -215,7 +215,7 @@ if __name__ == '__main__':
             dataset = "tick_bite"
         else:
             path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\val'
             dataset = "multi"
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
