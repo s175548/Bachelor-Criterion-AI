@@ -13,7 +13,9 @@ from semantic_segmentation.DeepLabV3.utils.ext_transforms import ExtEnhanceContr
 6. Random crop to N1xN1 (default: 200x200) and flip vertically and horizontally with probability 0.5 for both (independently) (+ whitening)
 """
 
-def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=None,visibility_scores = [2,3],exclude_no_mask_crops=True,make_binary=True,ignore_good=False,crop=False):
+def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=None,visibility_scores = 'All',exclude_no_mask_crops=True,make_binary=True,ignore_good=False,crop=False):
+    idx=data_loader.valid_annotations
+
     if visibility_scores!= "All":
         visibility_idx=data_loader.get_visibility_score(visibility_scores)
         idx=visibility_idx
