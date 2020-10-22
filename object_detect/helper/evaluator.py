@@ -78,7 +78,7 @@ def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,p
     c = np.array([np.mean(c1),np.mean(c2),np.mean(c3)])
     if len(scores) == 0:
         df, mAP, mAP2 = check_empty(scores,target,labels)
-        return df, mAP, mAP2
+        return df, mAP, mAP2, c
     else:
         df = pd.DataFrame(scores.cpu().data,columns=["Scores"])
         true_labels = [iou_list >= threshold]
