@@ -30,16 +30,20 @@ def check_empty(scores,target,labels):
                 print("Detected None, target true :-( ")
     return df, mAP, mAP2
 
-def classifier_metric(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
+def classifier_metric(iou_list,scores,target,threshold=0.3):
     """ acc_image = [ """""
-    acc_image = [None, None] # [No defects accuracy, defects accuray]
+    acc_image = [None, None]  # [No defects accuracy, defects accuray]
     acc_defect = None
+    ac1 = 0
+    ac2 = 0
     if len(target) == 0:
         if len(scores) == 0:
             acc_image = [1, 0]
+            ac1 = 1
         else:
             acc_image = [0, 0]
             acc_defect = 0
+            ac1 = 1
     else:
         num_obj = len(target)
         true_labels = [iou_list >= threshold]
@@ -51,33 +55,12 @@ def classifier_metric(iou_list,label_list,scores,target,labels,preds,threshold=0
                 pass
         if counter >= 1:
             acc_defect = counter/num_obj
-            acc_image = [None, 1]
-    else:
-        true_labels = [iou_list >= threshold]
-        df.insert(1,"Correct?",true_labels[0],True)
-        df.insert(2,"IoU {}".format(threshold),iou_list,True)
-        prec, rec = precision_recall(true_labels[0])
-        df.insert(2,"Precision", prec,True)
-        df.insert(3,"Recall", rec,True)
-        mAP = average_precision_score(true_labels[0],preds.cpu())
-        if len(scores) == 0:
-            scores2 = np.zeros(len(true_labels[0]))
-            mAP2 = average_precision_score(true_labels[0],scores2)
+            acc_image = [0, 1]
         else:
-            mAP2 = average_precision_score(true_labels[0], scores.cpu())
-        if np.isnan(mAP)==True:
-            mAP = 0
-        if np.isnan(mAP2) == True:
-            mAP2 = 0
-        if print_state==True:
-            print("boxes: ", boxes)
-            print("targets: ", target)
-            print("iou: ", iou_list)
-            print("scores: ", scores)
-            print("predictions: ", preds)
-            print("labels: ", labels)
-            print("class iou: ", c)
-    return df, mAP, mAP2, c
+            acc_image = [0, 0]
+            acc_defect = 0
+        ac2 = 1
+    return acc_image, acc_defect, ac1, ac2
 
 def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
     c1, c2, c3 = [], [], []
@@ -287,9 +270,29 @@ if __name__ == '__main__':
     labels = torch.tensor([1, 2, 3],dtype=torch.int64)
     preds = torch.tensor([2, 3, 1, 1, 1],dtype=torch.int64)
     iou, label_list = iou_multi(boxes2,target2,preds,labels)
-    df, mAP, mAP2, c = get_class_iou(iou,label_list,scores,preds,threshold=0.1,print_state=True)
+    #df, mAP, mAP2, c = get_class_iou(iou,label_list,scores,preds,threshold=0.1,print_state=True)
     #iou, index, selected_iou = get_iou2(boxes=boxes,target=target)
     #best_bboxes = boxes[index]
     #df, mAP, mAP2 = get_map2(boxes,target,scores,iou_list=iou,threshold=0.3,print_state=True)
-    print("IoU is; ", iou)
-    print("mAP is: ", c)
+    #print("IoU is; ", iou)
+    #print("mAP is: ", c)
+
+    acimg = []
+    acdef = []
+    ac1 = 0
+    ac2 = 0
+
+    for i in range(10):
+        scores = np.array([1/(2+i),1/(3+i),1/(4+i)])
+        if i % 2 == 0:
+            target = []
+            iou_list = np.zeros(3)
+        else:
+            target = np.ones(7)
+            iou_list = np.array([1 / (1 + i), 1 / (2 + i), 1 / (3 + i)])
+        acc_image, acc_def, acc1, acc2 = classifier_metric(iou_list,scores,target)
+        acimg.append(acc_image)
+        acdef.append(acc_def)
+        ac1 += acc1
+        ac2 += acc2
+

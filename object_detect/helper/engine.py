@@ -7,7 +7,7 @@ import torchvision.models.detection.mask_rcnn
 from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
 import object_detect.helper.utils as utils
-from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou
+from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric
 import matplotlib.pyplot as plt
 
 def get_samples(samples,model_name,optim_name,lr,layers,ids,N,path_save,train=True):
@@ -126,6 +126,10 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
     i = 0
     mAP = []
     mAP2 = []
+    acimg = []
+    acdef = []
+    ac1 = 0
+    ac2 = 0
     with torch.no_grad():
         for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
             images = list(img.to(device) for img in image)
@@ -153,7 +157,12 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                         df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
-
+                    if HPC == False:
+                        acc_image, acc_def, acc1, acc2 = classifier_metric(iou, outputs[j]['scores'].cpu(), targets[j]['boxes'].cpu())
+                        acimg.append(acc_image)
+                        acdef.append(acc_def)
+                        ac1 += acc1
+                        ac2 += acc2
                 else:
                     iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
@@ -203,4 +212,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
             print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
+            print("Accuracy on images: ", acc_image)
+            print("Accuracy on defects: ", acc_def)
     return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
