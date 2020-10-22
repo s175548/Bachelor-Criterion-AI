@@ -127,7 +127,8 @@ def get_multi_bboxes(mask):
         print("REACHED")
     clist = [55, 110, 165, 220]
     k = 0
-    for i in range(num_labels):
+    labels2 = [l for l in labels if l != 4]
+    for i in range(len(labels2)):
         print("Shape: ", np.shape(count2))
         k2 = count2[i][1]
         colour = count2[i][0]-1
