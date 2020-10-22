@@ -452,7 +452,7 @@ class ExtRandomCrop(object):
             PIL Image: Cropped label.
         """
         if self.size != None:
-            self.size = (self.size, self.size)
+            self.size = (int(self.size), int(self.size))
         else:
             self.size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale) )
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
