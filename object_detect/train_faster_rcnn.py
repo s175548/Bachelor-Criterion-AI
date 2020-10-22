@@ -357,7 +357,7 @@ if __name__ == '__main__':
         mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
-                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
+                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)

@@ -128,10 +128,13 @@ def get_multi_bboxes(mask):
     clist = [55, 110, 165, 220]
     k = 0
     labels2 = [l for l in labels if l != 4]
+    print("count2: ", count2)
+    print("labels: ", labels)
     for i in range(len(labels2)):
         print("Shape: ", np.shape(count2))
         k2 = count2[i][1]
         colour = count2[i][0]-1
+        print("colour", colour)
         for box in bboxes[k:k+k2]:
                 x1, y1, x2, y2 = box
                 bounding_box_mask2 = cv2.rectangle(bounding_box_mask2.copy(), (x1, y1), (x2, y2), (clist[colour], 255, 255), 3)
