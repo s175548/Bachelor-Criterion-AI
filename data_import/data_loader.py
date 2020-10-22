@@ -15,7 +15,7 @@ class DataLoader():
         self.annotations_dict=self.get_all_annotations()
         self.annotations_index=self.annotation_to_index()
         self.color_dict=self.make_color_dict()
-        self.color_dict_binary={1:np.array([255,255,255]),self.annotations_dict["Background"]:self.color_dict[self.annotations_dict["Background"]]}
+        self.color_dict_binary=self.make_color_dict(binary=True)
 
 
     def get_metadata(self,metadata_path):
@@ -64,51 +64,45 @@ class DataLoader():
 
 
 
-    def get_image_and_labels(self,images_idx,labels="All",ignore_good=True,make_binary=True):
+    def get_image_and_labels(self,images_idx,labels="All",ignore_good=False,make_binary=True):
             """     input: give index/indices of the wanted images in the dataset
                     output: image(s) and mask(s) of the given index/indices
             """
             images = []
             segmentation_masks = []
+            if labels=='All':
+                labels=self.annotations_dict.keys()
+            if make_binary:
+                color_map_dict = self.color_dict_binary
+            else:
+                color_map_dict = self.color_dict
             for image_idx in images_idx:
                 image=np.array(PIL.Image.open(os.path.join(self.data_path, self.metadata_csv[image_idx,1])))
-                mask=self.read_segmentation_file(os.path.join(self.data_path,self.metadata_csv[image_idx,3][1:]),ignore_good=ignore_good,make_binary=make_binary,labels=labels)
+                mask=self.read_segmentation_file(os.path.join(self.data_path,self.metadata_csv[image_idx,3][1:]),labels=labels)
                 back_mask=get_background_mask(image)
                 back_mask[(np.array(back_mask)!=0) & (np.squeeze(mask)!=0)]=0
                 mask=np.squeeze(mask)+np.array(back_mask)/255*self.annotations_dict["Background"]
                 mask_3d=np.dstack((mask,mask,mask))
-                if make_binary:
-                    for color_id,color_map in self.color_dict_binary.items():
-                        index = mask==color_id
-                        mask_3d[index,:]=mask_3d[index,:]/color_id*color_map
-                else:
-                    for label in labels:
-                        color_id=self.annotations_dict[label]
-                        color_map=self.color_dict[color_id]
-                        index = mask == color_id
-                        mask_3d[index, :] = mask_3d[index, :] / color_id * color_map
+                for label in labels:
+                    color_id=self.annotations_dict[label]
+                    color_map=color_map_dict[color_id]
+                    index = mask == color_id
+                    mask_3d[index, :] = mask_3d[index, :] / color_id * color_map
                 segmentation_masks.append(mask_3d.astype(np.uint8))
                 images.append(image)
             return (images,segmentation_masks)
 
 
-    def read_segmentation_file(self,filepath,ignore_good=True,make_binary=True,labels='All'):
+    def read_segmentation_file(self,filepath,labels='All'):
         """     Helper function, that simply opens segmentation file, draws a contour from this.
                 Output: Segmentation retrieved from filename
         """
         label_dict=self.annotations_dict.copy()
         seg = self.get_json_file_content(filepath)
-        if ignore_good==True:
-            key_good=[key for key in label_dict.keys() if key[:4]=="Good"]
-        else:
-            key_good=[]
-        if make_binary==True:
-            for key in label_dict.keys():
-                label_dict[key]=1
         if labels=='All':
             labels=list(label_dict.keys())
         label_space = {kk["label"]: [label_dict[kk["label"]]] for kk in seg["annotations"] if
-                       (kk["label"] in labels) and (kk["label"] not in key_good)}
+                       (kk["label"] in labels)}
         if not label_space:
             print('Image with provided idx does not contain any of the wanted labels')
             return
@@ -147,7 +141,6 @@ class DataLoader():
             path = self.metadata_csv[idx, 1].split('/')
             if (path[0][0]=='W') & (split!=False) :
                 y_thresh=65000*p_value[0]
-                print('yes')
                 p_value.reverse()
                 split=self.metadata_csv[idx, 1].split('/')[2]
                 split=False
@@ -176,15 +169,18 @@ class DataLoader():
                 label_dict[label["label"]].add(idx)
         return label_dict
 
-    def make_color_dict(self):
+    def make_color_dict(self,binary=False):
         color_dict={}
         np.random.seed(0)
         colors = np.array([[np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255)] for _ in
                   range(60)])
-        for color,label in zip(colors,np.sort(list(self.annotations_dict.values()))):
-            if label[:4] == "Good":
-                color_dict[label]=np.array([0,0,0])
-            color_dict[label]=color
+        for color,key_val in zip(colors,sorted(list(self.annotations_dict.items()))):
+            if key_val[0][:4] == "Good":
+                color_dict[int(key_val[1])]=np.array([0,0,0])
+            elif binary and key_val[0] != 'Background':
+                color_dict[int(key_val[1])] = np.array([255, 255, 255])
+            else:
+                color_dict[int(key_val[1])]=color
         return color_dict
 
     def get_index_for_label(self,labels=None):
@@ -415,6 +411,7 @@ if __name__ == '__main__':
     #images, masks = get_patches(np.where(np.array(dataloader.visibility_score) == 3)[0],dataloader)
     #dataloader.plot_function(images,masks)
     # pass
-    # print(dataloader.visibility_score[:50])
+    #
+# (dataloader.visibility_score[:50])
     # pass
     #save_pictures_locally(data_loader,directory_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/training_img')
