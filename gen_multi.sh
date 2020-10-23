@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J resnet_classifier_
-#BSUB -o resnet_classifier_%J.out
+#BSUB -J generate_data
+#BSUB -o generate_data_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py 0.01 resnet50 SGD classifier
+python3 data_import/generate_test_val_split.py
 echo "Done"

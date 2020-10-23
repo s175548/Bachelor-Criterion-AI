@@ -63,7 +63,7 @@ class LeatherData(data.Dataset):
                 img3, tgt3 = self.transform(img_for_bbox, target3)
             mask = tgt.numpy()
             mask3 = tgt3.numpy()
-            if self.multi:
+            if self.multi == True:
                 bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
             else:
                 bmask, bounding_box = new_convert(mask)

@@ -140,7 +140,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
 tick_bite=False
@@ -215,7 +215,7 @@ if __name__ == '__main__':
             dataset = "tick_bite"
         else:
             path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\val'
             dataset = "multi"
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
@@ -298,7 +298,11 @@ if __name__ == '__main__':
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
-        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        if multi:
+            model = define_model(num_classes=4, net=model_name, data=dataset,
+                                 anchors=((8,), (16,), (32,), (64,), (128,)))
+        else:
+            model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
@@ -357,7 +361,7 @@ if __name__ == '__main__':
         mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
-                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk)
+                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)

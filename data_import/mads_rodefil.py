@@ -6,7 +6,6 @@
 #     im_pil = Image.fromarray( (test* 255).astype(np.uint8))
 #     im_pil.save(os.path.join(save_path, str(i) + "_mask.png"))
 
-#
 #     self.binary_class_dictionary = self.generate_binary_class_dictionary()
 #
 #
@@ -95,111 +94,111 @@ PATH = r'E:\downloads_hpc_bachelor\exp_results\lr_INITIAL EXP LR V7_8_oktober\lr
 
 
 # Load
-model = Net()
-model.load_state_dict(torch.load(PATH))
-model.eval()
-
-
-denorm = Denormalize(mean=[0.485, 0.456, 0.406],
-                     std=[0.229, 0.224, 0.225])
-import os
-#TEST MODEL
-if __name__ == "__main__":
-    binary = False
-    batch_size = 16
-    val_batch_size = 4  # 4
-
-    path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
-    path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
-
-    data_loader = DataLoader()
-
-    labels = ['Piega', 'Verruca', 'Puntura insetto', 'Background']
-
-    file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
-    N_files = len(file_names_train)
-    shuffled_index = np.random.permutation(len(file_names_train))
-    file_names_train = file_names_train[shuffled_index]
-    file_names_train = file_names_train[file_names_train != ".DS_S"]
-
-    file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
-    N_files = len(file_names_val)
-    shuffled_index = np.random.permutation(len(file_names_val))
-    file_names_val = file_names_val[shuffled_index]
-    file_names_val = file_names_val[file_names_val != ".DS_S"]
-
-    transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((256, 256)), et.ExtToTensor(),
-                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-    if binary:
-        color_dict = data_loader.color_dict_binary
-        target_dict = data_loader.get_target_dict()
-        annotations_dict = data_loader.annotations_dict
-
-    else:
-        color_dict = data_loader.color_dict
-        target_dict = data_loader.get_target_dict(labels)
-        annotations_dict = data_loader.annotations_dict
-
-    train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                            transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-    val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                          transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-
-    train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
-
-    train_img = []
-    for i in range(10):
-        train_img.append(train_dst.__getitem__(i))
-
-    model_path = r'E:\downloads_hpc_bachelor\exp_results\lr_INITIAL EXP LR V7_8_oktober\lr\0001\DeepLab_lr_exp0.0001.pt'
-    model_dict_parameters = {'model_pre_class': {'pretrained': True, 'num_classes': 21, 'requires_grad': False},
-                             'model_pre_full': {'pretrained': True, 'num_classes': 21, 'requires_grad': True},
-                             'model_full': {'pretrained': False, 'num_classes': 2, 'requires_grad': True}}
-    model_dict = {}
-
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-    # for model_name in ['model_pre_full']:
-    #     model = deeplabv3_resnet101(pretrained=model_dict_parameters[model_name]['pretrained'], progress=True,
-    #                                 num_classes=model_dict_parameters[model_name]['num_classes'], aux_loss=None)
-    #     for parameter in model.classifier.parameters():
-    #         parameter.requires_grad_(requires_grad=model_dict_parameters[model_name]['requires_grad'])
-    default_scope = True
-    model='DeepLab'
-    model_name = 'model_pre_full'
-    model_dict[model] = deeplabv3_resnet101(pretrained=True, progress=True, num_classes=21, aux_loss=None)
-    if default_scope:
-        grad_check(model_dict[model])
-        model_dict[model_name] = model
-    lr = 0.001
-    checkpoint = torch.load(model_path.format(lr), map_location=torch.device('cpu'))
-    for model_name, model in model_dict.items():
-        model.load_state_dict(checkpoint["model_state"])
-        model = nn.DataParallel(model)
-        model.to(device)
-        del checkpoint
-        print("Model restored")
-
-        model.eval()
-        for i in range(len(train_img)):
-            image = train_img[i][0].unsqueeze(0)
-            image = image.to(device, dtype=torch.float32)
-
-            output = model(image)['out']
-            pred = output.detach().max(dim=1)[1].cpu().numpy()
-            target = train_img[i][1].cpu().numpy()
-            image = (denorm(train_img[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-            cv2.imshow('inp',np.array(np.transpose(np.squeeze(train_img[i][0]),(1,2,0))))
-            cv2.imshow('pred', np.transpose(( (~ (pred-1) * (-255) ) ).astype(np.uint8),(1,2,0)))
-            cv2.imshow('image', image)
-            cv2.imshow('target', target)
-            cv2.waitKey(0)
-            print(image.shape)
-
+# model = Net()
+# model.load_state_dict(torch.load(PATH))
+# model.eval()
+#
+#
+# denorm = Denormalize(mean=[0.485, 0.456, 0.406],
+#                      std=[0.229, 0.224, 0.225])
+# import os
+# #TEST MODEL
+# if __name__ == "__main__":
+#     binary = False
+#     batch_size = 16
+#     val_batch_size = 4  # 4
+#
+#     path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
+#     path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
+#
+#     data_loader = DataLoader()
+#
+#     labels = ['Piega', 'Verruca', 'Puntura insetto', 'Background']
+#
+#     file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
+#     N_files = len(file_names_train)
+#     shuffled_index = np.random.permutation(len(file_names_train))
+#     file_names_train = file_names_train[shuffled_index]
+#     file_names_train = file_names_train[file_names_train != ".DS_S"]
+#
+#     file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+#     N_files = len(file_names_val)
+#     shuffled_index = np.random.permutation(len(file_names_val))
+#     file_names_val = file_names_val[shuffled_index]
+#     file_names_val = file_names_val[file_names_val != ".DS_S"]
+#
+#     transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((256, 256)), et.ExtToTensor(),
+#                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+#
+#     if binary:
+#         color_dict = data_loader.color_dict_binary
+#         target_dict = data_loader.get_target_dict()
+#         annotations_dict = data_loader.annotations_dict
+#
+#     else:
+#         color_dict = data_loader.color_dict
+#         target_dict = data_loader.get_target_dict(labels)
+#         annotations_dict = data_loader.annotations_dict
+#
+#     train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+#                             transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+#     val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+#                           transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+#
+#     train_loader = data.DataLoader(
+#         train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+#     val_loader = data.DataLoader(
+#         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
+#
+#     train_img = []
+#     for i in range(10):
+#         train_img.append(train_dst.__getitem__(i))
+#
+#     model_path = r'E:\downloads_hpc_bachelor\exp_results\lr_INITIAL EXP LR V7_8_oktober\lr\0001\DeepLab_lr_exp0.0001.pt'
+#     model_dict_parameters = {'model_pre_class': {'pretrained': True, 'num_classes': 21, 'requires_grad': False},
+#                              'model_pre_full': {'pretrained': True, 'num_classes': 21, 'requires_grad': True},
+#                              'model_full': {'pretrained': False, 'num_classes': 2, 'requires_grad': True}}
+#     model_dict = {}
+#
+#     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+#
+#     # for model_name in ['model_pre_full']:
+#     #     model = deeplabv3_resnet101(pretrained=model_dict_parameters[model_name]['pretrained'], progress=True,
+#     #                                 num_classes=model_dict_parameters[model_name]['num_classes'], aux_loss=None)
+#     #     for parameter in model.classifier.parameters():
+#     #         parameter.requires_grad_(requires_grad=model_dict_parameters[model_name]['requires_grad'])
+#     default_scope = True
+#     model='DeepLab'
+#     model_name = 'model_pre_full'
+#     model_dict[model] = deeplabv3_resnet101(pretrained=True, progress=True, num_classes=21, aux_loss=None)
+#     if default_scope:
+#         grad_check(model_dict[model])
+#         model_dict[model_name] = model
+#     lr = 0.001
+#     checkpoint = torch.load(model_path.format(lr), map_location=torch.device('cpu'))
+#     for model_name, model in model_dict.items():
+#         model.load_state_dict(checkpoint["model_state"])
+#         model = nn.DataParallel(model)
+#         model.to(device)
+#         del checkpoint
+#         print("Model restored")
+#
+#         model.eval()
+#         for i in range(len(train_img)):
+#             image = train_img[i][0].unsqueeze(0)
+#             image = image.to(device, dtype=torch.float32)
+#
+#             output = model(image)['out']
+#             pred = output.detach().max(dim=1)[1].cpu().numpy()
+#             target = train_img[i][1].cpu().numpy()
+#             image = (denorm(train_img[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+#             cv2.imshow('inp',np.array(np.transpose(np.squeeze(train_img[i][0]),(1,2,0))))
+#             cv2.imshow('pred', np.transpose(( (~ (pred-1) * (-255) ) ).astype(np.uint8),(1,2,0)))
+#             cv2.imshow('image', image)
+#             cv2.imshow('target', target)
+#             cv2.waitKey(0)
+#             print(image.shape)
+#
 #TEST MODEL END
 
 # N_epochs = 2
