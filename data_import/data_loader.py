@@ -10,6 +10,7 @@ class DataLoader():
     def __init__(self,data_path=r'C:\Users\Mads-\Desktop\leather_patches',metadata_path = r'samples/model_comparison.csv'):
         self.data_path = data_path
         self.metadata_path = os.path.join(data_path,metadata_path)
+        self.insect_bite_names=['Area Punture insetti', 'Insect bite', "Puntura d'insetto", 'Puntura insetto']
         self.metadata_csv = self.get_metadata(self.metadata_path)
         self.valid_annotations = self.get_empty_segmentations()
         self.annotations_dict=self.get_all_annotations()
@@ -136,8 +137,10 @@ class DataLoader():
         val_idx=[]
         y_thresh=p_value[0]*65000
         p_value.reverse()
+        idx_to_include=load_idx_to_include()
+        idx_to_include=np.intersect1d(idx_to_include,self.valid_annotations)
         split=self.metadata_csv[0, 1].split('/')[2]
-        for idx in self.valid_annotations[1:]:
+        for idx in idx_to_include[1:]:
             path = self.metadata_csv[idx, 1].split('/')
             if (path[0][0]=='W') & (split!=False) :
                 y_thresh=65000*p_value[0]
@@ -177,6 +180,8 @@ class DataLoader():
         for color,key_val in zip(colors,sorted(list(self.annotations_dict.items()))):
             if key_val[0][:4] == "Good":
                 color_dict[int(key_val[1])]=np.array([0,0,0])
+#            elif binary and key_val[0] in self.insect_bite_names:
+#                color_dict[int(key_val[1])] = colors[0]
             elif binary and key_val[0] != 'Background':
                 color_dict[int(key_val[1])] = np.array([255, 255, 255])
             else:
@@ -305,6 +310,17 @@ class DataLoader():
                     pad_split_imgs[i*crop_count_width+j] = large_img
 
         return split_imgs, (crop_count_height,crop_count_width ), pad_split_imgs
+
+def load_idx_to_include():
+    idx=open(os.path.join(os.getcwd(),'data_import','idx_to_include.txt'),'r')
+    idx=idx.read()
+    idx=idx.split(' ')
+    while '' in idx:
+        idx.remove('')
+    idx=[int(id) for id in idx]
+    return idx
+
+
 
 def convert_to_image(pred,color_dict,target_dict):
     rgb_pred = np.dstack((pred, pred, pred))

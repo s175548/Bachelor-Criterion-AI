@@ -1,5 +1,6 @@
 from data_import.data_pipeline import import_data_and_mask
 from data_import.data_loader import DataLoader
+import os
 
 Villads = True
 if Villads:
@@ -10,12 +11,11 @@ else:
     data_loader = DataLoader()
     save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
     save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
+
 train,val=data_loader.test_training_split()
 
 
 import_data_and_mask(data_loader,idx_to_consider=train,
-                     path=save_path_train,
-                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=False)
+                     path=save_path_train, make_binary=True)
 import_data_and_mask(data_loader,idx_to_consider=val,
-                     path=save_path_val,
-                     labels=['Piega', 'Verruca', 'Puntura insetto', 'Background'], make_binary=False)
+                     path=save_path_val, make_binary=True)
