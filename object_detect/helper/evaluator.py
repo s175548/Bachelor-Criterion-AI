@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 import torch
-from object_detect.load_data import *
+from object_detect.load_data import train_loader
 from sklearn.metrics import average_precision_score
 import object_detect.helper.utils as utils
 
