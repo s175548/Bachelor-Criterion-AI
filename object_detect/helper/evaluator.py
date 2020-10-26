@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 import torch
-from object_detect.load_data import train_loader
 from sklearn.metrics import average_precision_score
 import object_detect.helper.utils as utils
 
@@ -311,6 +310,7 @@ def try_error():
         ac2 += acc2
 
 if __name__ == '__main__':
+        from object_detect.load_data import train_loader
         epoch = 1
         data_loader = train_loader
         metric_logger = utils.MetricLogger(delimiter="  ")
