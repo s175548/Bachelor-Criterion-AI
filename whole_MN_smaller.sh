@@ -12,8 +12,8 @@
 # end of BSUB options
 
 echo "Running script..."
-cd ..
-source test-env/bin/activate
-cd Bachelor-Criterion-AI
+cd --
+source BachelorProject/test-env/bin/activate
+cd BachelorProject/cropped_data/Bachelor-Criterion-AI
 python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 MobileNet SGD True res_exp original_res/smaller True
 echo "Done"
