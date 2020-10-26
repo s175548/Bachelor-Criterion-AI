@@ -177,7 +177,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
+    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
 
 
     # ==========   Train Loop   ==========#
