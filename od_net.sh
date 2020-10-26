@@ -1,2 +1,2 @@
-bsub < mn_full.sh
-bsub < rn_full.sh
+bsub < mn_full_scale_001.sh
+bsub < mn_full_scale_01.sh

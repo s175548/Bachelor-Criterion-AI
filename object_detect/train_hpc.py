@@ -170,7 +170,7 @@ if __name__ == '__main__':
             #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
             path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
             path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-            save_fold = 'binary/'
+            save_fold = 'full_scale/'
             dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -198,7 +198,7 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 100
+        num_epoch = int(1/lr)
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -210,7 +210,7 @@ if __name__ == '__main__':
         if binary:
             path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
             path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
-            dataset = "binary"
+            dataset = "binary_scale"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
