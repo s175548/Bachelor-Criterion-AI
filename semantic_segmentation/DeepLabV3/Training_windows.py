@@ -33,7 +33,7 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
+batch_size= 4 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -41,7 +41,7 @@ random_seed=1
 val_interval= 55 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
+N_epochs= 100
 
 
 
@@ -295,6 +295,73 @@ def grad_check(model,model_layers='Classifier'):
         for parameter in model.parameters():
             parameter.requires_grad_(requires_grad=True)
 
+import random,cv2
+def randomCrop(img, mask, width, height):
+    crop_img = np.empty((3,width,height))
+    crop_mask = np.empty((width,height))
+    x = random.randint(0, img.shape[1]-width)
+    y = random.randint(0,img.shape[2]- height)
+    img_num = img.numpy()
+    mask_num = mask.numpy()
+    for i in range(3):
+        crop_img[i] = img_num[i][x:x+width,y:y+height ]
+    crop_mask = mask_num[x:x+width,y:y+height ]
+    return torch.from_numpy(crop_img),torch.from_numpy(crop_mask)
+def pad(img,mask,size,ignore_idx):
+    #        topBorderWidth,bottomBorderWidth, leftBorderWidth,  rightBorderWidth,
+    img_num = img.numpy()
+    mask_num = mask.numpy()
+    pad_img = np.empty((3,size,size))
+    pad_mask = np.empty(( size, size))
+
+    height_border = (size-img_num.shape[1] )// 2
+    width_border = (size - img_num.shape[2]) //2
+    if (size-img_num.shape[1])%2 != 0:
+        rest_height = 1
+    else:
+        rest_height = 0
+    if (size-img_num.shape[2])%2 != 0:
+        rest_width = 1
+    else:
+        rest_width = 0
+
+    if (width_border >= 0 and height_border >= 0):
+        for i in range(3):
+            pad_img[i] = cv2.copyMakeBorder(img_num[i], height_border, height_border + rest_height, width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)
+        pad_mask = cv2.copyMakeBorder(mask_num, height_border, height_border + rest_height, width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)
+    elif height_border >= 0:
+        rand_start = random.randint(0, abs(width_border) * 2)
+        for i in range(3):
+            pad_img[i] = cv2.copyMakeBorder(img_num[i], height_border, height_border + rest_height, 0,0, cv2.BORDER_CONSTANT, value=ignore_idx)[:,rand_start:rand_start+size]
+        pad_mask = cv2.copyMakeBorder(mask_num, height_border, height_border + rest_height, 0,0, cv2.BORDER_CONSTANT, value=ignore_idx)[:,rand_start:rand_start+size]
+    elif width_border >= 0:
+        rand_start = random.randint(0,abs(height_border)*2)
+        for i in range(3):
+            pad_img[i] = cv2.copyMakeBorder(img_num[i], 0, 0 , width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)[rand_start:rand_start+size,:]
+        pad_mask = cv2.copyMakeBorder(mask_num, 0, 0 , width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)[rand_start:rand_start+size,:]
+
+    return torch.from_numpy(pad_img),torch.from_numpy(pad_mask)
+
+def my_def_collate(batch,size=2000):
+    IGNORE_INDEX = 4
+    for idx,item in enumerate(batch):
+        # transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(),et.ExtToTensor(), et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        # pil_image = transforms.ToPILImage()(item[0]).convert("RGB")
+        # pil_label = transforms.ToPILImage()(item[1])
+        if (item[0].shape[1] >= size and item[0].shape[2]>= size):
+            img, mask =randomCrop(item[0],item[1],size,size)
+        else:
+            img, mask = pad(item[0],item[1],size,IGNORE_INDEX)
+        if idx ==0:
+            data = img
+            masks = mask
+        elif idx==1:
+            data = torch.stack([data,img])
+            masks = torch.stack([masks,mask])
+        else:
+            data = torch.cat([data,img.unsqueeze(0)])
+            masks = torch.cat([masks,mask.unsqueeze(0)])
+    return data,masks
 
 if __name__ == "__main__":
 

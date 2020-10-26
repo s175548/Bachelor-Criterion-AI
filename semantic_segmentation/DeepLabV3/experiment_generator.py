@@ -6,13 +6,18 @@ from semantic_segmentation.DeepLabV3.Training_windows import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from data_import.data_loader import DataLoader
 import argparse,json,ast
+from PIL import Image
+from torchvision import transforms
+from semantic_segmentation.DeepLabV3.network.utils import randomCrop,pad
+from semantic_segmentation.DeepLabV3.Training_windows import my_def_collate
+
 
 def boolean_string(s):
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =True
+HPC =False
 Villads=False
 binary=True
 model_name = ''
@@ -75,8 +80,10 @@ if __name__ == "__main__":
         path_model = save_path
         path_original_data = r'C:\Users\Mads-\Desktop\leather_patches'
         if binary:
-            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
-            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
+            #path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
+            #path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
+            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
+            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
         else:
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
@@ -106,8 +113,8 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
-
+    transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+#et.ExtRandomCrop(scale=0.7)
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
@@ -125,9 +132,9 @@ if __name__ == "__main__":
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4,collate_fn=my_def_collate)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4,collate_fn=my_def_collate)
 
     train_img = []
     for i in range(5):
