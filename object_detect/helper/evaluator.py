@@ -4,6 +4,9 @@ import pandas as pd
 import torch
 from sklearn.metrics import average_precision_score
 import object_detect.helper.utils as utils
+import torchvision
+from PIL import Image
+
 
 
 def check_empty(scores,target,labels):
@@ -141,12 +144,40 @@ def iou_multi(boxes, targets, pred, labels):
         iou_list = np.append(iou_list, 0)
     return iou_list, iou_label_index
 
-def get_iou_targets(boxes,targets):
+def get_non_maximum_supression(boxes,scores,iou_threshold):
+    new_boxes = []
+    nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
+    for i in range(len(nms)):
+        new_boxes.append(boxes[i])
+    return new_boxes
+
+def get_iou_targets(boxes,targets,image,expand=256):
     iou_list = np.array([])
+    iou_pred = np.zeros((len(boxes)))
     for target in targets:
         best_iou = 0
         xmin, ymin, xmax, ymax = target.unbind(0)
+        print("Image: ", image.shape)
+        print("Before: ", xmin, ymin, xmax, ymax)
+        if xmin >= expand:
+            xmin -= expand
+        else:
+            xmin = torch.tensor(0)
+        if ymin >= expand:
+            ymin -= expand
+        else:
+            ymin = torch.tensor(0)
+        if xmax <= image.shape[2]-expand:
+            xmax += expand
+        else:
+            xmax = torch.tensor(image.shape[2])
+        if ymax <= image.shape[1]-expand:
+            ymax += expand
+        else:
+            ymax = torch.tensor(image.shape[1])
+        print("After: ", xmin, ymin, xmax, ymax)
         target_area = (xmax - xmin + 1) * (ymax - ymin + 1)
+        i = 0
         for bbox in boxes:
 
             x1, y1, x2, y2 = bbox.unbind(0)
@@ -161,9 +192,11 @@ def get_iou_targets(boxes,targets):
             iou = interArea / float(bbox_area + target_area - interArea)
             if iou > best_iou:
                 best_iou = iou
+                iou_pred[i] = best_iou
+            i+=1
         iou_list = np.append(iou_list, best_iou)
 
-    return iou_list
+    return iou_list, iou_pred
 
 def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
@@ -311,31 +344,42 @@ def try_error():
 
 if __name__ == '__main__':
         from object_detect.load_data import train_loader
+        device = torch.device('cpu')
         epoch = 1
         data_loader = train_loader
         metric_logger = utils.MetricLogger(delimiter="  ")
         metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
         header = 'Epoch: [{}]'.format(epoch)
         i = 0
+        total_num_defects = 0
+        true_positives = 0
+        false_negatives = 0
         for (images, labels, masks) in metric_logger.log_every(data_loader, 1, header):
             images = list(img.to(device, dtype=torch.float32) for img in images)
             targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
 
             outputs = torch.tensor([[950, 0, 1500, 320],
-                                  [1, 1, 1500, 1090],
-                                  [500, 700, 2000, 1300]], dtype=torch.float32)
+                                  [1, 1, 1400, 1090],
+                                  [500, 1200, 900, 1500],
+                                    [550, 1000, 1150, 1300],
+                                    [1000,10,1450,370],
+                                    [10,10, 1400, 1200]], dtype=torch.float32)
             outputs2 = torch.tensor([[1, 1, 800, 1090]], dtype=torch.float32)
             scores2 = torch.tensor([0.7861], dtype=torch.float32)
             labels2 = torch.tensor([1], dtype=torch.int64)
-            scores = torch.tensor([0.7861, 0.7633, 0.6983], dtype=torch.float32)
+            scores = torch.tensor([0.7861, 0.7633, 0.6983, 0.45, 0.35, 0.33], dtype=torch.float32)
+            new_boxes = get_non_maximum_supression(outputs,scores,iou_threshold=0.3)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
 
-            iou = get_iou_targets(boxes=outputs2.cpu(), targets=targets[9]['boxes'].cpu())
+            iou = get_iou_targets(boxes=outputs2.cpu(), targets=targets[9]['boxes'].cpu(),image=images[9])
 
            # df, AP, AP2 = get_map2(outputs2, targets[9]['boxes'], scores2,
            #                                labels2, targets[9]['labels'].cpu(), iou_list=iou, threshold=0.3)
 
             acc_dict = classifier_metric(iou, scores2, targets[9]['boxes'].cpu())
-
+            true_positives += acc_dict["Detected"]
+            false_negatives += acc_dict["Defects"]-acc_dict["Detected"]
+            total_num_defects += acc_dict["Defects"]
             jo = 1
+            #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)
             break

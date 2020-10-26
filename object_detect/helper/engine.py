@@ -46,6 +46,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
+        print("Image shape: ", images[0].shape)
 
         nb = []
         nt = []
