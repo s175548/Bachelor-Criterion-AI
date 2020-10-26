@@ -140,16 +140,16 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=200),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
-tick_bite=False
+tick_bite=True
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
 binary=False
-multi=True
+multi=False
 load_model=False
 if __name__ == '__main__':
 
@@ -201,7 +201,7 @@ if __name__ == '__main__':
         device = torch.device('cpu')
         lr = 0.01
         layers_to_train = 'classifier'
-        num_epoch = 1
+        num_epoch = 2
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
@@ -245,8 +245,8 @@ if __name__ == '__main__':
             batch_size = 16
             val_batch_size = 4
         else:
-            batch_size = 1
-            val_batch_size = 1
+            batch_size = 8
+            val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -258,7 +258,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
