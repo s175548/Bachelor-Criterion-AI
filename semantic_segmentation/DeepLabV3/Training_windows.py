@@ -33,7 +33,7 @@ total_itrs=1000#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 2 # 16
+batch_size= 4 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -342,7 +342,7 @@ def pad(img,mask,size,ignore_idx):
 
     return torch.from_numpy(pad_img),torch.from_numpy(pad_mask)
 
-def my_def_collate(batch,size=2000):
+def my_def_collate(batch,size=1500):
     IGNORE_INDEX = 4
     for idx,item in enumerate(batch):
         # transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(),et.ExtToTensor(), et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
