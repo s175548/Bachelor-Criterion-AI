@@ -17,7 +17,7 @@ def boolean_string(s):
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =False
+HPC =True
 Villads=False
 binary=True
 model_name = ''
@@ -93,6 +93,7 @@ if __name__ == "__main__":
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+    print("Dataloader paths: ",path_original_data,path_meta_data)
     data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
