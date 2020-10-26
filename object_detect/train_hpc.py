@@ -149,6 +149,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
+scale=True
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -166,12 +167,16 @@ if __name__ == '__main__':
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         if binary:
-            #path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-            #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-            save_fold = 'full_scale/'
-            dataset = "binary"
+            if scale:
+                path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                save_fold = 'full_scale/'
+                dataset = "binary"
+            else:
+                path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+                path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                save_fold = 'binary/'
+                dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'

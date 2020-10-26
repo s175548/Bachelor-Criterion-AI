@@ -140,15 +140,16 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=200),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
-tick_bite=True
+tick_bite=False
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
-binary=False
+binary=True
+scale=True
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -166,18 +167,24 @@ if __name__ == '__main__':
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         if binary:
-            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-            save_fold = 'binary/'
-            dataset = "binary"
+            if scale:
+                path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                save_fold = 'full_scale/'
+                dataset = "binary"
+            else:
+                path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+                path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                save_fold = 'binary/'
+                dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             save_fold = 'tick_bite/'
             dataset = "tick_bite"
         else:
-            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
+            path_train = r'/zhome/dd/4/128822/Bachelorprojekt/multi/train'
+            path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
             save_fold = 'multi/'
             dataset = "multi"
 
@@ -196,26 +203,31 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 100
+        num_epoch = int(1/lr)
     else:
         device = torch.device('cpu')
         lr = 0.01
         layers_to_train = 'classifier'
-        num_epoch = 2
+        num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
         if binary:
-            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
-            dataset = "binary"
+            if scale:
+                path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\train'
+                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\val'
+                dataset = "binary_scale"
+            else:
+                path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
+                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
+                dataset = "binary_scale"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             dataset = "tick_bite"
         else:
             path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\val'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
             dataset = "multi"
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
@@ -242,11 +254,11 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 16
-            val_batch_size = 4
+            batch_size = 1
+            val_batch_size = 1
         else:
-            batch_size = 8
-            val_batch_size = 4
+            batch_size = 2
+            val_batch_size = 2
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -258,7 +270,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -291,18 +303,14 @@ if __name__ == '__main__':
         else:
             if multi:
                 model = define_model(num_classes=4, net=model_name,
-                                     data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+                                     data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
             else:
                 model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
+                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
-        if multi:
-            model = define_model(num_classes=4, net=model_name, data=dataset,
-                                 anchors=((8,), (16,), (32,), (64,), (128,)))
-        else:
-            model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
