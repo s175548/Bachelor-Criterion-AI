@@ -29,19 +29,19 @@ from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 num_classes=2
 output_stride=16
 save_val_results=False
-total_itrs=1000#1000
+total_itrs=500#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 4 # 16
+batch_size= 8 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
-val_interval= 55 # 55
+val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
+N_epochs= 80
 
 
 
@@ -177,7 +177,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
+    criterion = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
 
 
     # ==========   Train Loop   ==========#
@@ -342,7 +342,7 @@ def pad(img,mask,size,ignore_idx):
 
     return torch.from_numpy(pad_img),torch.from_numpy(pad_mask)
 
-def my_def_collate(batch,size=1500):
+def my_def_collate(batch,size=1000):
     IGNORE_INDEX = 4
     for idx,item in enumerate(batch):
         # transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(),et.ExtToTensor(), et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
