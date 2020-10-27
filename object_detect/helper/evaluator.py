@@ -35,12 +35,12 @@ def check_empty(scores,target,labels):
                 print("Detected None, target true :-( ")
     return df, mAP, mAP2
 
-def classifier_metric(iou_list,scores,target):
+def classifier_metric(iou_list,iou_pred,scores,target):
     acc_dict = {}
     if len(target) == 0:
         acc_dict["Defects"] = 0
         acc_dict["Detected"] = 0
-        acc_dict["Predicted"] = len(scores)
+        acc_dict["FP"] = len(scores)
     else:
         num_obj = len(target)
         true_labels = iou_list > 0
@@ -52,7 +52,8 @@ def classifier_metric(iou_list,scores,target):
                 pass
         acc_dict["Defects"] = num_obj
         acc_dict["Detected"] = counter
-        acc_dict["Predicted"] = len(scores)
+        fp_count = [fp for fp in iou_pred if fp == 0]
+        acc_dict["FP"] = len(fp_count)
     return acc_dict
 
 def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):
@@ -146,10 +147,12 @@ def iou_multi(boxes, targets, pred, labels):
 
 def get_non_maximum_supression(boxes,scores,iou_threshold):
     new_boxes = []
+    new_scores = []
     nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
     for i in range(len(nms)):
-        new_boxes.append(boxes[i])
-    return new_boxes
+        new_boxes.append(boxes[nms[i]])
+        new_scores.append(scores[nms[i]])
+    return new_boxes, new_scores
 
 def get_iou_targets(boxes,targets,image,expand=256):
     iou_list = np.array([])
@@ -192,7 +195,8 @@ def get_iou_targets(boxes,targets,image,expand=256):
             iou = interArea / float(bbox_area + target_area - interArea)
             if iou > best_iou:
                 best_iou = iou
-                iou_pred[i] = best_iou
+                if best_iou > iou_pred[i]:
+                    iou_pred[i] = best_iou
             i+=1
         iou_list = np.append(iou_list, best_iou)
 
@@ -354,31 +358,33 @@ if __name__ == '__main__':
         total_num_defects = 0
         true_positives = 0
         false_negatives = 0
+        false_positives = 0
         for (images, labels, masks) in metric_logger.log_every(data_loader, 1, header):
             images = list(img.to(device, dtype=torch.float32) for img in images)
             targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
 
             outputs = torch.tensor([[950, 0, 1500, 320],
-                                  [1, 1, 1400, 1090],
+                                  [1, 1, 1200, 1090],
                                   [500, 1200, 900, 1500],
-                                    [550, 1000, 1150, 1300],
+                                    [550, 1250, 1050, 1400],
                                     [1000,10,1450,370],
                                     [10,10, 1400, 1200]], dtype=torch.float32)
             outputs2 = torch.tensor([[1, 1, 800, 1090]], dtype=torch.float32)
             scores2 = torch.tensor([0.7861], dtype=torch.float32)
             labels2 = torch.tensor([1], dtype=torch.int64)
             scores = torch.tensor([0.7861, 0.7633, 0.6983, 0.45, 0.35, 0.33], dtype=torch.float32)
-            new_boxes = get_non_maximum_supression(outputs,scores,iou_threshold=0.3)
+            new_boxes, new_scores = get_non_maximum_supression(outputs,scores,iou_threshold=0.2)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
 
-            iou = get_iou_targets(boxes=outputs2.cpu(), targets=targets[9]['boxes'].cpu(),image=images[9])
+            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(),image=images[9])
 
            # df, AP, AP2 = get_map2(outputs2, targets[9]['boxes'], scores2,
            #                                labels2, targets[9]['labels'].cpu(), iou_list=iou, threshold=0.3)
 
-            acc_dict = classifier_metric(iou, scores2, targets[9]['boxes'].cpu())
+            acc_dict = classifier_metric(iou, iou_pred, new_scores, targets[9]['boxes'].cpu())
             true_positives += acc_dict["Detected"]
             false_negatives += acc_dict["Defects"]-acc_dict["Detected"]
+            false_positives += acc_dict["FP"]
             total_num_defects += acc_dict["Defects"]
             jo = 1
             #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)

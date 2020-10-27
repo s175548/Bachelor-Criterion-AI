@@ -140,7 +140,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
 tick_bite=False
@@ -149,7 +149,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=True
+scale=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -257,14 +257,12 @@ if __name__ == '__main__':
             batch_size = 1
             val_batch_size = 1
         else:
-            batch_size = 2
-            val_batch_size = 2
+            batch_size = 1
+            val_batch_size = 1
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
-        shuffled_index = np.random.permutation(len(file_names_train))
-        file_names_train = file_names_train[shuffled_index]
         file_names_train = file_names_train[file_names_train != ".DS_S"]
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
@@ -290,7 +288,7 @@ if __name__ == '__main__':
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
