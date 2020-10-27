@@ -143,7 +143,7 @@ def new_convert(mask):
     """
     new_mask = np.copy(mask)
     for i in range(np.shape(new_mask)[0]):
-        for j in range(np.shape(new_mask)[0]):
+        for j in range(np.shape(new_mask)[1]):
             if mask[i,j] == 101:
                 new_mask[i,j] = 0
             else:
