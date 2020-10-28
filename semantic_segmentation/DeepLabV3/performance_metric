@@ -9,6 +9,8 @@ from torchvision.models.segmentation import deeplabv3_resnet101
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import PIL
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 from data_import.data_loader import convert_to_image
 
 

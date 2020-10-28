@@ -183,6 +183,19 @@ class DataLoader():
                     train_idx.append(idx)
         return train_idx,val_idx
 
+    def test_training_split_skin(self):
+        train_idx = []
+        val_idx = []
+        idx_to_include = load_idx_to_include()
+        idx_to_include = np.intersect1d(idx_to_include, self.valid_annotations)
+        for idx in idx_to_include[1:]:
+            split = self.metadata_csv[idx, 1].split('/')[2]
+            if split[0]=='W':
+                val_idx.append(idx)
+            else:
+                train_idx.append(idx)
+        return train_idx,val_idx
+
     def annotation_to_index(self,index_list=[]):
         if index_list==[]:
             index_list=self.valid_annotations

@@ -342,8 +342,8 @@ def pad(img,mask,size,ignore_idx):
 
     return torch.from_numpy(pad_img),torch.from_numpy(pad_mask)
 
-def my_def_collate(batch,size=1000):
-    IGNORE_INDEX = 4
+def my_def_collate(batch,size=358):
+    IGNORE_INDEX = 2
     for idx,item in enumerate(batch):
         # transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(),et.ExtToTensor(), et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
         # pil_image = transforms.ToPILImage()(item[0]).convert("RGB")
