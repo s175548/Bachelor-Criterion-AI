@@ -140,7 +140,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
 tick_bite=False
@@ -149,7 +149,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=True
+scale=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -207,8 +207,8 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
         lr = 0.01
-        layers_to_train = 'classifier'
-        num_epoch = 1
+        layers_to_train = 'full'
+        num_epoch = 4
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
@@ -257,20 +257,18 @@ if __name__ == '__main__':
             batch_size = 1
             val_batch_size = 1
         else:
-            batch_size = 2
-            val_batch_size = 2
+            batch_size = 4
+            val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
-        shuffled_index = np.random.permutation(len(file_names_train))
-        file_names_train = file_names_train[shuffled_index]
         file_names_train = file_names_train[file_names_train != ".DS_S"]
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[89:95],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -290,7 +288,7 @@ if __name__ == '__main__':
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
@@ -351,10 +349,16 @@ if __name__ == '__main__':
     overall_best = 0
     best_map = 0
     best_map2 = 0
+    highest_tp = 0
+    lowest_fp = 10**4
+    lowest_fn = 10**4
+    highest_tn = 0
     val_boxes = []
     val_targets = []
     print("About to train")
     for epoch in range(num_epoch):
+        img_bad = 0
+        img_good = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -366,17 +370,31 @@ if __name__ == '__main__':
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+        mAP, mAP2, val_loss, vbox_p, vbox, conf = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
+
+        img_bad = conf["bad_leather"]
+        img_good = conf["good_leather"]
+
         if mAP > best_map:
             best_map = mAP
         if mAP2 > best_map2:
             best_map2 = mAP2
+        if conf["true_positives"] > highest_tp:
+            highest_tp = conf["true_positives"]
+        if conf["false_positives"] < lowest_fp:
+            lowest_fp = conf["false_positives"]
+        if conf["false_negatives"] < lowest_fn:
+            lowest_fn = conf["false_negatives"]
+        if conf["true_negatives"] > highest_tn:
+            highest_tn = conf["true_negatives"]
+
+
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
@@ -384,12 +402,14 @@ if __name__ == '__main__':
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
-    else:
-        save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
-                   n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
+    #else:
+    #    save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
+    #    save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
+    #               n_epochs=num_epoch, optimizer=optimizer,
+    #               scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives, ", lowest_fn, " false negatives and ", highest_tn, "true negatives")
+    print("Validation set contained ", img_good," images with good leather and ", img_bad, " with bad leather")

@@ -13,6 +13,7 @@ import torch
 
 
 
+
 class LeatherData(data.Dataset):
 
     def __init__(self,
@@ -59,9 +60,13 @@ class LeatherData(data.Dataset):
             if self.transform is not None:
                 img, tgt = self.transform(img_for_bbox, mask_for_bbox)
             if self.transform is not None:
+                target2 = Image.fromarray(target)
+                img2, tgt2 = self.transform(img_for_bbox, target2)
+            if self.transform is not None:
                 target3 = Image.fromarray(target).convert('L')
                 img3, tgt3 = self.transform(img_for_bbox, target3)
             mask = tgt.numpy()
+            mask2 = tgt2[:,:,0].numpy()
             mask3 = tgt3.numpy()
             if self.multi == True:
                 bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
@@ -83,7 +88,7 @@ class LeatherData(data.Dataset):
                 else:
                     labels = torch.ones((len(bboxes),), dtype=torch.int64)
             image_id = torch.tensor([img_index])
-            # suppose all instances are not crowd
+            # suppose all instances are not crowdpr
             iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
             targets = {}
             targets["boxes"] = boxes

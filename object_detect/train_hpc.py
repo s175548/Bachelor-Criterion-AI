@@ -47,7 +47,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
             anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
                                                aspect_ratios=((0.5, 1.0, 2.0),))
         else:
-            anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
+            anchor_generator = AnchorGenerator(sizes=((16, 32, 64, 128, 256),),
                                                aspect_ratios=((0.5, 1.0, 2.0),))
 
         # let's define what are the feature maps that we will
@@ -87,7 +87,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,conf=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -98,6 +98,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
             "best_map_w_score": best_score,
+            "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
         }, save_path+model_name+optim_name+'.pt')
@@ -140,7 +141,8 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+#transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=True
 tick_bite=False
@@ -149,7 +151,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=True
+scale=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -203,7 +205,7 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = int(1/lr)
+        num_epoch = 50
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -249,11 +251,11 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 1
-            val_batch_size = 1
+            batch_size = 8
+            val_batch_size = 4
         else:
-            batch_size = 1
-            val_batch_size = 1
+            batch_size = 4
+            val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -342,14 +344,22 @@ if __name__ == '__main__':
                                                    gamma=0.5)
     loss_train = []
     loss_val = []
-    risk = True
+    risk = False
     overall_best = 0
     best_map = 0
     best_map2 = 0
     val_boxes = []
     val_targets = []
+    cmatrix = {}
+    cmatrix["highest_tp"] = 0
+    cmatrix["lowest_fp"] = 10 ** 4
+    cmatrix["lowest_fn"] = 10 ** 4
+    cmatrix["highest_tn"] = 0
+    cmatrix["num_defects"] = 0
     print("About to train")
     for epoch in range(num_epoch):
+        cmatrix["img_bad"] = 0
+        cmatrix["img_good"] = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -361,30 +371,51 @@ if __name__ == '__main__':
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+        mAP, mAP2, val_loss, vbox_p, vbox, conf = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
+        cmatrix["num_defects"] = conf["total_num_defects"]
+        cmatrix["img_bad"] = conf["bad_leather"]
+        cmatrix["img_good"] = conf["good_leather"]
+        if conf["true_positives"] > cmatrix["highest_tp"]:
+            cmatrix["highest_tp"] = conf["true_positives"]
+        if conf["false_positives"] < cmatrix["lowest_fp"]:
+            cmatrix["lowest_fp"] = conf["false_positives"]
+        if conf["false_negatives"] < cmatrix["lowest_fn"]:
+            cmatrix["lowest_fn"] = conf["false_negatives"]
+        if conf["true_negatives"] > cmatrix["highest_tn"]:
+            cmatrix["highest_tn"] = conf["true_negatives"]
         if mAP > best_map:
             best_map = mAP
         if mAP2 > best_map2:
             best_map2 = mAP2
-    if HPC:
-        save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
-                   n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
-        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
-                  val_loss=loss_val,exp_description=model_name)
-    else:
-        save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-        save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
-                   n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
+            if HPC:
+            save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+                       model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                       n_epochs=epoch, optimizer=optimizer,
+                       scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=cmatrix, losses=loss_train, val_losses=loss_val)
+            #plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+            #         val_loss=loss_val,exp_description=model_name)
+
+    #if HPC:
+        #save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+        #           model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+        #           n_epochs=num_epoch, optimizer=optimizer,
+        #           scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
+        #plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+         #         val_loss=loss_val,exp_description=model_name)
+    #else:
+    #    save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
+    #    save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
+    #               n_epochs=num_epoch, optimizer=optimizer,
+    #               scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
+    print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")

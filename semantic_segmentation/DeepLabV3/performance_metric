@@ -1,0 +1,123 @@
+
+from data_import.data_loader import DataLoader
+import numpy as np
+from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
+from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
+import torch
+from torchvision.models.segmentation import deeplabv3_resnet101
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+import PIL
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+from data_import.data_loader import convert_to_image
+
+
+
+def error_count(idx,target,data_loader,labels):
+    masks = data_loader.get_separate_segmentations(os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]),labels=labels)
+    buffer=256
+    errors=np.array([[0,0],[0,0]])
+
+    for mask in masks:
+        label,mask=mask[0],np.squeeze(np.array(mask[1]).astype(np.uint))
+        print(label)
+        row,col=np.where(mask != 0)
+        mask_shape=pred.shape
+        xdim=(np.maximum(np.min(row)-buffer,0),np.minimum(np.max(row)+buffer,mask_shape[0]))
+        ydim=(np.maximum(np.min(col)-buffer,0),np.minimum(np.max(col)+buffer,mask_shape[1]))
+        print(xdim,ydim)
+        mask=mask[xdim[0]:xdim[1],ydim[0]:ydim[1]]
+        defect_found=int(np.sum(target[xdim[0]:xdim[1],ydim[0]:ydim[1]]!=0)>0)
+        if label=='Insect bite':
+            errors[1,0]+=1
+            errors[1, 1]+=defect_found
+        else:
+            errors[0, 0] += 1
+            errors[0, 1] += defect_found
+    return errors
+
+
+
+Villads=True
+if Villads:
+    path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
+    path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
+    path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
+    path_meta_data = r'samples/model_comparison.csv'
+    save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
+    model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
+else:
+    path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
+    path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
+    path_val = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
+    path_meta_data = r'samples/model_comparison.csv'
+    save_path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet\predictions'
+    model_path=r'E:\downloads_hpc_bachelor\exp_results\backbone\classifier_only\ResNet\DeepLab_backbone_exp0.01.pt'
+
+
+
+checkpoint=torch.load(model_path,map_location=torch.device('cpu'))
+model_name='DeepLab'
+n_classes=1
+model=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
+model.classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+model.aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+
+
+model.load_state_dict(checkpoint['model_state'])
+model.eval()
+
+data_loader = DataLoader(data_path=path_original_data ,metadata_path=path_meta_data)
+binary=True
+device=torch.device('cpu')
+
+file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
+file_names_train = file_names_train[file_names_train != ".DS_S"]
+
+file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+file_names_val = file_names_val[file_names_val != ".DS_S"]
+
+transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+denorm = Denormalize(mean=[0.485, 0.456, 0.406],
+                     std=[0.229, 0.224, 0.225])
+if binary:
+    color_dict = data_loader.color_dict_binary
+    target_dict = data_loader.get_target_dict()
+    annotations_dict = data_loader.annotations_dict
+
+else:
+    color_dict = data_loader.color_dict
+    target_dict = data_loader.get_target_dict(labels)
+    annotations_dict = data_loader.annotations_dict
+
+train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+                        transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                      transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+
+
+train_images = []
+
+data_set='val'
+if data_set=='train':
+    for i in range(len(train_dst)):
+        train_images.append(train_dst.__getitem__(i))
+elif data_set=='val':
+    for i in range(len(val_dst)):
+        train_images.append(val_dst.__getitem__(i))
+
+
+image = train_images[6][0].unsqueeze(0)
+image = image.to(device, dtype=torch.float32)
+output = model(image)['out']
+pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()*255
+
+PIL.Image.fromarray(pred.astype(np.uint8)).show()
+labels=['02','Abassamento','Abbassamento','Area Punture insetti','Area aperta','Area vene','Buco','Cicatrice','Cicatrice aperta','Contaminazione','Crease','Difetto di lavorazione','Dirt','Fianco','Fiore marcio','Insect bite','Marchio','Microcut','Piega','Pinza','Pinze','Poro',"Puntura d'insetto",'Puntura insetto','Ruga','Rughe','Scopertura','Scratch','Smagliatura','Soffiatura','Struttura','Taglio','Vena','Vene','Verruca','Wart','Zona aperta','verruca']
+print(error_count(20,pred,data_loader,labels))
+
+
+

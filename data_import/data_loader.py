@@ -111,6 +111,28 @@ class DataLoader():
             segmentation = draw_contours2(seg, label_space=label_space)
             return segmentation
 
+    def get_separate_segmentations(self,filepath,labels):
+        seg = self.get_json_file_content(filepath)
+        segmentations_to_return=[]
+        label_space = {kk["label"]: [1] for kk in seg["annotations"] if kk["label"] in labels}
+        for kk in seg['annotations']:
+            if kk["label"] in labels:
+                seg_dict=seg
+                seg_dict['annotations']=[kk]
+                segmentation = draw_contours2(seg_dict, label_space=label_space)
+                if kk['label'] in self.insect_bite_names:
+                    segmentations_to_return.append(('Insect bite',segmentation))
+                else:
+                    segmentations_to_return.append(('Binary', segmentation))
+        return segmentations_to_return
+
+
+
+
+
+
+
+
     def get_all_annotations(self):
         label_names_set=set()
         label_dict_new={}
@@ -159,6 +181,19 @@ class DataLoader():
                     val_idx.append(idx)
                 else:
                     train_idx.append(idx)
+        return train_idx,val_idx
+
+    def test_training_split_skin(self):
+        train_idx = []
+        val_idx = []
+        idx_to_include = load_idx_to_include()
+        idx_to_include = np.intersect1d(idx_to_include, self.valid_annotations)
+        for idx in idx_to_include[1:]:
+            split = self.metadata_csv[idx, 1].split('/')[2]
+            if split[0]=='W':
+                val_idx.append(idx)
+            else:
+                train_idx.append(idx)
         return train_idx,val_idx
 
     def annotation_to_index(self,index_list=[]):
