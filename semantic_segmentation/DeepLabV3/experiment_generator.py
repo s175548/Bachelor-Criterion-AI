@@ -17,7 +17,7 @@ def boolean_string(s):
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =True
+HPC =False
 Villads=False
 binary=True
 model_name = ''
@@ -93,7 +93,6 @@ if __name__ == "__main__":
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    print("Dataloader paths: ",path_original_data,path_meta_data)
     data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
@@ -114,7 +113,7 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
+    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomRotation(degrees=random.randint(0,360)),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 #et.ExtRandomCrop(scale=0.7)
     if binary:
         color_dict = data_loader.color_dict_binary
@@ -154,4 +153,4 @@ if __name__ == "__main__":
     if train_scope == '':
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
-    training(n_classes=3, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
+    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
