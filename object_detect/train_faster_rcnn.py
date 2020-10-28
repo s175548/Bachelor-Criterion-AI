@@ -345,12 +345,13 @@ if __name__ == '__main__':
                                                    gamma=0.5)
     loss_train = []
     loss_val = []
-    risk = True
+    risk = False
     overall_best = 0
     best_map = 0
     best_map2 = 0
     highest_tp = 0
     lowest_fp = 10**4
+    lowest_fn = 10**4
     val_boxes = []
     val_targets = []
     print("About to train")
@@ -381,6 +382,8 @@ if __name__ == '__main__':
             highest_tp = conf["true_positives"]
         if conf["false_positives"] < lowest_fp:
             lowest_fp = conf["false_positives"]
+        if conf["false_negatives"] < lowest_fn:
+            lowest_fn = conf["false_negatives"]
 
 
     if HPC:
@@ -399,4 +402,4 @@ if __name__ == '__main__':
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
-    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives")
+    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives and ", lowest_fn, " false negatives")

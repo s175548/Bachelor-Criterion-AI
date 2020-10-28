@@ -352,6 +352,7 @@ if __name__ == '__main__':
     val_targets = []
     highest_tp = 0
     lowest_fp = 10 ** 4
+    lowest_fn = 10 ** 4
     print("About to train")
     for epoch in range(num_epoch):
         curr_loss_train = []
@@ -380,6 +381,8 @@ if __name__ == '__main__':
             highest_tp = conf["true_positives"]
         if conf["false_positives"] < lowest_fp:
             lowest_fp = conf["false_positives"]
+        if conf["false_negatives"] < lowest_fn;
+            lowest_fn = conf["false_negatives"]
 
     #if HPC:
         #save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
@@ -397,4 +400,4 @@ if __name__ == '__main__':
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
-    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives")
+    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives and ", lowest_fn, " false negatives")

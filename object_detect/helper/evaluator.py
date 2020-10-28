@@ -355,6 +355,7 @@ if __name__ == '__main__':
         true_positives = 0
         false_negatives = 0
         false_positives = 0
+        true_negatives = 0
         for (images, labels, masks) in metric_logger.log_every(data_loader, 1, header):
             images = list(img.to(device, dtype=torch.float32) for img in images)
             targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
@@ -382,6 +383,10 @@ if __name__ == '__main__':
             false_negatives += acc_dict["Defects"]-acc_dict["Detected"]
             false_positives += acc_dict["FP"]
             total_num_defects += acc_dict["Defects"]
+            if acc_dict["Defects"] == 0:
+                if acc_dict["FP"] == 0:
+                    true_negatives += 1
+
             jo = 1
             #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)
             break

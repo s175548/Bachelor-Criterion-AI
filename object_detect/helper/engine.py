@@ -128,8 +128,9 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
     mAP2 = []
     conf_matrix = {}
     conf_matrix["true_positives"] = 0
-    conf_matrix["false_negatives"] = 0
     conf_matrix["false_positives"] = 0
+    conf_matrix["true_negatives"] = 0
+    conf_matrix["false_negatives"] = 0
     conf_matrix["total_num_defects"] = 0
     with torch.no_grad():
         for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
@@ -165,7 +166,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                     new_boxes, new_scores = get_non_maximum_supression(boxes, scores, iou_threshold=0.2)
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
-                                                           image=images[j],)
+                                                           image=images[j],expand=32)
 
                     acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu())
 
@@ -173,6 +174,9 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     conf_matrix["false_negatives"] += acc_dict["Defects"] - acc_dict["Detected"]
                     conf_matrix["false_positives"] += acc_dict["FP"]
                     conf_matrix["total_num_defects"] += acc_dict["Defects"]
+                    if acc_dict["Defects"] == 0:
+                        if acc_dict["FP"] == 0:
+                            conf_matrix["true_negatives"] += 1
 
                     iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
@@ -227,8 +231,9 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
             print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
             print("TP: ", conf_matrix["true_positives"])
-            print("FN: ", conf_matrix["false_negatives"])
             print("FP: ", conf_matrix["false_positives"])
+            print("TN: ", conf_matrix["true_negatives"])
+            print("FN: ", conf_matrix["false_negatives"])
             print("Total number of defects: ", conf_matrix["total_num_defects"])
 
     return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix
