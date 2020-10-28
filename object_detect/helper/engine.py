@@ -170,7 +170,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
                                                            labels=targets[j]['labels'].cpu(),image=images[j],expand=42)
 
-                    acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu())
+                    acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu(), targets[j]['labels'].cpu())
 
                     conf_matrix["true_positives"] += acc_dict["Detected"]
                     conf_matrix["false_negatives"] += acc_dict["Defects"] - acc_dict["Detected"]

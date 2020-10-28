@@ -83,8 +83,8 @@ if __name__ == '__main__':
         batch_size = 4
         val_batch_size = 4
     else:
-        batch_size = 1
-        val_batch_size = 1
+        batch_size = 4
+        val_batch_size = 4
 
     file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
     N_files = len(file_names_train)
@@ -118,7 +118,7 @@ if __name__ == '__main__':
     model.to(device)
     model.eval()
 
-    train_mAP, train_mAP2, cmatrix_train = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=False)
-    val_mAP, val_mAP2, cmatrix_val = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=True)
+    train_mAP, train_mAP2, cmatrix_train = validate(model=model,model_name=model_name,data_loader=train_loader,device=device,val=False)
+    val_mAP, val_mAP2, cmatrix_val = validate(model=model,model_name=model_name,data_loader=val_loader,device=device,val=True)
 
 

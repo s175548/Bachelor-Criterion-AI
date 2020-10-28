@@ -31,12 +31,16 @@ def check_empty(scores,target,labels):
                 df = pd.DataFrame()
     return df, mAP, mAP2
 
-def classifier_metric(iou_list,iou_pred,scores,target):
+def classifier_metric(iou_list,iou_pred,scores,target,labels):
     acc_dict = {}
-    if len(target) == 0:
+    if len(target) == 0 or labels == torch.zeros(1):
         acc_dict["Defects"] = 0
         acc_dict["Detected"] = 0
         acc_dict["FP"] = len(scores)
+    elif len(scores) == 0:
+        acc_dict["Defects"] = len(target)
+        acc_dict["Detected"] = 0
+        acc_dict["FP"] = 0
     else:
         num_obj = len(target)
         true_labels = iou_list > 0

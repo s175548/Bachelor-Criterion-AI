@@ -141,6 +141,26 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
+def get_transform_fun():
+    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
 transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
                                     et.ExtRandomHorizontalFlip(p=0.5),
                                     et.ExtRandomVerticalFlip(p=0.5),
