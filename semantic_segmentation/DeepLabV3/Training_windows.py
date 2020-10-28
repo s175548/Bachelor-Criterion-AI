@@ -218,7 +218,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                 np_loss = loss.detach().cpu().numpy()
                 running_loss = + loss.item() * images.size(0)
                 interval_loss += np_loss
-                print('Loss', cur_itrs, np_loss)
+                # print('Loss', cur_itrs, np_loss)
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
@@ -227,7 +227,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                # if True:
+                if cur_itrs==1:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
