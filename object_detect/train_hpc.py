@@ -151,7 +151,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=True
+scale=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -205,7 +205,7 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 75
+        num_epoch = 50
     else:
         device = torch.device('cpu')
         lr = 0.01
