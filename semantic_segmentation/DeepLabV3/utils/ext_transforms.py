@@ -451,11 +451,13 @@ class ExtRandomCrop(object):
             PIL Image: Cropped image.
             PIL Image: Cropped label.
         """
-        if self.size != None:
+        if self.size != None and not self.pad_if_needed:
             if np.min(img.size)<self.size:
                 size=img.size
             else:
                 size = (self.size, self.size)
+        elif self.pad_if_needed:
+            size = (self.size, self.size)
         else:
             size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
 
@@ -463,16 +465,16 @@ class ExtRandomCrop(object):
         if self.padding > 0:
             img = F.pad(img, self.padding)
             lbl = F.pad(lbl, self.padding)
-
         # pad the width if needed
-        if self.pad_if_needed and img.size[0] < self.size[1]:
-            img = F.pad(img, padding=int((1 + self.size[1] - img.size[0]) / 2))
-            lbl = F.pad(lbl, padding=int((1 + self.size[1] - lbl.size[0]) / 2))
+        if self.pad_if_needed and img.size[0] < size[1]:
+            img = F.pad(img,fill=2, padding=int((1 + size[1] - img.size[0]) / 2))
+            lbl = F.pad(lbl,fill=2, padding=int((1 + size[1] - lbl.size[0]) / 2))
 
         # pad the height if needed
-        if self.pad_if_needed and img.size[1] < self.size[0]:
-            img = F.pad(img, padding=int((1 + self.size[0] - img.size[1]) / 2))
-            lbl = F.pad(lbl, padding=int((1 + self.size[0] - lbl.size[1]) / 2))
+        if self.pad_if_needed and img.size[1] < size[0]:
+            img = F.pad(img, fill=2, padding=int((1 + size[0] - img.size[1]) / 2))
+            lbl = F.pad(lbl, fill=2, padding=int((1 + size[0] - lbl.size[1]) / 2))
+
         i, j, h, w = self.get_params(img, size)
 
         return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)

@@ -70,9 +70,10 @@ file_names_val = file_names_val[file_names_val != ".DS_S"]
 transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
                                     et.ExtResize(scale=0.33,size=None),
                                     et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
                                     et.ExtRandomHorizontalFlip(p=0.5),
                                     et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtEnhanceContrast(),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
@@ -107,6 +108,17 @@ if data_set=='train':
 elif data_set=='val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
+
+for i in range(len(train_images)):
+    image = train_images[i][0].unsqueeze(0)
+    image = image.to(device, dtype=torch.float32)
+    image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+    PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
+    target = train_images[i][1].cpu().squeeze().numpy()
+    target = convert_to_image(target.squeeze(), color_dict, target_dict)
+    PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
+
+
 
 
 for i in range(len(train_images)):
