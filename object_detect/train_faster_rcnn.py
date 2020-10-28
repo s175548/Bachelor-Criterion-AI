@@ -268,7 +268,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:80],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -352,6 +352,7 @@ if __name__ == '__main__':
     highest_tp = 0
     lowest_fp = 10**4
     lowest_fn = 10**4
+    highest_tn = 0
     val_boxes = []
     val_targets = []
     print("About to train")
@@ -384,6 +385,8 @@ if __name__ == '__main__':
             lowest_fp = conf["false_positives"]
         if conf["false_negatives"] < lowest_fn:
             lowest_fn = conf["false_negatives"]
+        if conf["true_negatives"] > highest_tn:
+            highest_tn = conf["true_negatives"]
 
 
     if HPC:
@@ -402,4 +405,4 @@ if __name__ == '__main__':
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
-    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives and ", lowest_fn, " false negatives")
+    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives, ", lowest_fn, " false negatives and ", highest_tn, "true negatives")
