@@ -111,6 +111,28 @@ class DataLoader():
             segmentation = draw_contours2(seg, label_space=label_space)
             return segmentation
 
+    def get_separate_segmentations(self,filepath,labels):
+        seg = self.get_json_file_content(filepath)
+        segmentations_to_return=[]
+        label_space = {kk["label"]: [1] for kk in seg["annotations"] if kk["label"] in labels}
+        for kk in seg['annotations']:
+            if kk["label"] in labels:
+                seg_dict=seg
+                seg_dict['annotations']=[kk]
+                segmentation = draw_contours2(seg_dict, label_space=label_space)
+                if kk['label'] in self.insect_bite_names:
+                    segmentations_to_return.append(('Insect bite',segmentation))
+                else:
+                    segmentations_to_return.append(('Binary', segmentation))
+        return segmentations_to_return
+
+
+
+
+
+
+
+
     def get_all_annotations(self):
         label_names_set=set()
         label_dict_new={}
