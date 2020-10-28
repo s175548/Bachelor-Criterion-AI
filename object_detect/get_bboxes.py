@@ -146,8 +146,7 @@ def new_convert(mask):
         for j in range(np.shape(new_mask)[1]):
             if mask[i,j] == 101:
                 new_mask[i,j] = 0
-            else:
-                new_mask[i,j] = 255
+
     labeled_array, num_features = ndimage.label(new_mask)
     s = ndimage.generate_binary_structure(2,2)
     mask, num_features2 = ndimage.label(new_mask, structure=s)

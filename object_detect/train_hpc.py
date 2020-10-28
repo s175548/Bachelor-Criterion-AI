@@ -141,7 +141,7 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=True
@@ -356,6 +356,8 @@ if __name__ == '__main__':
     highest_tn = 0
     print("About to train")
     for epoch in range(num_epoch):
+        img_bad = 0
+        img_good = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -374,6 +376,10 @@ if __name__ == '__main__':
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
+
+        img_bad = conf["bad_leather"]
+        img_good = conf["good_leather"]
+
         if mAP > best_map:
             best_map = mAP
         if mAP2 > best_map2:
@@ -404,3 +410,4 @@ if __name__ == '__main__':
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
     print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives, ", lowest_fn, " false negatives and ", highest_tn, "true negatives")
+    print("Validation set contained ", img_good," images with good leather and ", img_bad, " with bad leather")

@@ -153,10 +153,12 @@ def get_non_maximum_supression(boxes,scores,iou_threshold):
     else:
         return torch.tensor(new_boxes), torch.tensor(new_scores)
 
-def get_iou_targets(boxes,targets,image,expand=256):
+def get_iou_targets(boxes,targets,labels,image,expand=256):
     iou_list = np.array([])
     iou_pred = np.zeros((len(boxes)))
-    for target in targets:
+    indicies = [i for i in range(len(labels)) if labels[i] !=0]
+
+    for target in targets[indicies]:
         best_iou = 0
         xmin, ymin, xmax, ymax = target.unbind(0)
         if xmin >= expand:
@@ -245,7 +247,7 @@ def get_iou2(boxes,targets, pred, labels):
         iou_list = np.append(iou_list, 0)
     return iou_list, index_list, new_iou_list
 
-def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=False):
+def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=True):
     map = []
     map2 = []
     if len(scores) == 0:
@@ -373,7 +375,7 @@ if __name__ == '__main__':
             new_boxes, new_scores = get_non_maximum_supression(outputs,scores,iou_threshold=0.2)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
 
-            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(),image=images[9])
+            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(), labels=targets[9]['labels'].cpu(), image=images[9])
 
            # df, AP, AP2 = get_map2(outputs2, targets[9]['boxes'], scores2,
            #                                labels2, targets[9]['labels'].cpu(), iou_list=iou, threshold=0.3)
