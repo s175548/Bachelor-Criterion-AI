@@ -142,12 +142,12 @@ def new_convert(mask):
     output: bounding boxes
     """
     new_mask = np.copy(mask)
-    #for i in range(np.shape(new_mask)[0]):
-    #    for j in range(np.shape(new_mask)[0]):
-    #        if mask[i,j] < 190:
-    #            new_mask[i,j] = 0
-    #        else:
-    #            new_mask[i,j] = 1
+    for i in range(np.shape(new_mask)[0]):
+        for j in range(np.shape(new_mask)[1]):
+            if mask[i,j] == 101:
+                new_mask[i,j] = 0
+            else:
+                new_mask[i,j] = 255
     labeled_array, num_features = ndimage.label(new_mask)
     s = ndimage.generate_binary_structure(2,2)
     mask, num_features2 = ndimage.label(new_mask, structure=s)

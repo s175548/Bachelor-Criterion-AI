@@ -46,6 +46,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
+        print("Image shape: ", images[0].shape)
 
         nb = []
         nt = []
@@ -174,6 +175,12 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                         df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
+                    if HPC == False:
+                        acc_image, acc_def, acc1, acc2 = classifier_metric(iou, outputs[j]['scores'].cpu(), targets[j]['boxes'].cpu())
+                        acimg.append(acc_image)
+                        acdef.append(acc_def)
+                        ac1 += acc1
+                        ac2 += acc2
                     #print(df2)
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
@@ -209,9 +216,11 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
                 print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
         else:
+            accu1 = np.sum(acimg)/ac1
+            accu2 = np.sum(acdef)/ac2
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
             print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
-            print("Accuracy on images: ", acc_image)
-            print("Accuracy on defects: ", acc_def)
+            print("Accuracy on images: ", accu1)
+            print("Accuracy on defects: ", accu2)
     return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))

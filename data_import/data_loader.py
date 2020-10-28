@@ -334,7 +334,7 @@ class DataLoader():
         return split_imgs, (crop_count_height,crop_count_width ), pad_split_imgs
 
 def load_idx_to_include():
-    idx=open(os.path.join(os.getcwd(),'data_import','idx_to_include.txt'),'r')
+    idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')
     idx=idx.read()
     idx=idx.split(' ')
     while '' in idx:

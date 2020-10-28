@@ -12,16 +12,16 @@ if Villads:
     save_path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
 
 elif Johannes:
-    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+    path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
-    save_path_train = r'/zhome/dd/4/128822/Bachelorprojekt/multi/train'
-    save_path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
+    save_path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\train'
+    save_path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\val'
 else:
     data_loader = DataLoader()
-    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
-    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
+    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
+    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
 
 train,val=data_loader.test_training_split()
 

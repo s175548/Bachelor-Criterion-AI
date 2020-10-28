@@ -59,10 +59,15 @@ class LeatherData(data.Dataset):
             if self.transform is not None:
                 img, tgt = self.transform(img_for_bbox, mask_for_bbox)
             if self.transform is not None:
+                target2 = Image.fromarray(target)
+                img2, tgt2 = self.transform(img_for_bbox, target2)
+            if self.transform is not None:
                 target3 = Image.fromarray(target).convert('L')
                 img3, tgt3 = self.transform(img_for_bbox, target3)
             mask = tgt.numpy()
+            mask2 = tgt2[:,:,0].numpy()
             mask3 = tgt3.numpy()
+            print("Unique",img_index, np.unique(mask),np.unique(mask2), np.unique(mask3))
             if self.multi == True:
                 bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
             else:
