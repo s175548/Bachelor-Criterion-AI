@@ -15,24 +15,20 @@ def check_empty(scores,target,labels):
             mAP = 1
             mAP2 = 1
             df = pd.DataFrame()
-            print("Detected None, target None! :-) ")
         else:
             if len(labels) == 1:
                 if labels == torch.zeros(1):
                     mAP = 1
                     mAP2 = 1
                     df = pd.DataFrame()
-                    print("Detected None, target None! :-) ")
                 else:
                     mAP = 0
                     mAP2 = 0
                     df = pd.DataFrame()
-                    print("Detected None, target true :-( ")
             else:
                 mAP = 0
                 mAP2 = 0
                 df = pd.DataFrame()
-                print("Detected None, target true :-( ")
     return df, mAP, mAP2
 
 def classifier_metric(iou_list,iou_pred,scores,target):
