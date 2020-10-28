@@ -148,11 +148,14 @@ def iou_multi(boxes, targets, pred, labels):
 def get_non_maximum_supression(boxes,scores,iou_threshold):
     new_boxes = []
     new_scores = []
-    nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
-    for i in range(len(nms)):
-        new_boxes.append(boxes[nms[i]])
-        new_scores.append(scores[nms[i]])
-    return new_boxes, new_scores
+    if len(boxes) > 0:
+        nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
+        for i in range(len(nms)):
+            new_boxes.append(boxes[nms[i]])
+            new_scores.append(scores[nms[i]])
+        return new_boxes, new_scores
+    else:
+        return torch.tensor(new_boxes), torch.tensor(new_scores)
 
 def get_iou_targets(boxes,targets,image,expand=256):
     iou_list = np.array([])
@@ -160,8 +163,6 @@ def get_iou_targets(boxes,targets,image,expand=256):
     for target in targets:
         best_iou = 0
         xmin, ymin, xmax, ymax = target.unbind(0)
-        print("Image: ", image.shape)
-        print("Before: ", xmin, ymin, xmax, ymax)
         if xmin >= expand:
             xmin -= expand
         else:
@@ -178,7 +179,6 @@ def get_iou_targets(boxes,targets,image,expand=256):
             ymax += expand
         else:
             ymax = torch.tensor(image.shape[1])
-        print("After: ", xmin, ymin, xmax, ymax)
         target_area = (xmax - xmin + 1) * (ymax - ymin + 1)
         i = 0
         for bbox in boxes:
