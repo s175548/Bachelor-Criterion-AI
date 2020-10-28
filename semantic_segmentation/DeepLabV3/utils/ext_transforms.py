@@ -428,7 +428,7 @@ class ExtRandomCrop(object):
     def get_params(img, output_size):
         """Get parameters for ``crop`` for a random crop.
         Args:
-            img (PIL Image): Image to be cropped.
+            img (PIL Image): Image to be cropped.ize
             output_size (tuple): Expected output size of the crop.
         Returns:
             tuple: params (i, j, h, w) to be passed to ``crop`` for random crop.
@@ -490,8 +490,9 @@ class ExtResize(object):
             ``PIL.Image.BILINEAR``
     """
 
-    def __init__(self, size, interpolation=Image.BILINEAR):
-        assert isinstance(size, int) or (isinstance(size, collections.Iterable) and len(size) == 2)
+    def __init__(self, size=None, scale=None, interpolation=Image.BILINEAR):
+#        assert isinstance(size, int) or (isinstance(size, collections.Iterable) and len(size) == 2)
+        self.scale=scale
         self.size = size
         self.interpolation = interpolation
 
@@ -501,7 +502,11 @@ class ExtResize(object):
             img (PIL Image): Image to be scaled.
         Returns:
             PIL Image: Rescaled image.
+
         """
+        if self.size==None:
+            size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
+
         return F.resize(img, self.size, self.interpolation), F.resize(lbl, self.size, Image.NEAREST)
 
     def __repr__(self):

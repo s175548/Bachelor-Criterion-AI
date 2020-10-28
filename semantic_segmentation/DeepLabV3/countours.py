@@ -12,13 +12,10 @@ pil_mask=PIL.Image.open('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Ba
 img,_ = transform_function(pil_img,pil_mask)
 
 
-im = cv.imread('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask/10_mask.png')
+im = cv.imread('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/mask/39_mask.png')
 imgray = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
-imgray=255-imgray
-ret, thresh = cv.threshold(imgray, 127, 255, 0)
 img, contours, hierachy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-mask=cv.drawContours(im,contours,1,color=(0,255,0),thickness=cv.FILLED)
-mask[:,:,2]==255
+mask=cv.drawContours(im,contours,5,color=(255,255,255),thickness=cv.FILLED)
 img=PIL.Image.fromarray(mask)
 img.show()
 
