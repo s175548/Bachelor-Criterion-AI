@@ -16,12 +16,13 @@ import matplotlib.pyplot as plt
 from data_import.data_loader import convert_to_image
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 from torch.utils import data
-
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 batch_size= 16 # 16
 val_batch_size= 4 #4
 
-Villads=False
+Villads=True
 if Villads:
     path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
     path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
@@ -40,6 +41,7 @@ else:
 checkpoint=torch.load(model_path,map_location=torch.device('cpu'))
 model_name='DeepLab'
 n_classes=1
+
 if model_name=='DeepLab':
     model=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
     model.classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
@@ -53,7 +55,7 @@ model.eval()
 
 data_loader = DataLoader(data_path=path_original_data ,metadata_path=path_meta_data)
 labels =['Piega', 'Verruca', 'Puntura insetto' ,'Background']
-binary=False
+binary=True
 device=torch.device('cpu')
 
 file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
@@ -62,8 +64,18 @@ file_names_train = file_names_train[file_names_train != ".DS_S"]
 file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((1000, 1000)), et.ExtToTensor(),
+#transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((1000, 1000)), et.ExtToTensor(),
+#                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])
 if binary:
@@ -96,9 +108,12 @@ elif data_set=='val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
 
+
 for i in range(len(train_images)):
+    break
     image = train_images[i][0].unsqueeze(0)
     image = image.to(device, dtype=torch.float32)
+
     if model_name == 'DeepLab':
         output = model(image)['out']
     else:

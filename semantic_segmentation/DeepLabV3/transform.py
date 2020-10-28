@@ -1,6 +1,7 @@
+
 transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.25)
-                                    et.ExtRandomCrop(size=0.7)
+                                    et.ExtResize(scale=0.25),
+                                    et.ExtRandomCrop(size=0.7),
                                     et.ExtRandomHorizontalFlip(p=0.5),
                                     et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtEnhanceContrast(),

@@ -434,12 +434,12 @@ class ExtRandomCrop(object):
             tuple: params (i, j, h, w) to be passed to ``crop`` for random crop.
         """
         w, h = img.size
-        th, tw = output_size
-        if w == tw and h == th:
-            return 0, 0, h, w
-
+        tw,th = output_size
         i = random.randint(0, h - th)
         j = random.randint(0, w - tw)
+        if w != h and img.size==output_size:
+            min_dim = np.min(img.size)
+            tw, th = min_dim, min_dim
         return i, j, th, tw
 
     def __call__(self, img, lbl):
@@ -452,9 +452,13 @@ class ExtRandomCrop(object):
             PIL Image: Cropped label.
         """
         if self.size != None:
-            size = (self.size, self.size)
+            if np.min(img.size)<self.size:
+                size=img.size
+            else:
+                size = (self.size, self.size)
         else:
-            size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale) )
+            size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
+
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
         if self.padding > 0:
             img = F.pad(img, self.padding)
@@ -469,7 +473,6 @@ class ExtRandomCrop(object):
         if self.pad_if_needed and img.size[1] < self.size[0]:
             img = F.pad(img, padding=int((1 + self.size[0] - img.size[1]) / 2))
             lbl = F.pad(lbl, padding=int((1 + self.size[0] - lbl.size[1]) / 2))
-
         i, j, h, w = self.get_params(img, size)
 
         return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)
@@ -504,8 +507,8 @@ class ExtResize(object):
             PIL Image: Rescaled image.
 
         """
-        if self.size==None:
-            size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
+        if self.scale != None:
+            self.size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale))
 
         return F.resize(img, self.size, self.interpolation), F.resize(lbl, self.size, Image.NEAREST)
 
