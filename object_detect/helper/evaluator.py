@@ -15,24 +15,20 @@ def check_empty(scores,target,labels):
             mAP = 1
             mAP2 = 1
             df = pd.DataFrame()
-            print("Detected None, target None! :-) ")
         else:
             if len(labels) == 1:
                 if labels == torch.zeros(1):
                     mAP = 1
                     mAP2 = 1
                     df = pd.DataFrame()
-                    print("Detected None, target None! :-) ")
                 else:
                     mAP = 0
                     mAP2 = 0
                     df = pd.DataFrame()
-                    print("Detected None, target true :-( ")
             else:
                 mAP = 0
                 mAP2 = 0
                 df = pd.DataFrame()
-                print("Detected None, target true :-( ")
     return df, mAP, mAP2
 
 def classifier_metric(iou_list,iou_pred,scores,target):
@@ -148,20 +144,23 @@ def iou_multi(boxes, targets, pred, labels):
 def get_non_maximum_supression(boxes,scores,iou_threshold):
     new_boxes = []
     new_scores = []
-    nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
-    for i in range(len(nms)):
-        new_boxes.append(boxes[nms[i]])
-        new_scores.append(scores[nms[i]])
-    return new_boxes, new_scores
+    if len(boxes) > 0:
+        nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
+        for i in range(len(nms)):
+            new_boxes.append(boxes[nms[i]])
+            new_scores.append(scores[nms[i]])
+        return new_boxes, new_scores
+    else:
+        return torch.tensor(new_boxes), torch.tensor(new_scores)
 
-def get_iou_targets(boxes,targets,image,expand=256):
+def get_iou_targets(boxes,targets,labels,image,expand=256):
     iou_list = np.array([])
     iou_pred = np.zeros((len(boxes)))
-    for target in targets:
+    indicies = [i for i in range(len(labels)) if labels[i] !=0]
+
+    for target in targets[indicies]:
         best_iou = 0
         xmin, ymin, xmax, ymax = target.unbind(0)
-        print("Image: ", image.shape)
-        print("Before: ", xmin, ymin, xmax, ymax)
         if xmin >= expand:
             xmin -= expand
         else:
@@ -178,7 +177,6 @@ def get_iou_targets(boxes,targets,image,expand=256):
             ymax += expand
         else:
             ymax = torch.tensor(image.shape[1])
-        print("After: ", xmin, ymin, xmax, ymax)
         target_area = (xmax - xmin + 1) * (ymax - ymin + 1)
         i = 0
         for bbox in boxes:
@@ -249,7 +247,7 @@ def get_iou2(boxes,targets, pred, labels):
         iou_list = np.append(iou_list, 0)
     return iou_list, index_list, new_iou_list
 
-def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=False):
+def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=True):
     map = []
     map2 = []
     if len(scores) == 0:
@@ -359,6 +357,7 @@ if __name__ == '__main__':
         true_positives = 0
         false_negatives = 0
         false_positives = 0
+        true_negatives = 0
         for (images, labels, masks) in metric_logger.log_every(data_loader, 1, header):
             images = list(img.to(device, dtype=torch.float32) for img in images)
             targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
@@ -376,7 +375,7 @@ if __name__ == '__main__':
             new_boxes, new_scores = get_non_maximum_supression(outputs,scores,iou_threshold=0.2)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
 
-            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(),image=images[9])
+            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(), labels=targets[9]['labels'].cpu(), image=images[9])
 
            # df, AP, AP2 = get_map2(outputs2, targets[9]['boxes'], scores2,
            #                                labels2, targets[9]['labels'].cpu(), iou_list=iou, threshold=0.3)
@@ -386,6 +385,10 @@ if __name__ == '__main__':
             false_negatives += acc_dict["Defects"]-acc_dict["Detected"]
             false_positives += acc_dict["FP"]
             total_num_defects += acc_dict["Defects"]
+            if acc_dict["Defects"] == 0:
+                if acc_dict["FP"] == 0:
+                    true_negatives += 1
+
             jo = 1
             #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)
             break

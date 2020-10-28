@@ -7,7 +7,7 @@ import torchvision.models.detection.mask_rcnn
 from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
 import object_detect.helper.utils as utils
-from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric
+from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric, get_non_maximum_supression, get_iou_targets
 import matplotlib.pyplot as plt
 
 def get_samples(samples,model_name,optim_name,lr,layers,ids,N,path_save,train=True):
@@ -46,7 +46,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
-        print("Image shape: ", images[0].shape)
 
         nb = []
         nt = []
@@ -127,10 +126,14 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
     i = 0
     mAP = []
     mAP2 = []
-    acimg = []
-    acdef = []
-    ac1 = 0
-    ac2 = 0
+    conf_matrix = {}
+    conf_matrix["true_positives"] = 0
+    conf_matrix["false_positives"] = 0
+    conf_matrix["true_negatives"] = 0
+    conf_matrix["false_negatives"] = 0
+    conf_matrix["total_num_defects"] = 0
+    conf_matrix["good_leather"] = 0
+    conf_matrix["bad_leather"] = 0
     with torch.no_grad():
         for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
             images = list(img.to(device) for img in image)
@@ -158,13 +161,28 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                         df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
-                    if HPC == False:
-                        acc_image, acc_def, acc1, acc2 = classifier_metric(iou, outputs[j]['scores'].cpu(), targets[j]['boxes'].cpu())
-                        acimg.append(acc_image)
-                        acdef.append(acc_def)
-                        ac1 += acc1
-                        ac2 += acc2
                 else:
+
+                    boxes = outputs[j]['boxes'].cpu()
+                    scores = outputs[j]['scores'].cpu()
+
+                    new_boxes, new_scores = get_non_maximum_supression(boxes, scores, iou_threshold=0.2)
+                    iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
+                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=32)
+
+                    acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu())
+
+                    conf_matrix["true_positives"] += acc_dict["Detected"]
+                    conf_matrix["false_negatives"] += acc_dict["Defects"] - acc_dict["Detected"]
+                    conf_matrix["false_positives"] += acc_dict["FP"]
+                    conf_matrix["total_num_defects"] += acc_dict["Defects"]
+                    if acc_dict["Defects"] == 0:
+                        conf_matrix["good_leather"] += 1
+                        if acc_dict["FP"] == 0:
+                            conf_matrix["true_negatives"] += 1
+                    else:
+                        conf_matrix["bad_leather"] += 1
+
                     iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
                     df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
@@ -175,13 +193,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                         df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
-                    if HPC == False:
-                        acc_image, acc_def, acc1, acc2 = classifier_metric(iou, outputs[j]['scores'].cpu(), targets[j]['boxes'].cpu())
-                        acimg.append(acc_image)
-                        acdef.append(acc_def)
-                        ac1 += acc1
-                        ac2 += acc2
-                    #print(df2)
+
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
@@ -215,12 +227,20 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("Averaged stats:", metric_logger)
                 print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
                 print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
+                print("TP: ", conf_matrix["true_positives"])
+                print("FN: ", conf_matrix["false_negatives"])
+                print("FP: ", conf_matrix["false_positives"])
+                print("Total number of defects: ", conf_matrix["total_num_defects"])
         else:
-            accu1 = np.sum(acimg)/ac1
-            accu2 = np.sum(acdef)/ac2
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
             print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
-            print("Accuracy on images: ", accu1)
-            print("Accuracy on defects: ", accu2)
-    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val))
+            print("TP: ", conf_matrix["true_positives"])
+            print("FP: ", conf_matrix["false_positives"])
+            print("TN: ", conf_matrix["true_negatives"])
+            print("FN: ", conf_matrix["false_negatives"])
+            print("Total number of defects: ", conf_matrix["total_num_defects"])
+            print("Images with good leather: ", conf_matrix["good_leather"])
+            print("Images with bad leather: ", conf_matrix["bad_leather"])
+
+    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix

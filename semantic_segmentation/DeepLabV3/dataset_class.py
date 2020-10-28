@@ -68,7 +68,6 @@ class LeatherData(data.Dataset):
             mask = tgt.numpy()
             mask2 = tgt2[:,:,0].numpy()
             mask3 = tgt3.numpy()
-            print("Unique",img_index, np.unique(mask),np.unique(mask2), np.unique(mask3))
             if self.multi == True:
                 bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
             else:
@@ -89,7 +88,7 @@ class LeatherData(data.Dataset):
                 else:
                     labels = torch.ones((len(bboxes),), dtype=torch.int64)
             image_id = torch.tensor([img_index])
-            # suppose all instances are not crowd
+            # suppose all instances are not crowdpr
             iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
             targets = {}
             targets["boxes"] = boxes

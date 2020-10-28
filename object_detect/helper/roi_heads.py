@@ -32,7 +32,7 @@ def fastrcnn_loss(class_logits, box_regression, labels, regression_targets):
         her_er_jeg = 0
 
     new_regression_targets = torch.cat(regression_targets, dim=0)
-    loss_func = torch.nn.CrossEntropyLoss(ignore_index=4, reduction='mean')
+    loss_func = torch.nn.CrossEntropyLoss(reduction='mean')
     classification_loss = loss_func(class_logits,targets)
     #if torch.isnan(classification_loss.detach().cpu()) == True:
     #    print("Labels was", labels)
