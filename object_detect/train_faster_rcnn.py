@@ -207,8 +207,8 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
         lr = 0.01
-        layers_to_train = 'classifier'
-        num_epoch = 1
+        layers_to_train = 'full'
+        num_epoch = 4
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"

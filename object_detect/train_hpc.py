@@ -350,14 +350,16 @@ if __name__ == '__main__':
     best_map2 = 0
     val_boxes = []
     val_targets = []
-    highest_tp = 0
-    lowest_fp = 10 ** 4
-    lowest_fn = 10 ** 4
-    highest_tn = 0
+    cmatrix = {}
+    cmatrix["highest_tp"] = 0
+    cmatrix["lowest_fp"] = 10 ** 4
+    cmatrix["lowest_fn"] = 10 ** 4
+    cmatrix["highest_tn"] = 0
+    cmatrix["num_defects"] = 0
     print("About to train")
     for epoch in range(num_epoch):
-        img_bad = 0
-        img_good = 0
+        cmatrix["img_bad"] = 0
+        cmatrix["img_good"] = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -376,22 +378,28 @@ if __name__ == '__main__':
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
-
-        img_bad = conf["bad_leather"]
-        img_good = conf["good_leather"]
-
+        cmatrix["num_defects"] = conf["total_num_defects"]
+        cmatrix["img_bad"] = conf["bad_leather"]
+        cmatrix["img_good"] = conf["good_leather"]
+        if conf["true_positives"] > cmatrix["highest_tp"]:
+            cmatrix["highest_tp"] = conf["true_positives"]
+        if conf["false_positives"] < cmatrix["lowest_fp"]:
+            cmatrix["lowest_fp"] = conf["false_positives"]
+        if conf["false_negatives"] < cmatrix["lowest_fn"]:
+            cmatrix["lowest_fn"] = conf["false_negatives"]
+        if conf["true_negatives"] > cmatrix["highest_tn"]:
+            cmatrix["highest_tn"] = conf["true_negatives"]
         if mAP > best_map:
             best_map = mAP
         if mAP2 > best_map2:
             best_map2 = mAP2
-        if conf["true_positives"] > highest_tp:
-            highest_tp = conf["true_positives"]
-        if conf["false_positives"] < lowest_fp:
-            lowest_fp = conf["false_positives"]
-        if conf["false_negatives"] < lowest_fn:
-            lowest_fn = conf["false_negatives"]
-        if conf["true_negatives"] > highest_tn:
-            highest_tn = conf["true_negatives"]
+            if HPC:
+            save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+                       model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                       n_epochs=epoch, optimizer=optimizer,
+                       scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=cmatrix, losses=loss_train, val_losses=loss_val)
+            #plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+            #         val_loss=loss_val,exp_description=model_name)
 
     #if HPC:
         #save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
@@ -409,5 +417,5 @@ if __name__ == '__main__':
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
-    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives, ", lowest_fn, " false negatives and ", highest_tn, "true negatives")
-    print("Validation set contained ", img_good," images with good leather and ", img_bad, " with bad leather")
+    print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
+    print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")
