@@ -9,33 +9,43 @@ from torchvision.models.segmentation import deeplabv3_resnet101
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 import PIL
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+import torchvision.transforms.functional as F
+
 from data_import.data_loader import convert_to_image
 
 
 
-def error_count(idx,target,data_loader,labels):
-    masks = data_loader.get_separate_segmentations(os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]),labels=labels)
-    buffer=256
-    errors=np.array([[0,0],[0,0]])
+def error_count(idx,pred,data_loader,labels):
 
+    masks = data_loader.get_separate_segmentations(os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]),labels=labels)
+    buffer=42
+    errors=np.array([[0,0],[0,0]])
+    xdim_s=[]
+    ydim_s=[]
     for mask in masks:
         label,mask=mask[0],np.squeeze(np.array(mask[1]).astype(np.uint))
+        resize_shape=
+        mask=F.resize(mask, mask.shape*0.33, PIL.Image.NEAREST)
         print(label)
         row,col=np.where(mask != 0)
         mask_shape=pred.shape
         xdim=(np.maximum(np.min(row)-buffer,0),np.minimum(np.max(row)+buffer,mask_shape[0]))
+        xdim_s.append(xdim)
         ydim=(np.maximum(np.min(col)-buffer,0),np.minimum(np.max(col)+buffer,mask_shape[1]))
-        print(xdim,ydim)
+        ydim_s.append(ydim)
         mask=mask[xdim[0]:xdim[1],ydim[0]:ydim[1]]
-        defect_found=int(np.sum(target[xdim[0]:xdim[1],ydim[0]:ydim[1]]!=0)>0)
+        defect_found=int(np.sum(pred[xdim[0]:xdim[1],ydim[0]:ydim[1]]!=0)>0)
         if label=='Insect bite':
             errors[1,0]+=1
             errors[1, 1]+=defect_found
         else:
             errors[0, 0] += 1
             errors[0, 1] += defect_found
+    for xdim,ydim in zip(xdim_s,ydim_s):
+        pred[xdim[0]:xdim[1], ydim[0]:ydim[1]]=0
+        target[xdim[0]:xdim[1], ydim[0]:ydim[1]]=0
+
+
     return errors
 
 

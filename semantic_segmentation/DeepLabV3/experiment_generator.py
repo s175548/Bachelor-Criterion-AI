@@ -17,7 +17,7 @@ def boolean_string(s):
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =Trrue
+HPC =False
 Villads=False
 binary=True
 model_name = ''
@@ -93,7 +93,6 @@ if __name__ == "__main__":
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    print("Dataloader paths: ",path_original_data,path_meta_data)
     data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
@@ -114,14 +113,25 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                        et.ExtResize(scale=0.25),
-                                        et.ExtRandomCrop(size=0.7),
-                                        et.ExtRandomHorizontalFlip(p=0.5),
-                                        et.ExtRandomVerticalFlip(p=0.5),
-                                        et.ExtEnhanceContrast(),
-                                        et.ExtToTensor(),
-                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])#et.ExtRandomCrop(scale=0.7)
+    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
@@ -132,11 +142,11 @@ if __name__ == "__main__":
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    
+
     train_dst = LeatherData(path_mask=path_train,path_img=path_train,list_of_filenames=file_names_train,
-                            transform=transform_function,color_dict=color_dict,target_dict=target_dict)
+                            transform=transform_function_train,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
-                          transform=transform_function,color_dict=color_dict,target_dict=target_dict)
+                          transform=transform_function_val,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4,collate_fn=my_def_collate)
@@ -160,4 +170,4 @@ if __name__ == "__main__":
     if train_scope == '':
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
-#    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
+    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
