@@ -64,6 +64,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
         # put the pieces together inside a FasterRCNN model
         model = FasterRCNN(backbone,
                            num_classes=num_classes,
+                           min_size=120,max_size=512,
                            rpn_anchor_generator=anchor_generator,
                            rpn_fg_iou_thresh=up_thres, rpn_bg_iou_thresh=low_thres,
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
@@ -257,7 +258,7 @@ if __name__ == '__main__':
             batch_size = 1
             val_batch_size = 1
         else:
-            batch_size = 4
+            batch_size = 1
             val_batch_size = 4
 
     if splitted_data:

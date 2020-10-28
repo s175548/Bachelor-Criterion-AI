@@ -44,7 +44,7 @@ def validate(model, model_name, data_loader, device, val=True, threshold=0.3):
     else:
         path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary\train'
     metric_logger = utils.MetricLogger(delimiter="  ")
-    header = 'Val:'
+    header = 'Test:'
     i = 0
     conf_matrix = {}
     conf_matrix["true_positives"] = 0
@@ -57,7 +57,7 @@ def validate(model, model_name, data_loader, device, val=True, threshold=0.3):
     mAP = []
     mAP2 = []
     with torch.no_grad():
-        for (image, labels, masks) in metric_logger.log_every(data_loader, 10, header):
+        for (image, labels, masks) in data_loader:
             images = list(img.to(device) for img in image)
             targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
 
@@ -103,8 +103,6 @@ def validate(model, model_name, data_loader, device, val=True, threshold=0.3):
             samples = []
             samples.append((images, masks, targets, outputs))
             get_samples(samples, model_name, optim_name, lr, layers, ids, N=1, path_save=path_save, train=False)
-            if N % 10 == 0:
-                metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
             i+=1
 
     return np.mean(mAP),np.mean(mAP2), conf_matrix
