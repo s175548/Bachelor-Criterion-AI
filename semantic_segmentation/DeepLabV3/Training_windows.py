@@ -33,7 +33,7 @@ total_itrs=500#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 8 # 16
+batch_size= 16 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -41,7 +41,7 @@ random_seed=1
 val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 80
+N_epochs= 100
 
 
 
@@ -71,6 +71,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                 outputs = model(images)['out']
             else:
                 outputs = model(images)
+
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
 
@@ -226,7 +227,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if True:
+                # if True:
                     print("validation...")
                     model.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
@@ -320,7 +321,7 @@ def pad(img,mask,size,ignore_idx):
         rest_height = 1
     else:
         rest_height = 0
-    if (size-img_num.shape[2])%2 != 0:
+    if ((size-img_num.shape[2])%2 != 0):
         rest_width = 1
     else:
         rest_width = 0
@@ -330,19 +331,19 @@ def pad(img,mask,size,ignore_idx):
             pad_img[i] = cv2.copyMakeBorder(img_num[i], height_border, height_border + rest_height, width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)
         pad_mask = cv2.copyMakeBorder(mask_num, height_border, height_border + rest_height, width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)
     elif height_border >= 0:
-        rand_start = random.randint(0, abs(width_border) * 2)
+        rand_start = random.randint(0, abs(width_border) * 2-1)
         for i in range(3):
             pad_img[i] = cv2.copyMakeBorder(img_num[i], height_border, height_border + rest_height, 0,0, cv2.BORDER_CONSTANT, value=ignore_idx)[:,rand_start:rand_start+size]
         pad_mask = cv2.copyMakeBorder(mask_num, height_border, height_border + rest_height, 0,0, cv2.BORDER_CONSTANT, value=ignore_idx)[:,rand_start:rand_start+size]
     elif width_border >= 0:
-        rand_start = random.randint(0,abs(height_border)*2)
+        rand_start = random.randint(0,abs(height_border)*2-1)
         for i in range(3):
             pad_img[i] = cv2.copyMakeBorder(img_num[i], 0, 0 , width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)[rand_start:rand_start+size,:]
         pad_mask = cv2.copyMakeBorder(mask_num, 0, 0 , width_border,width_border + rest_width, cv2.BORDER_CONSTANT, value=ignore_idx)[rand_start:rand_start+size,:]
 
     return torch.from_numpy(pad_img),torch.from_numpy(pad_mask)
 
-def my_def_collate(batch,size=358):
+def my_def_collate(batch,size=512):
     IGNORE_INDEX = 2
     for idx,item in enumerate(batch):
         # transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(),et.ExtToTensor(), et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])

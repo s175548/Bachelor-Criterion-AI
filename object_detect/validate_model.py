@@ -13,7 +13,7 @@ import argparse
 from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN, fasterrcnn_resnet50_fpn
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from object_detect.helper.engine import train_one_epoch, evaluate
+from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
@@ -117,3 +117,8 @@ if __name__ == '__main__':
     model.load_state_dict(loaded_model["model_state"])
     model.to(device)
     model.eval()
+
+    train_mAP, train_mAP2, cmatrix_train = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=False)
+    val_mAP, val_mAP2, cmatrix_val = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=True)
+
+

@@ -17,7 +17,7 @@ def boolean_string(s):
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =Trrue
+HPC =False
 Villads=False
 binary=True
 model_name = ''
@@ -93,7 +93,6 @@ if __name__ == "__main__":
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    print("Dataloader paths: ",path_original_data,path_meta_data)
     data_loader = DataLoader(data_path=path_original_data,metadata_path=path_meta_data)
 
 
@@ -143,7 +142,7 @@ if __name__ == "__main__":
         target_dict=data_loader.get_target_dict(labels)
         annotations_dict=data_loader.annotations_dict
 
-    
+
     train_dst = LeatherData(path_mask=path_train,path_img=path_train,list_of_filenames=file_names_train,
                             transform=transform_function_train,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
@@ -171,4 +170,4 @@ if __name__ == "__main__":
     if train_scope == '':
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
-#    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
+    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
