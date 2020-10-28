@@ -168,7 +168,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                     new_boxes, new_scores = get_non_maximum_supression(boxes, scores, iou_threshold=0.2)
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
-                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=32)
+                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=16)
 
                     acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu())
 
@@ -228,9 +228,12 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
                 print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
                 print("TP: ", conf_matrix["true_positives"])
-                print("FN: ", conf_matrix["false_negatives"])
                 print("FP: ", conf_matrix["false_positives"])
+                print("TN: ", conf_matrix["true_negatives"])
+                print("FN: ", conf_matrix["false_negatives"])
                 print("Total number of defects: ", conf_matrix["total_num_defects"])
+                print("Images with good leather: ", conf_matrix["good_leather"])
+                print("Images with bad leather: ", conf_matrix["bad_leather"])
         else:
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
