@@ -141,7 +141,11 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtToTensor()])
 #transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=True
@@ -394,10 +398,10 @@ if __name__ == '__main__':
         if mAP2 > best_map2:
             best_map2 = mAP2
             if HPC:
-            save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                       model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
-                       n_epochs=epoch, optimizer=optimizer,
-                       scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=cmatrix, losses=loss_train, val_losses=loss_val)
+                save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+                           model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                           n_epochs=epoch, optimizer=optimizer,
+                           scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=cmatrix, losses=loss_train, val_losses=loss_val)
             #plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
             #         val_loss=loss_val,exp_description=model_name)
 

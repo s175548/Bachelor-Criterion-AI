@@ -168,7 +168,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                     new_boxes, new_scores = get_non_maximum_supression(boxes, scores, iou_threshold=0.2)
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
-                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=16)
+                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=42)
 
                     acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu())
 
