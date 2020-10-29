@@ -229,7 +229,7 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 50
+        num_epoch = 30
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -278,7 +278,7 @@ if __name__ == '__main__':
             batch_size = 8
             val_batch_size = 4
         else:
-            batch_size = 4
+            batch_size = 8
             val_batch_size = 4
 
     if splitted_data:
@@ -439,7 +439,7 @@ if __name__ == '__main__':
     #               scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
-    print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
+    print("Overall best with nms: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
+    print("Overall best without nms is: ", best_map, " for learning rate: ", lr, "model ", model_name)
     print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")

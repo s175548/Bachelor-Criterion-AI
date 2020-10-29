@@ -13,29 +13,27 @@ from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
 
 
 def get_samples(samples,model_name,ids,path_save,train=True):
-    denorm = Denormalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
-            image = (denorm(img[i].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+            image = (img[i].detach().cpu().numpy() * 255).transpose(1, 2, 0).astype(np.uint8)
             boxes = p[i]['boxes'].detach().cpu().numpy()
             targets = t[i]['boxes'].detach().cpu().numpy()
             bmask = get_bbox_mask(mask=m[i], bbox=boxes)
             bmask2 = get_bbox_mask(mask=m[i], bbox=targets)
             if train == False:
                 Image.fromarray(image.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_img.png'.format(model_name,id.data),format='PNG')
+                    path_save + '/{}_val_{}_img.png'.format(model_name,id.numpy()[0]),format='PNG')
                 Image.fromarray(bmask.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_prediction.png'.format(model_name, id.data), format='PNG')
+                    path_save + '/{}_val_{}_prediction.png'.format(model_name, id.numpy()[0]), format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_target.png'.format(model_name, id.data), format='PNG')
+                    path_save + '/{}_val_{}_target.png'.format(model_name, id.numpy()[0]), format='PNG')
             else:
                 Image.fromarray(image.astype(np.uint8)).save(
-                    path_save + '/{}_train_{}_img.png'.format(model_name,id.data),format='PNG')
+                    path_save + '/{}_train_{}_img.png'.format(model_name,id.numpy()[0]),format='PNG')
                 Image.fromarray(bmask.astype(np.uint8)).save(
-                    path_save + '/{}_train_{}_prediction.png'.format(model_name, id.data), format='PNG')
+                    path_save + '/{}_train_{}_prediction.png'.format(model_name, id.numpy()[0]), format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
-                    path_save + '/{}_train_{}_target.png'.format(model_name, id.data), format='PNG')
+                    path_save + '/{}_train_{}_target.png'.format(model_name, id.numpy()[0]), format='PNG')
 
 
 def validate(model, model_name, data_loader, device, val=True, threshold=0.3):
@@ -101,7 +99,7 @@ def validate(model, model_name, data_loader, device, val=True, threshold=0.3):
 
             samples = []
             samples.append((images, masks, targets, outputs))
-            get_samples(samples, model_name, ids, path_save=path_save, train=False)
+            get_samples(samples, model_name, ids, path_save=path_save, train=val)
             i+=1
 
     return np.mean(mAP),np.mean(mAP2), conf_matrix

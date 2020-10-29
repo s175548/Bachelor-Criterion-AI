@@ -165,8 +165,9 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                     boxes = outputs[j]['boxes'].cpu()
                     scores = outputs[j]['scores'].cpu()
+                    preds = outputs[j]['labels'].cpu()
 
-                    new_boxes, new_scores = get_non_maximum_supression(boxes, scores, iou_threshold=0.2)
+                    new_boxes, new_scores, new_labels = get_non_maximum_supression(boxes, scores, preds, iou_threshold=0.2)
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
                                                            labels=targets[j]['labels'].cpu(),image=images[j],expand=42)
 
@@ -185,14 +186,19 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                     iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
-                    df, AP, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                    df, _, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
+                    df2, _, AP2 = get_map2(new_boxes, targets[j]['boxes'], new_scores,
+                                           new_labels, targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
                     if N % 50 == 0:
-                        df2,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                        print("Before nms: ", boxes)
+                        print("After nms: ", new_boxes)
+                        df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
+                        print("iou_pred: ", iou_pred)
 
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
@@ -225,8 +231,8 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
         if HPC:
             if N % 25 == 0:
                 print("Averaged stats:", metric_logger)
-                print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
-                print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
+                print("mean Average Precision for epoch {} without nms: ".format(N), np.mean(mAP))
+                print("mean Average Precision with nms {}: ".format(N), np.mean(mAP2))
                 print("TP: ", conf_matrix["true_positives"])
                 print("FP: ", conf_matrix["false_positives"])
                 print("TN: ", conf_matrix["true_negatives"])
@@ -236,8 +242,8 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("Images with bad leather: ", conf_matrix["bad_leather"])
         else:
             print("Averaged stats:", metric_logger)
-            print("mean Average Precision for epoch {}: ".format(N), np.mean(mAP))
-            print("mean Average Precision with scores for epoch {}: ".format(N), np.mean(mAP2))
+            print("mean Average Precision for epoch {} without nms: ".format(N), np.mean(mAP))
+            print("mean Average Precision with nms {}: ".format(N), np.mean(mAP2))
             print("TP: ", conf_matrix["true_positives"])
             print("FP: ", conf_matrix["false_positives"])
             print("TN: ", conf_matrix["true_negatives"])
