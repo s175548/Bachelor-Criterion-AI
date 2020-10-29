@@ -6,6 +6,7 @@ import torchvision, random
 import pickle
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from object_detect.leather_data_hpc import LeatherDataZ
 from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
@@ -16,6 +17,7 @@ from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.engine import train_one_epoch, evaluate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
+from object_detect.helper.generate_preds import validate
 
 
 def init_model(num_classes):
@@ -47,7 +49,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
             anchor_generator = AnchorGenerator(sizes=((8, 16, 32, 64, 128),),
                                                aspect_ratios=((0.5, 1.0, 2.0),))
         else:
-            anchor_generator = AnchorGenerator(sizes=((32, 64, 128, 256, 512),),
+            anchor_generator = AnchorGenerator(sizes=((16, 32, 64, 128, 256),),
                                                aspect_ratios=((0.5, 1.0, 2.0),))
 
         # let's define what are the feature maps that we will
@@ -87,7 +89,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,conf=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -98,6 +100,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
             "best_map_w_score": best_score,
+            "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
         }, save_path+model_name+optim_name+'.pt')
@@ -140,7 +143,32 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
     plt.close()
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+def get_transform_fun():
+    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtRandomCrop(scale=0.7,size=None),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtToTensor(),
+                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtToTensor()])
+#transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC=False
 tick_bite=False
@@ -193,17 +221,20 @@ if __name__ == '__main__':
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
         parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
         parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
+        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either empty or zero')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
+        bbox_type = args['bbox'][0]
         save_folder = os.path.join(path_save, model_name)
+        save_folder = os.path.join(save_folder,bbox_type)
         save_path_exp = os.path.join(save_path_model,save_fold)
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = int(1/lr)
+        num_epoch = 30
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -213,14 +244,9 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
         if binary:
-            if scale:
-                path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\train'
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\val'
-                dataset = "binary_scale"
-            else:
-                path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
-                dataset = "binary_scale"
+            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
+            dataset = "binary_scale"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
             path_mask = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
@@ -232,7 +258,9 @@ if __name__ == '__main__':
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+        bbox_type = 'zero'
 
+    print("bbox_type: ", bbox_type)
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
@@ -254,26 +282,35 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 1
-            val_batch_size = 1
+            batch_size = 8
+            val_batch_size = 4
         else:
-            batch_size = 4
+            batch_size = 8
             val_batch_size = 4
 
     if splitted_data:
         file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
+        shuffled_index = np.random.permutation(len(file_names_train))
+        file_names_train = file_names_train[shuffled_index]
         file_names_train = file_names_train[file_names_train != ".DS_S"]
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
-
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[89:95],
-                                bbox=True, multi=multi,
-                                transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                              bbox=True, multi=multi,
-                              transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        if bbox_type == 'empty':
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
+                                    bbox=True, multi=multi,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                                  bbox=True, multi=multi,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        else:
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
+                                    bbox=True, multi=multi,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                                  bbox=True, multi=multi,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
@@ -288,7 +325,7 @@ if __name__ == '__main__':
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
@@ -308,7 +345,8 @@ if __name__ == '__main__':
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
-        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model = model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
@@ -345,20 +383,29 @@ if __name__ == '__main__':
                                                    gamma=0.5)
     loss_train = []
     loss_val = []
-    risk = True
+    risk = False
     overall_best = 0
     best_map = 0
     best_map2 = 0
-    highest_tp = 0
-    lowest_fp = 10**4
-    lowest_fn = 10**4
-    highest_tn = 0
     val_boxes = []
     val_targets = []
+    cmatrix = {}
+    cmatrix["highest_tp"] = 0
+    cmatrix["lowest_fp"] = 10 ** 4
+    cmatrix["lowest_fn"] = 10 ** 4
+    cmatrix["highest_tn"] = 0
+    cmatrix["num_defects"] = 0
+    cmatrix2 = {}
+    cmatrix2["highest_tp"] = 0
+    cmatrix2["lowest_fp"] = 10 ** 4
+    cmatrix2["lowest_fn"] = 10 ** 4
+    cmatrix2["highest_tn"] = 0
+    cmatrix2["num_defects"] = 0
     print("About to train")
+    best_epoch = 0
     for epoch in range(num_epoch):
-        img_bad = 0
-        img_good = 0
+        cmatrix["img_bad"] = 0
+        cmatrix["img_good"] = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -370,46 +417,63 @@ if __name__ == '__main__':
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox, conf = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2 = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
-
-        img_bad = conf["bad_leather"]
-        img_good = conf["good_leather"]
-
+        cmatrix["num_defects"] = conf["total_num_defects"]
+        cmatrix["img_bad"] = conf["bad_leather"]
+        cmatrix["img_good"] = conf["good_leather"]
+        if conf["true_positives"] > cmatrix["highest_tp"]:
+            cmatrix["highest_tp"] = conf["true_positives"]
+        if conf["false_positives"] < cmatrix["lowest_fp"]:
+            cmatrix["lowest_fp"] = conf["false_positives"]
+        if conf["false_negatives"] < cmatrix["lowest_fn"]:
+            cmatrix["lowest_fn"] = conf["false_negatives"]
+        if conf["true_negatives"] > cmatrix["highest_tn"]:
+            cmatrix["highest_tn"] = conf["true_negatives"]
+        #################################################
+        if conf2["true_positives"] > cmatrix2["highest_tp"]:
+            cmatrix2["highest_tp"] = conf2["true_positives"]
+        if conf2["false_positives"] < cmatrix2["lowest_fp"]:
+            cmatrix2["lowest_fp"] = conf2["false_positives"]
+        if conf2["false_negatives"] < cmatrix2["lowest_fn"]:
+            cmatrix2["lowest_fn"] = conf2["false_negatives"]
+        if conf2["true_negatives"] > cmatrix2["highest_tn"]:
+            cmatrix2["highest_tn"] = conf2["true_negatives"]
         if mAP > best_map:
             best_map = mAP
+            if HPC:
+                best_model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                best_model.load_state_dict(model.state_dict())
+                best_epoch = epoch
         if mAP2 > best_map2:
             best_map2 = mAP2
-        if conf["true_positives"] > highest_tp:
-            highest_tp = conf["true_positives"]
-        if conf["false_positives"] < lowest_fp:
-            lowest_fp = conf["false_positives"]
-        if conf["false_negatives"] < lowest_fn:
-            lowest_fn = conf["false_negatives"]
-        if conf["true_negatives"] > highest_tn:
-            highest_tn = conf["true_negatives"]
-
-
-    if HPC:
-        save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
-                   n_epochs=num_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
-        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
-                  val_loss=loss_val,exp_description=model_name)
-    #else:
-    #    save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Experiments\CPU\tick_bite'
-    #    save_model(model,save_path, HPC=HPC, model_name="{}_{}_{}_{}".format(model_name, lr,dataset,layers_to_train), optim_name=optim,
-    #               n_epochs=num_epoch, optimizer=optimizer,
-    #               scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, losses=loss_train, val_losses=loss_val)
+    print("Bounding box type: ", bbox_type)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with scores is: ", best_map2, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
-    print("Overall best is: ", best_map, " for learning rate: ", lr, "model ", model_name)
-    print("Overall best tp: ", highest_tp, " out of ", conf["total_num_defects"], " with ", lowest_fp, " false positives, ", lowest_fn, " false negatives and ", highest_tn, "true negatives")
-    print("Validation set contained ", img_good," images with good leather and ", img_bad, " with bad leather")
+    print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
+    print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Stats for nms")
+    print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
+    print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")
+    print("Stats for no nms")
+    print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
+    print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
+
+    if HPC:
+        save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
+                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                   n_epochs=best_epoch, optimizer=optimizer,
+                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
+        best_model.eval()
+        _,_,_,_ = validate(model=best_model, model_name=model_name,
+                                                                data_loader=val_loader, path_save=save_folder, device=device, val=True)
+        _,_,_,_ = validate(model=best_model, model_name=model_name,
+                                                                data_loader=train_loader, path_save=save_folder, device=device, val=False)
+        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+                  val_loss=loss_val,exp_description=model_name)

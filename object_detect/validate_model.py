@@ -18,9 +18,11 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
 
-
-
-transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomVerticalFlip(p=0.5),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 tick_bite=False
 if tick_bite:
@@ -83,13 +85,11 @@ if __name__ == '__main__':
         batch_size = 4
         val_batch_size = 4
     else:
-        batch_size = 1
-        val_batch_size = 1
+        batch_size = 4
+        val_batch_size = 4
 
     file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
     N_files = len(file_names_train)
-    shuffled_index = np.random.permutation(len(file_names_train))
-    file_names_train = file_names_train[shuffled_index]
     file_names_train = file_names_train[file_names_train != ".DS_S"]
 
     file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
@@ -103,7 +103,7 @@ if __name__ == '__main__':
                           transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=utils.collate_fn)
+        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
@@ -118,7 +118,25 @@ if __name__ == '__main__':
     model.to(device)
     model.eval()
 
-    train_mAP, train_mAP2, cmatrix_train = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=False)
-    val_mAP, val_mAP2, cmatrix_val = validate(model=model,model_name=model_name,data_loader=data_loader,device=device,val=True)
+    val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model,model_name=model_name,
+                                                            data_loader=val_loader,
+                                                            device=device,
+                                                            path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary\val',
+                                                            val=True)
+    print("Overall best with nms: ", val_mAP2)
+    print("Overall best without nms is: ", val_mAP)
+    print("Stats for no nms:")
+    print("Overall best tp: ", cmatrix_val2["true_positives"], " out of ", cmatrix_val2["total_num_defects"], " with ",
+          cmatrix_val2["false_positives"], " false positives, ", cmatrix_val2["false_negatives"], " false negatives and ",
+          cmatrix_val2["true_negatives"], "true negatives")
+    print("Stats for nms:")
+    print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"], " with ",
+          cmatrix_val["false_positives"], " false positives, ", cmatrix_val["false_negatives"], " false negatives and ",
+          cmatrix_val["true_negatives"], "true negatives")
+    print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ", cmatrix_val["bad_leather"],
+          " with bad leather")
+    #train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,data_loader=train_loader,device=device,
+    # path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary\train',val=False)
+
 
 
