@@ -114,7 +114,7 @@ if __name__ == "__main__":
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
     transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtResize(scale=0.5,size=None),
                                     et.ExtRandomCrop(scale=0.7,size=None),
                                     et.ExtEnhanceContrast(),
                                     et.ExtRandomCrop(size=472,pad_if_needed=True),
@@ -124,7 +124,7 @@ if __name__ == "__main__":
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.33,size=None),
+                                    et.ExtResize(scale=0.5,size=None),
                                     et.ExtRandomCrop(scale=0.7,size=None),
                                     et.ExtEnhanceContrast(),
                                     et.ExtRandomHorizontalFlip(p=0.5),
@@ -149,9 +149,9 @@ if __name__ == "__main__":
                           transform=transform_function_val,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=4,collate_fn=my_def_collate)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4,collate_fn=my_def_collate)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     train_img = []
     for i in range(5):

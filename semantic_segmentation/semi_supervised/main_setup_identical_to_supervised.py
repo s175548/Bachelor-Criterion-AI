@@ -36,10 +36,12 @@ def main():
     val_batch_size = 4
     class_number=3
     lr_g=2e-4
-    lr_d=1e-4
+    #lr_d=1e-4
+    lr_d=0.01
     power=0.9
     weight_decay=5e-4
     max_iter=20000
+    epochs = 100
     binary = True
     HPC = True
 
@@ -53,13 +55,13 @@ def main():
     model_s_path=os.path.join(save_path,r'model.pt')
     model_g_spath=os.path.join(save_path,r'model_g.pt')
     ################### update lr ###################
-    def lr_poly(base_lr,iters,max_iter,power):
-        return base_lr*((1-float(iters)/max_iter)**power)
-    def adjust_lr(optimizer,base_lr,iters,max_iter,power):
-        lr=lr_poly(base_lr,iters,max_iter,power)
-        optimizer.param_groups[0]['lr']=lr
-        if len(optimizer.param_groups)>1:
-            optimizer.param_groups[1]['lr']=lr*10
+    # def lr_poly(base_lr,iters,max_iter,power):
+    #     return base_lr*((1-float(iters)/max_iter)**power)
+    # def adjust_lr(optimizer,base_lr,iters,max_iter,power):
+    #     lr=lr_poly(base_lr,iters,max_iter,power)
+    #     optimizer.param_groups[0]['lr']=lr
+    #     if len(optimizer.param_groups)>1:
+    #         optimizer.param_groups[1]['lr']=lr*10
 
     ################### dataset loader ###################
     trainloader, val_loader, train_dst, val_dst, color_dict, target_dict, annotations_dict = get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size,val_batch_size)
@@ -69,7 +71,9 @@ def main():
     ################### build model ###################
     model_name = 'MobileNet'
     model_g = generator(class_number)
-    model_d = discriminator(model=model_name,n_classes=class_number)
+    model_d_dict = discriminator(model=model_name,n_classes=class_number)
+    model_d = model_d_dict['model']
+    model_d.to(torch.device('cuda'))
 
     #### fine-tune ####
     #new_params=model.state_dict()
@@ -90,7 +94,8 @@ def main():
     optimizer_g=torch.optim.Adam(model_g.parameters(),lr=lr_g,betas=(0.9,0.99),weight_decay=weight_decay)
     #optimizer_g.zero_grad()
 
-    optimizer_d=torch.optim.Adam(model_d.parameters(),lr=lr_d,betas=(0.9,0.99),weight_decay=weight_decay)
+    #optimizer_d=torch.optim.Adam(model_d.parameters(),lr=lr_d,betas=(0.9,0.99),weight_decay=weight_decay)
+    optimizer_d = choose_optimizer(lr_d, model_d, model_d_dict, 'SGD')
     #optimizer_d.zero_grad()
 
     train_img = []
@@ -101,11 +106,10 @@ def main():
     metrics = StreamSegMetrics(class_number)
     ################### iter train ###################
     epoch = 1
-    for iters in range(max_iter):
+    while epoch < epochs:
         loss_g_v=0
         loss_d_v=0
         running_loss = 0
-
 
         ####### train D ##################
         optimizer_d.zero_grad()
@@ -115,8 +119,8 @@ def main():
         try:
             _,batch=next(trainloader_iter)
         except:
+            epoch += 1
             print("Epoch",epoch)
-            epoch+=1
             trainloader_iter=enumerate(trainloader)
             _,batch=next(trainloader_iter)
 
