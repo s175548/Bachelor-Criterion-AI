@@ -41,7 +41,7 @@ def main():
     weight_decay=5e-4
     max_iter=20000
     binary = True
-    HPC = True
+    HPC = False
 
     # Setup random seed
     random_seed = 42
@@ -62,14 +62,16 @@ def main():
             optimizer.param_groups[1]['lr']=lr*10
 
     ################### dataset loader ###################
-    trainloader, val_loader, train_dst, val_dst, color_dict, target_dict, annotations_dict = get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size,val_batch_size)
-    trainloader_nl, trainloader_nl_dst = get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,datset_path_ul,batch_size)
+    trainloader, val_loader, train_dst, _, color_dict, target_dict, annotations_dict = get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size,val_batch_size)
+    trainloader_nl, _ = get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,datset_path_ul,batch_size)
 
 
     ################### build model ###################
     model_name = 'MobileNet'
     model_g = generator(class_number)
-    model_d = discriminator(model=model_name,n_classes=class_number)
+    model_d_dict = discriminator(model=model_name,n_classes=class_number)
+    model_d = model_d_dict[model_name]
+    model_d.to(torch.device('cuda'))
 
     #### fine-tune ####
     #new_params=model.state_dict()
@@ -94,7 +96,7 @@ def main():
     #optimizer_d.zero_grad()
 
     train_img = []
-    for i in range(10,14):
+    for i in range(10,12):
         train_img.append(train_dst.__getitem__(i))
 
     # Set up metrics
@@ -170,7 +172,7 @@ def main():
             print('iter={} , loss_g={} , loss_d={}'.format(iters,loss_g_v,loss_d_v))
             print("validation...")
             model_d.eval()
-            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(4),
+            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(2),
                                                                model=model_d, loader=val_loader, device='cuda',
                                                                metrics=metrics, model_name=model_name, N=iters,
                                                                criterion=criterion, train_images=train_img, lr=0.1,
@@ -185,20 +187,10 @@ def main():
         if iters%25==0:
             print(iters)
             if iters%200==0:
-                fake_dat = model_g(noise)[0].cpu().detach().numpy()
-                fake_img = Image.fromarray((fake_dat * 255).reshape(256, 256, -1).astype('uint8'))
-                Image._show(fake_img)
+                # fake_dat = model_g(noise)[0].cpu().detach().numpy()
+                # fake_img = Image.fromarray((fake_dat * 255).reshape(256, 256, -1).astype('uint8'))
+                # Image._show(fake_img)
                 # test image
-        #        img=Image.open(os.path.join(test_path,names[i]))
-        #        r,g,b=img.split()
-        #        img=Image.merge('RGB',(b,g,r))
-        #        img_=img_transform(img)
-        #        img_=torch.unsqueeze(img_,dim=0)
-        #        image=Variable(img_).cuda()
-        #        predict=model(image)
-        #        P=torch.max(predict,1)[1].cuda().data.cpu().numpy()[0]
-        #        P=np.uint8(P)
-        #        cv2.imwrite(os.path.join(pre_path,names[i]),P)
 
                 torch.save(model_d.state_dict(),model_s_path)
                 torch.save(model_g.state_dict(),model_g_spath)
