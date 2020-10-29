@@ -393,6 +393,7 @@ if __name__ == '__main__':
     cmatrix["lowest_fn"] = 10 ** 4
     cmatrix["highest_tn"] = 0
     cmatrix["num_defects"] = 0
+    cmatrix2 = {}
     cmatrix2["highest_tp"] = 0
     cmatrix2["lowest_fp"] = 10 ** 4
     cmatrix2["lowest_fn"] = 10 ** 4
