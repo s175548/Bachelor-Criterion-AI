@@ -7,7 +7,18 @@ import object_detect.helper.utils as utils
 import torchvision
 from PIL import Image
 
-
+def do_nms(boxes,scores,preds,threshold=0.3):
+    indicies = [i for i in range(len(boxes))]
+    indicies2 = [i for i in range(len(boxes))]
+    for i in range(1,len(boxes)):
+        box = boxes[-i]
+        iou_list = check_iou(box=box,boxes=boxes[:-i])
+        for iou in iou_list:
+            if iou > threshold:
+                index = indicies2[-i]
+                indicies.remove(index)
+                break
+    return boxes[indicies], scores[indicies], preds[indicies]
 
 def check_empty(scores,target,labels):
     if len(scores) == 0:
@@ -146,26 +157,103 @@ def iou_multi(boxes, targets, pred, labels):
     return iou_list, iou_label_index
 
 def get_non_maximum_supression(boxes,scores,labels,iou_threshold):
-    new_boxes = []
-    new_scores = []
-    new_labels = []
     if len(boxes) > 0:
         nms = torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
-        for i in range(len(nms)):
-            new_boxes.append(boxes[nms[i]])
-            new_scores.append(scores[nms[i]])
-            new_labels.append(labels[nms[i]])
+        new_boxes = boxes[nms]
+        new_scores = scores[nms]
+        new_labels = labels[nms]
         return new_boxes, new_scores, new_labels
     else:
+        new_boxes = []
+        new_scores = []
+        new_labels = []
         return torch.tensor(new_boxes), torch.tensor(new_scores), torch.tensor(new_labels)
 
-def get_iou_targets(boxes,targets,labels,image,expand=256):
+def check_iou(box,boxes):
+    iou_list = np.array([])
+    best_iou = 0
+    xmin, ymin, xmax, ymax = box.unbind(0)
+    bbox_area = (xmax - xmin + 1) * (ymax - ymin + 1)
+    if len(boxes) > 1:
+        for target in boxes:
+            x1, y1, x2, y2 = target.unbind(0)
+            target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+            xA = max(xmin, x1)
+            yA = max(ymin, y1)
+            xB = min(xmax, x2)
+            yB = min(ymax, y2)
+
+            # compute the area of intersection rectangle
+            interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+            iou = interArea / float(bbox_area + target_area - interArea)
+            if iou > best_iou:
+                best_iou = iou
+            iou_list = np.append(iou_list, best_iou)
+    else:
+        x1, y1, x2, y2 = boxes[0].unbind(0)
+        target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
+        xA = max(xmin, x1)
+        yA = max(ymin, y1)
+        xB = min(xmax, x2)
+        yB = min(ymax, y2)
+        # compute the area of intersection rectangle
+        interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+        iou = interArea / float(bbox_area + target_area - interArea)
+        if iou > best_iou:
+            best_iou = iou
+        iou_list = np.append(iou_list, best_iou)
+    return iou_list
+
+def get_iou_pred(box,targets,pred,labels,image,expand=16):
+    iou_list = np.array([])
+    best_iou = 0
+    xmin, ymin, xmax, ymax = box.unbind(0)
+    bbox_area = (xmax - xmin + 1) * (ymax - ymin + 1)
+    index = 0
+    for target in targets:
+        x1, y1, x2, y2 = target.unbind(0)
+        if x1 >= expand:
+            x1 -= expand
+        else:
+            x1 = torch.tensor(0)
+        if y1 >= expand:
+            y1 -= expand
+        else:
+            y1 = torch.tensor(0)
+        if x2 <= image.shape[2] - expand:
+            x2 += expand
+        else:
+            x2 = torch.tensor(image.shape[2])
+        if y2 <= image.shape[1] - expand:
+            y2 += expand
+        else:
+            y2 = torch.tensor(image.shape[1])
+        target_area = (x2 - x1 + 1) * (y2 - y1 + 1)
+
+        xA = max(xmin, x1)
+        yA = max(ymin, y1)
+        xB = min(xmax, x2)
+        yB = min(ymax, y2)
+
+        # compute the area of intersection rectangle
+        interArea = max(0, xB - xA + 1) * max(0, yB - yA + 1)
+        iou = interArea / float(bbox_area + target_area - interArea)
+        if iou > best_iou:
+            if labels[index] == pred:
+                best_iou = iou
+        index +=1
+    iou_list = np.append(iou_list, best_iou)
+    return iou_list
+
+def get_iou_targets(boxes,targets,preds,labels,image,expand=256):
     iou_list = np.array([])
     iou_pred = np.zeros((len(boxes)))
     indicies = [i for i in range(len(labels)) if labels[i] !=0]
 
     for target in targets[indicies]:
         best_iou = 0
+        best_box_iou = 0
         xmin, ymin, xmax, ymax = target.unbind(0)
         if xmin >= expand:
             xmin -= expand
@@ -186,7 +274,7 @@ def get_iou_targets(boxes,targets,labels,image,expand=256):
         target_area = (xmax - xmin + 1) * (ymax - ymin + 1)
         i = 0
         for bbox in boxes:
-
+            best_bbox_iou = 0
             x1, y1, x2, y2 = bbox.unbind(0)
             bbox_area = (x2 - x1 + 1) * (y2 - y1 + 1)
             xA = max(xmin, x1)
@@ -199,8 +287,8 @@ def get_iou_targets(boxes,targets,labels,image,expand=256):
             iou = interArea / float(bbox_area + target_area - interArea)
             if iou > best_iou:
                 best_iou = iou
-                if best_iou > iou_pred[i]:
-                    iou_pred[i] = best_iou
+            iou_pred[i] = get_iou_pred(box=bbox,targets=targets[indicies],pred=preds[i],
+                                       labels=labels[indicies],image=image,expand=expand)
             i+=1
         iou_list = np.append(iou_list, best_iou)
 

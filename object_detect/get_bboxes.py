@@ -146,14 +146,25 @@ def new_convert(mask):
         for j in range(np.shape(new_mask)[1]):
             if mask[i,j] == 101:
                 new_mask[i,j] = 0
+            elif mask[i,j] != 0 and mask[i,j] != 255:
+                new_mask[i,j] = 0
 
     labeled_array, num_features = ndimage.label(new_mask)
+    obj_ids2 = np.unique(mask)
+    if len(obj_ids2) > 3:
+        yes = 1
     s = ndimage.generate_binary_structure(2,2)
     mask, num_features2 = ndimage.label(new_mask, structure=s)
 
     obj_ids = np.unique(mask)
+    background = [b for b in obj_ids2 if b != 0 and b != 255]
     # first id is the background, so remove it
-    obj_ids = obj_ids[1:]
+    if obj_ids2[0] == 255:
+        pass
+    #elif len(background) > 0:
+    #    pass
+    else:
+        obj_ids = obj_ids[1:]
 
     # split the color-encoded mask into a set
     # of binary masks

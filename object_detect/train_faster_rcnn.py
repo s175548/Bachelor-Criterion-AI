@@ -209,7 +209,7 @@ if __name__ == '__main__':
         device = torch.device('cpu')
         lr = 0.01
         layers_to_train = 'full'
-        num_epoch = 4
+        num_epoch = 2
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
@@ -269,10 +269,10 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[89:95],
+        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[70:95],
                                 bbox=True, multi=multi,
                                 transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
                               bbox=True, multi=multi,
                               transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
@@ -357,6 +357,7 @@ if __name__ == '__main__':
     val_boxes = []
     val_targets = []
     print("About to train")
+    original_model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     for epoch in range(num_epoch):
         img_bad = 0
         img_good = 0
@@ -382,10 +383,6 @@ if __name__ == '__main__':
         img_bad = conf["bad_leather"]
         img_good = conf["good_leather"]
 
-        if mAP > best_map:
-            best_map = mAP
-        if mAP2 > best_map2:
-            best_map2 = mAP2
         if conf["true_positives"] > highest_tp:
             highest_tp = conf["true_positives"]
         if conf["false_positives"] < lowest_fp:
@@ -394,7 +391,11 @@ if __name__ == '__main__':
             lowest_fn = conf["false_negatives"]
         if conf["true_negatives"] > highest_tn:
             highest_tn = conf["true_negatives"]
-
+        if mAP > best_map:
+            best_map = mAP
+        if mAP2 > best_map2:
+            best_map2 = mAP2
+        best_model = model
 
     if HPC:
         save_model(model=model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,

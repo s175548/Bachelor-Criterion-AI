@@ -7,7 +7,7 @@ import torchvision.models.detection.mask_rcnn
 from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
 import object_detect.helper.utils as utils
-from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric, get_non_maximum_supression, get_iou_targets
+from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric, do_nms, get_iou_targets, check_iou
 import matplotlib.pyplot as plt
 
 def get_samples(samples,model_name,optim_name,lr,layers,ids,N,path_save,train=True):
@@ -91,7 +91,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
                         num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                         model.train()
                         samples.append((images, masks, targets, outputs))
-                        get_samples(samples,model_name,optim_name,lr,layers,ids,N=epoch,path_save=path_save,train=True)
+                        #get_samples(samples,model_name,optim_name,lr,layers,ids,N=epoch,path_save=path_save,train=True)
                 else:
                     samples = []
                     model.eval()
@@ -100,7 +100,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
                     num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
                     model.train()
                     samples.append((images, masks, targets, outputs))
-                    get_samples(samples, model_name, optim_name, lr, ids, N=epoch, path_save=path_save, train=True)
+                    #get_samples(samples, model_name, optim_name, lr, ids, N=epoch, path_save=path_save, train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -134,6 +134,14 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
     conf_matrix["total_num_defects"] = 0
     conf_matrix["good_leather"] = 0
     conf_matrix["bad_leather"] = 0
+    conf_matrix2 = {}
+    conf_matrix2["true_positives"] = 0
+    conf_matrix2["false_positives"] = 0
+    conf_matrix2["true_negatives"] = 0
+    conf_matrix2["false_negatives"] = 0
+    conf_matrix2["total_num_defects"] = 0
+    conf_matrix2["good_leather"] = 0
+    conf_matrix2["bad_leather"] = 0
     with torch.no_grad():
         for (image, labels, masks) in metric_logger.log_every(data_loader, 100, header):
             images = list(img.to(device) for img in image)
@@ -167,11 +175,13 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     scores = outputs[j]['scores'].cpu()
                     preds = outputs[j]['labels'].cpu()
 
-                    new_boxes, new_scores, new_labels = get_non_maximum_supression(boxes, scores, preds, iou_threshold=0.2)
+                    new_boxes, new_scores, new_preds = do_nms(boxes, scores, preds, threshold=0.2)
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
-                                                           labels=targets[j]['labels'].cpu(),image=images[j],expand=42)
-
-                    acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu(), targets[j]['labels'].cpu())
+                                                           preds=new_preds,
+                                                           labels=targets[j]['labels'].cpu(), image=images[j],
+                                                           expand=16)
+                    acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu(),
+                                                 targets[j]['labels'].cpu())
 
                     conf_matrix["true_positives"] += acc_dict["Detected"]
                     conf_matrix["false_negatives"] += acc_dict["Defects"] - acc_dict["Detected"]
@@ -184,19 +194,37 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     else:
                         conf_matrix["bad_leather"] += 1
 
-                    iou, index, selected_iou = get_iou2(boxes=outputs[j]['boxes'].cpu(), targets=targets[j]['boxes'].cpu(),
-                                                        pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
-                    df, _, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
-                                           outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
-                    iou2, _, _ = get_iou2(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
-                                                        pred=new_labels, labels=targets[j]['labels'].cpu())
-                    df2, _, AP2 = get_map2(new_boxes, targets[j]['boxes'], new_scores,
-                                           new_labels, targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold)
+                    iou_target2, iou_pred2 = get_iou_targets(boxes=boxes, targets=targets[j]['boxes'].cpu(),
+                                                             preds=preds,
+                                                             labels=targets[j]['labels'].cpu(), image=images[j],
+                                                             expand=16)
+                    acc_dict2 = classifier_metric(iou_target2, iou_pred2, scores, targets[j]['boxes'].cpu(),
+                                                  targets[j]['labels'].cpu())
+
+                    conf_matrix2["true_positives"] += acc_dict2["Detected"]
+                    conf_matrix2["false_negatives"] += acc_dict2["Defects"] - acc_dict2["Detected"]
+                    conf_matrix2["false_positives"] += acc_dict2["FP"]
+                    conf_matrix2["total_num_defects"] += acc_dict2["Defects"]
+                    if acc_dict2["Defects"] == 0:
+                        conf_matrix2["good_leather"] += 1
+                        if acc_dict2["FP"] == 0:
+                            conf_matrix2["true_negatives"] += 1
+                    else:
+                        conf_matrix2["bad_leather"] += 1
+                    iou, _, _ = get_iou(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
+                                          pred=new_preds, labels=targets[j]['labels'].cpu())
+                    df, _, AP = get_map2(new_boxes, targets[j]['boxes'], new_scores,
+                                           new_preds, targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
+                    iou2, _, _ = get_iou(boxes=outputs[j]['boxes'].cpu(),
+                                                        targets=targets[j]['boxes'].cpu(),
+                                                        pred=outputs[j]['labels'].cpu(),
+                                                        labels=targets[j]['labels'].cpu())
+                    df2, _, AP2 = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
+                                         outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou2,
+                                         threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
-                    if N % 10 == 0:
-                        print("Before nms: ", boxes)
-                        print("After nms: ", new_boxes)
+                    if N % 25 == 0:
                         df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
                                            print_state=True)
@@ -204,7 +232,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                                              new_labels, targets[j]['labels'].cpu(), iou_list=iou2,
                                              threshold=threshold,
                                              print_state=True)
-                        print("iou_pred: ", iou_pred)
 
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
@@ -212,6 +239,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             samples.append((images, masks, targets, outputs))
             if N % 50 == 0:
                 metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
 
             if risk==True:
                 model.train()
@@ -223,22 +251,22 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
-                if i < 100:
-                    if HPC:
-                        if N % 100 == 0:
-                            get_samples(samples,model_name,optim_name,lr,layers,ids,N=N,path_save=path_save,train=False)
-                    else:
-                        get_samples(samples, model_name, optim_name, lr, layers,ids, N=N, path_save=path_save, train=False)
+#                if i < 100:
+#                    if HPC:
+#                        if N % 100 == 0:
+#                            get_samples(samples,model_name,optim_name,lr,layers,ids,N=N,path_save=path_save,train=False)
+#                    else:
+#                        get_samples(samples, model_name, optim_name, lr, layers,ids, N=N, path_save=path_save, train=False)
                 model.eval()
             i+=1
 
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
         if HPC:
-            if N % 10 == 0:
+            if N % 25 == 0:
                 print("Averaged stats:", metric_logger)
-                print("mean Average Precision for epoch {} without nms: ".format(N), np.mean(mAP))
-                print("mean Average Precision with nms {}: ".format(N), np.mean(mAP2))
+                print("mean Average Precision for epoch {} with nms: ".format(N), np.mean(mAP))
+                print("mean Average Precision without nms {}: ".format(N), np.mean(mAP2))
                 print("TP: ", conf_matrix["true_positives"])
                 print("FP: ", conf_matrix["false_positives"])
                 print("TN: ", conf_matrix["true_negatives"])
@@ -248,8 +276,8 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("Images with bad leather: ", conf_matrix["bad_leather"])
         else:
             print("Averaged stats:", metric_logger)
-            print("mean Average Precision for epoch {} without nms: ".format(N), np.mean(mAP))
-            print("mean Average Precision with nms {}: ".format(N), np.mean(mAP2))
+            print("mean Average Precision for epoch {} with nms: ".format(N), np.mean(mAP))
+            print("mean Average Precision without nms {}: ".format(N), np.mean(mAP2))
             print("TP: ", conf_matrix["true_positives"])
             print("FP: ", conf_matrix["false_positives"])
             print("TN: ", conf_matrix["true_negatives"])
@@ -258,4 +286,4 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("Images with good leather: ", conf_matrix["good_leather"])
             print("Images with bad leather: ", conf_matrix["bad_leather"])
 
-    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix
+    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix, conf_matrix2
