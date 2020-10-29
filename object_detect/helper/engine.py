@@ -188,11 +188,13 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                                                         pred=outputs[j]['labels'].cpu(), labels=targets[j]['labels'].cpu())
                     df, _, AP = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
+                    iou2, _, _ = get_iou2(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
+                                                        pred=new_labels, labels=targets[j]['labels'].cpu())
                     df2, _, AP2 = get_map2(new_boxes, targets[j]['boxes'], new_scores,
-                                           new_labels, targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
+                                           new_labels, targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
-                    if N % 50 == 0:
+                    if N % 10 == 0:
                         print("Before nms: ", boxes)
                         print("After nms: ", new_boxes)
                         df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
@@ -229,7 +231,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
         if HPC:
-            if N % 25 == 0:
+            if N % 10 == 0:
                 print("Averaged stats:", metric_logger)
                 print("mean Average Precision for epoch {} without nms: ".format(N), np.mean(mAP))
                 print("mean Average Precision with nms {}: ".format(N), np.mean(mAP2))
