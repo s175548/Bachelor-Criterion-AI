@@ -22,6 +22,7 @@ model_name = ''
 optimizer = ''
 exp_descrip = ''
 train_scope = ''
+SIZE = 512
 def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
@@ -108,10 +109,10 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
     file_names_val = file_names_val[file_names_val != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=512,pad_if_needed=True),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     transform_function_val = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=512,pad_if_needed=True),et.ExtEnhanceContrast(), et.ExtToTensor(),
+        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtEnhanceContrast(), et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     if binary:
@@ -147,8 +148,11 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     file_names_train = file_names_train[file_names_train != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7,size=None),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
-         et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        [et.ExtRandomCrop(scale=0.7, size=None), et.ExtRandomCrop(size=SIZE, pad_if_needed=True),
+         et.ExtRandomRotation(random.randint(0, 359)), et.ExtRandomHorizontalFlip(p=0.5),
+         et.ExtRandomVerticalFlip(p=0.5),
+         et.ExtEnhanceContrast(), et.ExtToTensor(),
+         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     # et.ExtRandomCrop(scale=0.7)
     if binary:
         color_dict = data_loader.color_dict_binary
@@ -161,5 +165,5 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
         annotations_dict = data_loader.annotations_dict
 
     trainloader_nl_dst = LeatherData(path_mask=dataset_path_unlabelled, path_img=dataset_path_unlabelled,list_of_filenames=file_names_train,transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-    trainloader_nl = data.DataLoader(trainloader_nl_dst, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=my_def_collate)
+    trainloader_nl = data.DataLoader(trainloader_nl_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     return trainloader_nl, trainloader_nl_dst
