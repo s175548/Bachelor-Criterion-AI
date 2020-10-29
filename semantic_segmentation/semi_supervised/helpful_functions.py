@@ -28,12 +28,12 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         path_model = r'/work3/s173934/Bachelorprojekt/'
 
         parser = argparse.ArgumentParser(description='Take parameters')
-        parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
-        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('learning rate', metavar='lr',default=0.1, type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='optimizer', type=str,default="MobileNet", nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('optimizer name', metavar='model', type=str,default = "SGD", nargs='+',help='choose either MobileNet or DeepLab')
         parser.add_argument('train scope', default=True, type=boolean_string, nargs='+',help='train whole model or only classifier')
-        parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
-        parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
+        parser.add_argument('experiment description', metavar='description',default='semi_supervised', type=str, nargs='+',help='enter description')
+        parser.add_argument('folder name', metavar='folder', type=str,default = 'semi_supervised', nargs='+',help='a save folder for the training loop')
         parser.add_argument('binary_setup', default=True, type=boolean_string, nargs='+', help='binary or multiclass')
         args = vars(parser.parse_args())
 
@@ -52,6 +52,8 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         if binary:
             path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
             path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+            dataset_path_ul = r'/work3/s173934/Bachelorprojekt/all'
+
         else:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
@@ -106,9 +108,12 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
     file_names_val = file_names_val[file_names_val != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(), et.ExtToTensor(),
+        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=512,pad_if_needed=True),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+         et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    transform_function_val = et.ExtCompose(
+        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=512,pad_if_needed=True),et.ExtEnhanceContrast(), et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    # et.ExtRandomCrop(scale=0.7)
+
     if binary:
         color_dict = data_loader.color_dict_binary
         target_dict = data_loader.get_target_dict()
@@ -123,12 +128,12 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
                             list_of_filenames=file_names_train,
                             transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     val_dst = LeatherData(path_mask=dataset_path_val, path_img=dataset_path_val, list_of_filenames=file_names_val,
-                          transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                          transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=0, collate_fn=my_def_collate)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0, collate_fn=my_def_collate)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
     return train_loader, val_loader, train_dst, val_dst, color_dict, target_dict, annotations_dict
 
 def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset_path_unlabelled,batch_size):
@@ -142,8 +147,8 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     file_names_train = file_names_train[file_names_train != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5), et.ExtEnhanceContrast(), et.ExtToTensor(),
-         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+        [et.ExtRandomCrop(scale=0.7,size=None),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+         et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     # et.ExtRandomCrop(scale=0.7)
     if binary:
         color_dict = data_loader.color_dict_binary

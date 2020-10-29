@@ -1,9 +1,10 @@
 '''
   the author is leilei
 '''
+import sys,os
+sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
-import os
-import cv2
 import torch
 from torchvision import transforms
 import numpy as np
@@ -31,8 +32,8 @@ from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
 def main():
     #batch_size=16
-    batch_size = 2 #
-    val_batch_size = 2
+    batch_size = 16 #
+    val_batch_size = 4
     class_number=3
     lr_g=2e-4
     lr_d=1e-4
@@ -40,7 +41,7 @@ def main():
     weight_decay=5e-4
     max_iter=20000
     binary = True
-    HPC = False
+    HPC = True
 
     # Setup random seed
     random_seed = 42
@@ -93,12 +94,13 @@ def main():
     #optimizer_d.zero_grad()
 
     train_img = []
-    for i in range(10,13):
+    for i in range(10,14):
         train_img.append(train_dst.__getitem__(i))
 
     # Set up metrics
-    metrics = StreamSegMetrics(class_number+2)
+    metrics = StreamSegMetrics(class_number)
     ################### iter train ###################
+    epoch = 1
     for iters in range(max_iter):
         loss_g_v=0
         loss_d_v=0
@@ -113,6 +115,8 @@ def main():
         try:
             _,batch=next(trainloader_iter)
         except:
+            print("Epoch",epoch)
+            epoch+=1
             trainloader_iter=enumerate(trainloader)
             _,batch=next(trainloader_iter)
 
@@ -145,7 +149,8 @@ def main():
         loss_unlabel = Loss_unlabel(pred_unlabel)
         loss_fake    = Loss_fake(pred_fake)
 
-        loss_d       = loss_labeled + 0.5*loss_fake + 0.5*loss_unlabel
+        gamma_one = gamma_two = 0.4
+        loss_d       = loss_labeled + gamma_one*loss_fake + gamma_two*loss_unlabel
         loss_d_v += loss_d.data.cpu().numpy().item()
         loss_d.backward()
         optimizer_d.step()
@@ -165,7 +170,7 @@ def main():
             print('iter={} , loss_g={} , loss_d={}'.format(iters,loss_g_v,loss_d_v))
             print("validation...")
             model_d.eval()
-            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(3),
+            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(4),
                                                                model=model_d, loader=val_loader, device='cuda',
                                                                metrics=metrics, model_name=model_name, N=iters,
                                                                criterion=criterion, train_images=train_img, lr=0.1,
