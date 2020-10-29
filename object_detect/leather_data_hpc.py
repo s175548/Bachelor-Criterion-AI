@@ -83,6 +83,12 @@ class LeatherDataZ(data.Dataset):
                 area = torch.tensor(area)
                 labels = []
                 labels = torch.tensor(labels)
+                image_id = torch.tensor([img_index])
+                # suppose all instances are not crowdpr
+                iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
+                targets = {}
+                targets["image_id"] = image_id
+                return img, targets, mask
             else:
                 boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])

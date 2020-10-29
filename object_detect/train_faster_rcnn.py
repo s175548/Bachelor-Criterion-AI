@@ -238,7 +238,7 @@ if __name__ == '__main__':
     else:
         device = torch.device('cpu')
         lr = 0.01
-        layers_to_train = 'classifier'
+        layers_to_train = 'full'
         num_epoch = 4
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
-        bbox_type = 'empty'
+        bbox_type = 'zero'
 
     print("bbox_type: ", bbox_type)
     print("Device: %s" % device)
@@ -345,7 +345,8 @@ if __name__ == '__main__':
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
-        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model = model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)

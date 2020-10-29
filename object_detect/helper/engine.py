@@ -49,8 +49,8 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
 
         nb = []
         nt = []
-        nb.append(np.mean([len(targets[j]['boxes']) for j in range(len(targets))]))
-        nt.append(np.mean([len(targets[j]['labels']) for j in range(len(targets))]))
+        #nb.append(np.mean([len(targets[j]['boxes']) for j in range(len(targets))]))
+        #nt.append(np.mean([len(targets[j]['labels']) for j in range(len(targets))]))
 
         if nb > nt:
             print("Something wrong.. hmm")
@@ -211,11 +211,11 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                             conf_matrix2["true_negatives"] += 1
                     else:
                         conf_matrix2["bad_leather"] += 1
-                    iou, _, _ = get_iou(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
+                    iou, _, _ = get_iou2(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
                                           pred=new_preds, labels=targets[j]['labels'].cpu())
                     df, _, AP = get_map2(new_boxes, targets[j]['boxes'], new_scores,
                                            new_preds, targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold)
-                    iou2, _, _ = get_iou(boxes=outputs[j]['boxes'].cpu(),
+                    iou2, _, _ = get_iou2(boxes=outputs[j]['boxes'].cpu(),
                                                         targets=targets[j]['boxes'].cpu(),
                                                         pred=outputs[j]['labels'].cpu(),
                                                         labels=targets[j]['labels'].cpu())
