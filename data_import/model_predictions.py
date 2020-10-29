@@ -122,7 +122,6 @@ for i in range(len(train_images)):
 
 
 for i in range(len(train_images)):
-    break
     image = train_images[i][0].unsqueeze(0)
     image = image.to(device, dtype=torch.float32)
 
@@ -139,4 +138,3 @@ for i in range(len(train_images)):
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_pred.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
-    print(i)

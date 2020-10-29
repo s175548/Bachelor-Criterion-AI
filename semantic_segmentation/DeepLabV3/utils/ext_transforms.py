@@ -510,7 +510,7 @@ class ExtResize(object):
 
         """
         if self.scale != None:
-            self.size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale))
+            self.size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
 
         return F.resize(img, self.size, self.interpolation), F.resize(lbl, self.size, Image.NEAREST)
 
