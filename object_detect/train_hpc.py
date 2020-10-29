@@ -6,6 +6,7 @@ import torchvision, random
 import pickle
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from object_detect.leather_data_hpc import LeatherDataZ
 from data_import.data_loader import DataLoader
 from torch.utils import data
 import torch
@@ -257,6 +258,7 @@ if __name__ == '__main__':
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+        bbox_type = 'zero'
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
@@ -294,13 +296,20 @@ if __name__ == '__main__':
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
-
-        train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                                bbox=True, multi=multi,
-                                transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-        val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                              bbox=True, multi=multi,
-                              transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        if bbox_type == 'empty':
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+                                    bbox=True, multi=multi,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                                  bbox=True, multi=multi,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+        else:
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+                                    bbox=True, multi=multi,
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                                  bbox=True, multi=multi,
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
