@@ -34,17 +34,14 @@ total_itrs=500#1000
 lr_policy='step'
 step_size=10000
 batch_size= 16 # 16
-val_batch_size= 1 #4
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
-
-
-
+N_epochs= 100
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -160,21 +157,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
     metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer
-    if optim == 'SGD':
-        optimizer = torch.optim.SGD(params=[
-            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
-            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
-    elif optim == 'Adam':
-        optimizer = torch.optim.Adam(params=[
-            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
-            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, weight_decay=weight_decay)
-    else:
-        optimizer = torch.optim.RMSprop(params=[
-            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
-            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    optimizer = choose_optimizer(lr, model, model_dict, optim)
 
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=0.1)
 
@@ -260,30 +243,54 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
             validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
 
-        plt.plot(range(N_epochs),train_loss_values,'-o')
-        plt.title('Train Loss')
-        plt.xlabel('N_epochs')
-        plt.ylabel('Loss')
-        plt.savefig(os.path.join(save_path,exp_description+(str(lr))+'_train_loss'),format='png')
-        plt.close()
-        plt.plot(range(N_epochs),validation_loss_values, '-o')
-        plt.title('Validation Loss')
-        plt.xlabel('N_epochs')
-        plt.ylabel('Loss')
-        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
-        plt.close()
-
-        experiment_dict = {}
-        best_metric = metrics.to_str(val_score)
-        hyperparams_val = [N_epochs,lr,batch_size,val_batch_size,loss_type,weight_decay,optim,random_seed,best_metric,best_scores,best_classIoU,model_name,default_scope,model]
-        hyperparams = ['N_epochs','lr','batch_size','val_batch_size','loss_type','weight_decay','optimizer','random_seed','best_metric','best_scores','best_classIoU','model_backbone','default_scope','model architecture']
-        for idx,key in enumerate(hyperparams):
-            experiment_dict[key] = hyperparams_val[idx]
-        with open("{}/{}_{}.txt".format(save_path,model_name,exp_description), "w") as text_file:
-            text_file.write(str(experiment_dict))
+        save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
+                                  model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
 
 
+def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
+                              model_name, optim, save_path, train_loss_values, val_score, validation_loss_values):
+    plt.plot(range(N_epochs), train_loss_values, '-o')
+    plt.title('Train Loss')
+    plt.xlabel('N_epochs')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
+    plt.close()
+    plt.plot(range(N_epochs), validation_loss_values, '-o')
+    plt.title('Validation Loss')
+    plt.xlabel('N_epochs')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_val_loss'), format='png')
+    plt.close()
+    experiment_dict = {}
+    best_metric = metrics.to_str(val_score)
+    hyperparams_val = [N_epochs, lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
+                       best_metric, best_scores, best_classIoU, model_name, default_scope, model]
+    hyperparams = ['N_epochs', 'lr', 'batch_size', 'val_batch_size', 'loss_type', 'weight_decay', 'optimizer',
+                   'random_seed', 'best_metric', 'best_scores', 'best_classIoU', 'model_backbone', 'default_scope',
+                   'model architecture']
+    for idx, key in enumerate(hyperparams):
+        experiment_dict[key] = hyperparams_val[idx]
+    with open("{}/{}_{}.txt".format(save_path, model_name, exp_description), "w") as text_file:
+        text_file.write(str(experiment_dict))
 
+
+def choose_optimizer(lr, model, model_dict, optim):
+    if optim == 'SGD':
+        optimizer = torch.optim.SGD(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    elif optim == 'Adam':
+        optimizer = torch.optim.Adam(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, weight_decay=weight_decay)
+    else:
+        optimizer = torch.optim.RMSprop(params=[
+            {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
+            {'params': model_dict[model].classifier.parameters(), 'lr': lr},
+        ], lr=lr, momentum=0.9, weight_decay=weight_decay)
+    return optimizer
 
 
 def grad_check(model,model_layers='Classifier'):
