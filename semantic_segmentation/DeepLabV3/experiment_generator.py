@@ -128,6 +128,7 @@ if __name__ == "__main__":
         et.ExtRandomCrop(scale=0.7),
         et.ExtRandomHorizontalFlip(p=0.5),
         et.ExtRandomCrop(size=512),
+        et.ExtEnhanceContrast(),
         et.ExtRandomVerticalFlip(p=0.5),
         et.ExtToTensor(),
         et.ExtNormalize(mean=[0.485, 0.456, 0.406],
