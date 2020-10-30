@@ -114,28 +114,27 @@ if __name__ == "__main__":
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
 # FOR RESIZE
-    transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                                                  et.ExtRandomCrop(scale=0.7),
-                                                                  et.ExtEnhanceContrast(),
-                                                                  et.ExtRandomCrop(size=2048, pad_if_needed=True),
-                                                                  et.ExtResize(scale=0.5),
-                                                                  et.ExtRandomHorizontalFlip(p=0.5),
-                                                                  et.ExtRandomCrop(size=512),
-                                                                  et.ExtRandomVerticalFlip(p=0.5),
-                                                                  et.ExtToTensor(),
-                                                                  et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                                                                                  std=[0.229, 0.224, 0.225])])
-    #
+#     transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+#                                                                   et.ExtRandomCrop(scale=0.7),
+#                                                                   et.ExtEnhanceContrast(),
+#                                                                   et.ExtRandomCrop(size=2048, pad_if_needed=True),
+#                                                                   et.ExtResize(scale=0.5),
+#                                                                   et.ExtRandomHorizontalFlip(p=0.5),
+#                                                                   et.ExtRandomCrop(size=512),
+#                                                                   et.ExtRandomVerticalFlip(p=0.5),
+#                                                                   et.ExtToTensor(),
+#                                                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+#                                                                                   std=[0.229, 0.224, 0.225])])
+#     #
     # #FOR EXTENDED DATASET EXPERIMENT
-    # transform_function = transform_function = et.ExtCompose([
-    #     et.ExtRandomCrop(scale=0.7),
-    #     et.ExtRandomHorizontalFlip(p=0.5),
-    #     et.ExtRandomCrop(size=512),
-    #     et.ExtEnhanceContrast(),
-    #     et.ExtRandomVerticalFlip(p=0.5),
-    #     et.ExtToTensor(),
-    #     et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-    #                     std=[0.229, 0.224, 0.225])])
+    transform_function = transform_function = et.ExtCompose([
+        et.ExtRandomHorizontalFlip(p=0.5),
+        et.ExtRandomCrop(size=256),
+        et.ExtEnhanceContrast(),
+        et.ExtRandomVerticalFlip(p=0.5),
+        et.ExtToTensor(),
+        et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225])])
 
     if binary:
         color_dict = data_loader.color_dict_binary
