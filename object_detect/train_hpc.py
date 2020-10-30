@@ -480,8 +480,12 @@ if __name__ == '__main__':
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
         _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=val_loader, path_save=save_folder, device=device, val=True)
+                           data_loader=val_loader, device=device,
+                           path_save=save_folder,bbox_type=bbox_type,
+                           val=True,bbox=True)
         _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=train_loader, path_save=save_folder, device=device, val=False)
+                           data_loader=val_loader, device=device,
+                           path_save=save_folder,bbox_type=bbox_type,
+                           val=False,bbox=True)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
