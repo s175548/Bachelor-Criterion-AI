@@ -50,7 +50,10 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
 
 
 def validate(model, model_name, data_loader, device, path_save, val=True, threshold=0.3):
-
+    if val == True:
+        path_save = os.path.join(path_save, 'val')
+    else:
+        path_save = os.path.join(path_save, 'train')
     i = 0
     conf_matrix = {}
     conf_matrix["true_positives"] = 0
