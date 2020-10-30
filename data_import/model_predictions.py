@@ -22,7 +22,7 @@ os.environ['KMP_DUPLICATE_LIB_OK']='True'
 batch_size= 16 # 16
 val_batch_size= 4 #4
 
-Villads=False
+Villads=True
 if Villads:
     path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
     path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
@@ -56,7 +56,7 @@ model.eval()
 data_loader = DataLoader(data_path=path_original_data ,metadata_path=path_meta_data)
 labels =['Piega', 'Verruca', 'Puntura insetto' ,'Background']
 binary=True
-device=torch.device('cuda')
+device=torch.device('cpu')
 
 file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
 file_names_train = file_names_train[file_names_train != ".DS_S"]
@@ -67,9 +67,24 @@ file_names_val = file_names_val[file_names_val != ".DS_S"]
 #transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((1000, 1000)), et.ExtToTensor(),
 #                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function = et.ExtCompose([et.ExtResize(scale=0.25),et.ExtEnhanceContrast(),
+transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtRandomCrop(scale=0.7),
+                                    et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=2048,pad_if_needed=True),
+                                    et.ExtResize(scale=0.5),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomCrop(size=512),
+                                    et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+transform_function = transform_function = et.ExtCompose([
+    et.ExtRandomCrop(scale=0.7),
+    et.ExtRandomHorizontalFlip(p=0.5),
+    et.ExtRandomCrop(size=512),
+    et.ExtRandomVerticalFlip(p=0.5),
+    et.ExtToTensor(),
+    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                    std=[0.229, 0.224, 0.225])])
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])
@@ -103,21 +118,21 @@ elif data_set=='val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
 
-# for i in range(len(train_images)):
-#     image = train_images[i][0].unsqueeze(0)
-#     image = image.to(device, dtype=torch.float32)
-#     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-#     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
-#     target = train_images[i][1].cpu().squeeze().numpy()
-#     target = convert_to_image(target.squeeze(), color_dict, target_dict)
-#     PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
-#
-#
+for i in range(len(train_images)):
+    print(i)
+    image = train_images[i][0].unsqueeze(0)
+    image = image.to(device, dtype=torch.float32)
+    image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+    PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
+    target = train_images[i][1].cpu().squeeze().numpy()
+    target = convert_to_image(target.squeeze(), color_dict, target_dict)
+    PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
 
 
-for i in range(1):
-    i = 68
-    model.cuda()
+
+
+for i in range(len(train_images)):
+    break
     image = train_images[i][0].unsqueeze(0)
     image = image.to(device, dtype=torch.float32)
 
@@ -134,4 +149,3 @@ for i in range(1):
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_pred.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
-    print(i)

@@ -131,30 +131,37 @@ class GeneralizedRCNNTransform(nn.Module):
         index = int(torch.empty(1).uniform_(0., float(len(k))).item())
         return k[index]
 
-    def resize(self, image, target):
+    def resize(self, image, target,make_resize=False):
         # type: (Tensor, Optional[Dict[str, Tensor]]) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]
-        h, w = image.shape[-2:]
-        if self.training:
-            size = float(self.torch_choice(self.min_size))
+        if make_resize == True:
+            h, w = image.shape[-2:]
+            if self.training:
+                size = float(self.torch_choice(self.min_size))
+            else:
+                # FIXME assume for now that testing uses the largest scale
+                size = float(self.min_size[-1])
+            if torchvision._is_tracing():
+                image, target = _resize_image_and_masks_onnx(image, size, float(self.max_size), target)
+            else:
+                image, target = _resize_image_and_masks(image, size, float(self.max_size), target)
+
+            if target is None:
+                return image, target
+
+            bbox = target["boxes"]
+            bbox = resize_boxes(bbox, (h, w), image.shape[-2:])
+            target["boxes"] = bbox
+
+            if "keypoints" in target:
+                keypoints = target["keypoints"]
+                keypoints = resize_keypoints(keypoints, (h, w), image.shape[-2:])
+                target["keypoints"] = keypoints
         else:
-            # FIXME assume for now that testing uses the largest scale
-            size = float(self.min_size[-1])
-        if torchvision._is_tracing():
-            image, target = _resize_image_and_masks_onnx(image, size, float(self.max_size), target)
-        else:
-            image, target = _resize_image_and_masks(image, size, float(self.max_size), target)
-
-        if target is None:
-            return image, target
-
-        bbox = target["boxes"]
-        bbox = resize_boxes(bbox, (h, w), image.shape[-2:])
-        target["boxes"] = bbox
-
-        if "keypoints" in target:
-            keypoints = target["keypoints"]
-            keypoints = resize_keypoints(keypoints, (h, w), image.shape[-2:])
-            target["keypoints"] = keypoints
+            bbox = target["boxes"]
+            target["boxes"] = bbox
+            if "keypoints" in target:
+                keypoints = target["keypoints"]
+                target["keypoints"] = keypoints
         return image, target
 
     # _onnx_batch_images() is an implementation of
@@ -213,23 +220,36 @@ class GeneralizedRCNNTransform(nn.Module):
     def postprocess(self,
                     result,               # type: List[Dict[str, Tensor]]
                     image_shapes,         # type: List[Tuple[int, int]]
-                    original_image_sizes  # type: List[Tuple[int, int]]
-                    ):
+                    original_image_sizes,  # type: List[Tuple[int, int]]
+                    make_resize=False):
         # type: (...) -> List[Dict[str, Tensor]]
         if self.training:
             return result
-        for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
-            boxes = pred["boxes"]
-            boxes = resize_boxes(boxes, im_s, o_im_s)
-            result[i]["boxes"] = boxes
-            if "masks" in pred:
-                masks = pred["masks"]
-                masks = paste_masks_in_image(masks, boxes, o_im_s)
-                result[i]["masks"] = masks
-            if "keypoints" in pred:
-                keypoints = pred["keypoints"]
-                keypoints = resize_keypoints(keypoints, im_s, o_im_s)
-                result[i]["keypoints"] = keypoints
+        if make_resize==True:
+            for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+                boxes = pred["boxes"]
+                boxes = resize_boxes(boxes, im_s, o_im_s)
+                result[i]["boxes"] = boxes
+                if "masks" in pred:
+                    masks = pred["masks"]
+                    masks = paste_masks_in_image(masks, boxes, o_im_s)
+                    result[i]["masks"] = masks
+                if "keypoints" in pred:
+                    keypoints = pred["keypoints"]
+                    keypoints = resize_keypoints(keypoints, im_s, o_im_s)
+                    result[i]["keypoints"] = keypoints
+        else:
+            for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
+                boxes = pred["boxes"]
+                result[i]["boxes"] = boxes
+                if "masks" in pred:
+                    masks = pred["masks"]
+                    masks = paste_masks_in_image(masks, boxes, o_im_s)
+                    result[i]["masks"] = masks
+                if "keypoints" in pred:
+                    keypoints = pred["keypoints"]
+                    keypoints = resize_keypoints(keypoints, im_s, o_im_s)
+                    result[i]["keypoints"] = keypoints
         return result
 
     def __repr__(self):

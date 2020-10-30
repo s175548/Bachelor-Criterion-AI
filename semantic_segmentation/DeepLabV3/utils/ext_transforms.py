@@ -466,14 +466,17 @@ class ExtRandomCrop(object):
             img = F.pad(img, self.padding)
             lbl = F.pad(lbl, self.padding)
         # pad the width if needed
-        if self.pad_if_needed and img.size[0] < size[1]:
-            img = F.pad(img,fill=2, padding=int((1 + size[1] - img.size[0]) / 2))
-            lbl = F.pad(lbl,fill=2, padding=int((1 + size[1] - lbl.size[0]) / 2))
+ #       if self.pad_if_needed and img.size[0] < size[1]:
+ #           img = F.pad(img,fill=2, padding=int((1 + size[1] - img.size[0]) / 2))
+ #           lbl = F.pad(lbl,fill=2, padding=int((1 + size[1] - lbl.size[0]) / 2))
 
         # pad the height if needed
-        if self.pad_if_needed and img.size[1] < size[0]:
-            img = F.pad(img, fill=2, padding=int((1 + size[0] - img.size[1]) / 2))
-            lbl = F.pad(lbl, fill=2, padding=int((1 + size[0] - lbl.size[1]) / 2))
+ #       if self.pad_if_needed and img.size[1] < size[0]:
+ #           img = F.pad(img, fill=2, padding=int((1 + size[0] - img.size[1]) / 2))
+ #           lbl = F.pad(lbl, fill=2, padding=int((1 + size[0] - lbl.size[1]) / 2))
+        if self.pad_if_needed:
+            img = F.pad(img,padding=self.size,padding_mode='reflect')
+            lbl = F.pad(lbl,padding=self.size,padding_mode='reflect')
 
         i, j, h, w = self.get_params(img, size)
 
@@ -510,7 +513,7 @@ class ExtResize(object):
 
         """
         if self.scale != None:
-            self.size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale))
+            self.size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
 
         return F.resize(img, self.size, self.interpolation), F.resize(lbl, self.size, Image.NEAREST)
 
