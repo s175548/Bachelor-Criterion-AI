@@ -113,24 +113,28 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.5,size=None),
-                                    et.ExtRandomCrop(scale=0.7,size=None),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.5,size=None),
-                                    et.ExtRandomCrop(scale=0.7,size=None),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+# FOR RESIZE
+#     transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+#                                                                   et.ExtRandomCrop(scale=0.7),
+#                                                                   et.ExtEnhanceContrast(),
+#                                                                   et.ExtRandomCrop(size=2048, pad_if_needed=True),
+#                                                                   et.ExtResize(scale=0.5),
+#                                                                   et.ExtRandomHorizontalFlip(p=0.5),
+#                                                                   et.ExtRandomCrop(size=512),
+#                                                                   et.ExtRandomVerticalFlip(p=0.5),
+#                                                                   et.ExtToTensor(),
+#                                                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+#                                                                                   std=[0.229, 0.224, 0.225])])
+#     #
+    # #FOR EXTENDED DATASET EXPERIMENT
+    transform_function = transform_function = et.ExtCompose([
+        et.ExtRandomHorizontalFlip(p=0.5),
+        et.ExtRandomCrop(size=256),
+        et.ExtEnhanceContrast(),
+        et.ExtRandomVerticalFlip(p=0.5),
+        et.ExtToTensor(),
+        et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225])])
 
     if binary:
         color_dict = data_loader.color_dict_binary
@@ -144,9 +148,9 @@ if __name__ == "__main__":
 
 
     train_dst = LeatherData(path_mask=path_train,path_img=path_train,list_of_filenames=file_names_train,
-                            transform=transform_function_train,color_dict=color_dict,target_dict=target_dict)
+                            transform=transform_function,color_dict=color_dict,target_dict=target_dict)
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
-                          transform=transform_function_val,color_dict=color_dict,target_dict=target_dict)
+                          transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
         train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
