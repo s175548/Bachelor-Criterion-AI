@@ -305,7 +305,7 @@ if __name__ == '__main__':
                                   bbox=True, multi=multi,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         else:
-            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,

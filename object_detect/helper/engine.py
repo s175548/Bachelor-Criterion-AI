@@ -226,10 +226,10 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     mAP2.append(AP2)
                     if N % 25 == 0:
                         df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
-                                           outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou, threshold=threshold,
+                                           outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold,
                                            print_state=True)
                         df3, _, _ = get_map2(new_boxes, targets[j]['boxes'], new_scores,
-                                             new_labels, targets[j]['labels'].cpu(), iou_list=iou2,
+                                             new_labels, targets[j]['labels'].cpu(), iou_list=iou,
                                              threshold=threshold,
                                              print_state=True)
 

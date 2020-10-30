@@ -144,17 +144,16 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.close()
 
 def get_transform_fun():
-    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+    transform_function_train = et.ExtCompose([et.ExtRandomCrop(size=2048),
                                     et.ExtResize(scale=0.33,size=None),
                                     et.ExtRandomCrop(scale=0.7,size=None),
                                     et.ExtEnhanceContrast(),
                                     et.ExtRandomCrop(size=472,pad_if_needed=True),
                                     et.ExtRandomHorizontalFlip(p=0.5),
                                     et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+                                    et.ExtToTensor()])
 
-    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+    transform_function_val = et.ExtCompose([et.ExtRandomCrop(size=2048),
                                     et.ExtResize(scale=0.33,size=None),
                                     et.ExtRandomCrop(scale=0.7,size=None),
                                     et.ExtEnhanceContrast(),
@@ -162,6 +161,8 @@ def get_transform_fun():
                                     et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+    return transform_function_train, transform_function_val
 
 transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
                                     et.ExtRandomHorizontalFlip(p=0.5),
@@ -178,6 +179,10 @@ else:
     splitted_data = True
 binary=True
 scale=False
+if scale:
+    diff_transform = True
+else:
+    diff_transform = False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -221,20 +226,19 @@ if __name__ == '__main__':
         parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
         parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
         parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
-        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either empty or zero')
+        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
-        bbox_type = args['bbox'][0]
         save_folder = os.path.join(path_save, model_name)
-        save_folder = os.path.join(save_folder,bbox_type)
         save_path_exp = os.path.join(save_path_model,save_fold)
+        bbox_type = args['bbox'][0]
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 30
+        num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -258,7 +262,6 @@ if __name__ == '__main__':
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
-        bbox_type = 'zero'
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
@@ -281,7 +284,7 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 8
+            batch_size = 16
             val_batch_size = 4
         else:
             batch_size = 8
@@ -296,6 +299,7 @@ if __name__ == '__main__':
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
+
         if bbox_type == 'empty':
             train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
@@ -339,8 +343,10 @@ if __name__ == '__main__':
                 model = define_model(num_classes=4, net=model_name,
                                      data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
             else:
+                #model = define_model(num_classes=2, net=model_name,
+                #                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
                 model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                                 data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
@@ -446,7 +452,7 @@ if __name__ == '__main__':
             best_map = mAP
             if HPC:
                 best_model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                                 data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
                 best_model.load_state_dict(model.state_dict())
                 best_epoch = epoch
         if mAP2 > best_map2:
@@ -455,6 +461,8 @@ if __name__ == '__main__':
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
     print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Dataset: ", dataset)
+    print("Bbox_type: ", bbox_type)
     print("Stats for nms")
     print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")
