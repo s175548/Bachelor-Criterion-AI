@@ -45,8 +45,7 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     num_boxes_pred = []
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
-        targets = list({k: v.to(device, dtype=torch.long) for k,v in t.items()} for t in labels)
-
+        targets = list({k: v.to(device) for k,v in t.items()} for t in labels)
         nb = []
         nt = []
         #nb.append(np.mean([len(targets[j]['boxes']) for j in range(len(targets))]))

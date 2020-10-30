@@ -87,14 +87,17 @@ class GeneralizedRCNNTransform(nn.Module):
             # targets = [{k: v for k,v in t.items()} for t in targets]
             targets_copy: List[Dict[str, Tensor]] = []
             for t in targets:
-                data: Dict[str, Tensor] = {}
-                for k, v in t.items():
-                    data[k] = v
-                targets_copy.append(data)
+                if t is not None:
+                    data: Dict[str, Tensor] = {}
+                    for k, v in t.items():
+                        data[k] = v
+                    targets_copy.append(data)
+                else:
+                    targets_copy.append(None)
             targets = targets_copy
         for i in range(len(images)):
             image = images[i]
-            target_index = targets[i] if targets is not None else None
+            target_index = targets[i] if targets is not None and {} else None
 
             if image.dim() != 3:
                 raise ValueError("images is expected to be a list of 3d tensors "
@@ -157,7 +160,11 @@ class GeneralizedRCNNTransform(nn.Module):
                 keypoints = resize_keypoints(keypoints, (h, w), image.shape[-2:])
                 target["keypoints"] = keypoints
         else:
+            if target is None:
+                return image, target
+
             bbox = target["boxes"]
+            bbox = bbox.type(torch.float32)
             target["boxes"] = bbox
             if "keypoints" in target:
                 keypoints = target["keypoints"]
@@ -241,6 +248,7 @@ class GeneralizedRCNNTransform(nn.Module):
         else:
             for i, (pred, im_s, o_im_s) in enumerate(zip(result, image_shapes, original_image_sizes)):
                 boxes = pred["boxes"]
+                boxes = boxes.type(torch.float32)
                 result[i]["boxes"] = boxes
                 if "masks" in pred:
                     masks = pred["masks"]
