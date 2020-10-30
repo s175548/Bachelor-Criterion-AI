@@ -103,21 +103,19 @@ elif data_set=='val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
 
-# for i in range(len(train_images)):
-#     image = train_images[i][0].unsqueeze(0)
-#     image = image.to(device, dtype=torch.float32)
-#     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-#     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
-#     target = train_images[i][1].cpu().squeeze().numpy()
-#     target = convert_to_image(target.squeeze(), color_dict, target_dict)
-#     PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
-#
-#
+for i in range(len(train_images)):
+    image = train_images[i][0].unsqueeze(0)
+    image = image.to(device, dtype=torch.float32)
+    image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
+    PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
+    target = train_images[i][1].cpu().squeeze().numpy()
+    target = convert_to_image(target.squeeze(), color_dict, target_dict)
+    PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
 
 
-for i in range(1):
-    i = 68
-    model.cuda()
+
+
+for i in range(len(train_images)):
     image = train_images[i][0].unsqueeze(0)
     image = image.to(device, dtype=torch.float32)
 
@@ -134,4 +132,3 @@ for i in range(1):
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(pred.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_pred.png'.format(i)),format='PNG' )
     PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
-    print(i)
