@@ -49,11 +49,14 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
                     path_save + '/{}_train_{}_target.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
 
 
-def validate(model, model_name, data_loader, device, path_save, val=True, threshold=0.3):
-    if val == True:
-        path_save = os.path.join(path_save, 'val')
+def validate(model, model_name, data_loader, device, path_save, bbox_type, val=True, bbox=False, threshold=0.3):
+    if bbox == False:
+        if val == True:
+            path_save = os.path.join(path_save, 'val')
+        else:
+            path_save = os.path.join(path_save, 'train')
     else:
-        path_save = os.path.join(path_save, 'train')
+        path_save = os.path.join(path_save, bbox_type)
     i = 0
     conf_matrix = {}
     conf_matrix["true_positives"] = 0
