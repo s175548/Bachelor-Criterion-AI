@@ -87,13 +87,17 @@ class GeneralizedRCNNTransform(nn.Module):
             # targets = [{k: v for k,v in t.items()} for t in targets]
             targets_copy: List[Dict[str, Tensor]] = []
             for t in targets:
-                if t is not None:
+                #if t is not None:
+                if len(t) == 5:
                     data: Dict[str, Tensor] = {}
                     for k, v in t.items():
                         data[k] = v
                     targets_copy.append(data)
                 else:
-                    targets_copy.append(None)
+                    data: Dict[str, Tensor] = {}
+                    for k, v in t.items():
+                        data[k] = v
+                    targets_copy.append(data)
             targets = targets_copy
         for i in range(len(images)):
             image = images[i]
@@ -160,15 +164,15 @@ class GeneralizedRCNNTransform(nn.Module):
                 keypoints = resize_keypoints(keypoints, (h, w), image.shape[-2:])
                 target["keypoints"] = keypoints
         else:
-            if target is None:
+            if target is not None:
+                bbox = target["boxes"]
+                bbox = bbox.type(torch.float32)
+                target["boxes"] = bbox
+                if "keypoints" in target:
+                    keypoints = target["keypoints"]
+                    target["keypoints"] = keypoints
+            else:
                 return image, target
-
-            bbox = target["boxes"]
-            bbox = bbox.type(torch.float32)
-            target["boxes"] = bbox
-            if "keypoints" in target:
-                keypoints = target["keypoints"]
-                target["keypoints"] = keypoints
         return image, target
 
     # _onnx_batch_images() is an implementation of
