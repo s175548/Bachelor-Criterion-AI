@@ -359,6 +359,7 @@ if __name__ == '__main__':
     print("Optimizer: ", optim)
     print("Number of epochs: ", num_epoch)
     print("Trained network: ", layers_to_train)
+    print("Bounding box: ", bbox_type)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
@@ -484,10 +485,10 @@ if __name__ == '__main__':
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=val_loader, device=device,
                            path_save=save_folder,bbox_type=bbox_type,
-                           val=True,bbox=False)
+                           val=True,bbox=True)
         _,_,_,_ = validate(model=best_model, model_name=model_name,
-                           data_loader=val_loader, device=device,
+                           data_loader=train_loader, device=device,
                            path_save=save_folder,bbox_type=bbox_type,
-                           val=False,bbox=False)
+                           val=False,bbox=True)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
