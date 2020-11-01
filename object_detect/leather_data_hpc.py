@@ -72,21 +72,24 @@ class LeatherDataZ(data.Dataset):
                 bmask, bounding_box, bbox_labels, _ = get_multi_bboxes(mask3)
             else:
                 bmask, bounding_box = new_convert(mask)
-            bboxes = []
-            for i in range(np.shape(bounding_box)[0]):
-                bboxes.append(bounding_box[i])
+            bboxes = bounding_box
+            #for i in range(np.shape(bounding_box)[0]):
+            #   bboxes.append(bounding_box[i])
             if len(bboxes) == 0:
                 #bboxes.append((0, 0, 255, 255))
-                boxes = torch.as_tensor(bboxes, dtype=torch.float32)
                 #area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+                empty_box = [np.nan, np.nan, np.nan, np.nan]
+                empty_box2 = torch.tensor(list(empty_box), dtype=torch.float32)
                 area = []
                 area = torch.tensor(area)
                 labels = []
                 labels = torch.tensor(labels)
-                image_id = torch.tensor([img_index])
                 # suppose all instances are not crowdpr
                 iscrowd = torch.zeros((len(bboxes),), dtype=torch.int64)
                 targets = {}
+                image_id = torch.tensor([img_index])
+                targets["boxes"] = torch.tensor(bboxes,dtype=torch.float32)
+                targets["labels"] = torch.zeros(1, dtype=torch.int64)
                 targets["image_id"] = image_id
                 return img, targets, mask
             else:
