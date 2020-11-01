@@ -134,13 +134,13 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_train_loss.png'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + 'bin_train_loss.png'), format='png')
     plt.close()
     plt.plot(range(N_epochs), val_loss, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + 'bin_val_loss.png'), format='png')
     plt.close()
 
 def get_transform_fun(resized=False):
@@ -471,7 +471,7 @@ if __name__ == '__main__':
 
     if HPC:
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                   model_name="{}_{}_{}_{}_{}".format(model_name, layers_to_train, bbox_type, lr, dataset), optim_name=optim,
                    n_epochs=best_epoch, optimizer=optimizer,
                    scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
