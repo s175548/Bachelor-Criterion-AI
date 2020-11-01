@@ -44,7 +44,7 @@ def main(semi_supervised = True):
     max_iter=20000
     epoch_max = 100
     binary = True
-    HPC = False
+    HPC = True
 
     # Setup random seed
     random_seed = 42
