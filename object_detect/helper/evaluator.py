@@ -366,13 +366,6 @@ def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=
             mAP = 0
         if np.isnan(mAP2) == True:
             mAP2 = 0
-        if print_state==True:
-            print("boxes: ", boxes)
-            print("targets: ", target)
-            print("iou: ", iou_list)
-            print("scores: ", scores)
-            print("predictions: ", pred)
-            print("labels: ", labels)
         #if len(boxes) > 0:
         #print("boxes: ", boxes)
         #print("targets: ", target)
