@@ -302,10 +302,10 @@ if __name__ == '__main__':
         N_files = len(file_names_val)
 
         if bbox_type == 'empty':
-            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:50],
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:20],
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
                                   bbox=True, multi=multi,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         else:
@@ -475,15 +475,12 @@ if __name__ == '__main__':
     print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
 
-    if HPC:
-        save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
-                   n_epochs=best_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
-        best_model.eval()
-        _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=val_loader, path_save=save_folder, device=device, val=True)
-        _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=train_loader, path_save=save_folder, device=device, val=False)
-        plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
-                  val_loss=loss_val,exp_description=model_name)
+    model.eval()
+    _,_,_,_ = validate(model=model, model_name=model_name,
+                       data_loader=val_loader, device=device,
+                       path_save=save_folder, bbox_type=bbox_type,
+                       val=True)
+    #_,_,_,_ = validate(model=best_model, model_name=model_name,
+    #                                                        data_loader=train_loader, path_save=save_folder, device=device, val=False)
+    #plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
+    #          val_loss=loss_val,exp_description=model_name)

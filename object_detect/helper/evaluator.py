@@ -12,7 +12,7 @@ def do_nms(boxes,scores,preds,threshold=0.3):
     indicies2 = [i for i in range(len(boxes))]
     for i in range(1,len(boxes)):
         box = boxes[-i]
-        iou_list = check_iou(box=box,boxes=boxes[:-i])
+        iou_list = check_iou(box=box.cpu(),boxes=boxes[:-i].cpu())
         for iou in iou_list:
             if iou > threshold:
                 index = indicies2[-i]
