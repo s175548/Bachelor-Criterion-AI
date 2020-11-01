@@ -145,33 +145,22 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 
 def get_transform_fun(resized=False):
     if resized == True:
-        transform_function_train = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                        et.ExtResize(scale=0.33,size=None),
-                                        et.ExtRandomCrop(scale=0.7,size=None),
-                                        et.ExtEnhanceContrast(),
-                                        et.ExtRandomCrop(size=472,pad_if_needed=True),
-                                        et.ExtRandomHorizontalFlip(p=0.5),
-                                        et.ExtRandomVerticalFlip(p=0.5),
-                                        et.ExtToTensor()])
-        transform_function_val = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                        et.ExtResize(scale=0.33,size=None),
-                                        et.ExtRandomCrop(scale=0.7,size=None),
-                                        et.ExtEnhanceContrast(),
-                                        et.ExtRandomHorizontalFlip(p=0.5),
-                                        et.ExtRandomVerticalFlip(p=0.5),
-                                        et.ExtToTensor()])
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                            et.ExtRandomCrop(scale=0.7,size=None),
+                                            et.ExtEnhanceContrast(),
+                                            et.ExtRandomCrop(size=2048, pad_if_needed=True),
+                                            et.ExtResize(scale=0.5),
+                                            et.ExtRandomHorizontalFlip(p=0.5),
+                                            et.ExtRandomCrop(size=512),
+                                            et.ExtRandomVerticalFlip(p=0.5),
+                                            et.ExtToTensor()])
     else:
-        transform_function_train = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                                  et.ExtRandomHorizontalFlip(p=0.5),
-                                                  et.ExtRandomVerticalFlip(p=0.5),
-                                                  et.ExtEnhanceContrast(),
-                                                  et.ExtToTensor()])
-        transform_function_val = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                                et.ExtRandomHorizontalFlip(p=0.5),
-                                                et.ExtRandomVerticalFlip(p=0.5),
-                                                et.ExtEnhanceContrast(),
-                                                et.ExtToTensor()])
-    return transform_function_train, transform_function_val
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                            et.ExtRandomHorizontalFlip(p=0.5),
+                                            et.ExtRandomVerticalFlip(p=0.5),
+                                            et.ExtEnhanceContrast(),
+                                            et.ExtToTensor()])
+    return transform_function
 
 #transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
@@ -312,22 +301,22 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        transform_function_train, transform_function_val = get_transform_fun(resized=scale)
+        transform_function = get_transform_fun(resized=scale)
 
         if bbox_type == 'empty':
             train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
-                                    transform=transform_function_train, color_dict=color_dict, target_dict=target_dict)
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                                   bbox=True, multi=multi,
-                                  transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         else:
             train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
-                                    transform=transform_function_train, color_dict=color_dict, target_dict=target_dict)
+                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                                   bbox=True, multi=multi,
-                                  transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
+                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
