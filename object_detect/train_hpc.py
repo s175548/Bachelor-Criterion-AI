@@ -434,23 +434,6 @@ if __name__ == '__main__':
         cmatrix["num_defects"] = conf["total_num_defects"]
         cmatrix["img_bad"] = conf["bad_leather"]
         cmatrix["img_good"] = conf["good_leather"]
-        if conf["true_positives"] > cmatrix["highest_tp"]:
-            cmatrix["highest_tp"] = conf["true_positives"]
-        if conf["false_positives"] < cmatrix["lowest_fp"]:
-            cmatrix["lowest_fp"] = conf["false_positives"]
-        if conf["false_negatives"] < cmatrix["lowest_fn"]:
-            cmatrix["lowest_fn"] = conf["false_negatives"]
-        if conf["true_negatives"] > cmatrix["highest_tn"]:
-            cmatrix["highest_tn"] = conf["true_negatives"]
-        #################################################
-        if conf2["true_positives"] > cmatrix2["highest_tp"]:
-            cmatrix2["highest_tp"] = conf2["true_positives"]
-        if conf2["false_positives"] < cmatrix2["lowest_fp"]:
-            cmatrix2["lowest_fp"] = conf2["false_positives"]
-        if conf2["false_negatives"] < cmatrix2["lowest_fn"]:
-            cmatrix2["lowest_fn"] = conf2["false_negatives"]
-        if conf2["true_negatives"] > cmatrix2["highest_tn"]:
-            cmatrix2["highest_tn"] = conf2["true_negatives"]
         cmatrix2["num_defects"] = conf2["total_num_defects"]
         cmatrix2["img_bad"] = conf2["bad_leather"]
         cmatrix2["img_good"] = conf2["good_leather"]
@@ -460,7 +443,17 @@ if __name__ == '__main__':
                 best_model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
                 best_model.load_state_dict(model.state_dict())
+                best_model.to(device)
                 best_epoch = epoch
+            cmatrix["highest_tp"] = conf["true_positives"]
+            cmatrix["lowest_fp"] = conf["false_positives"]
+            cmatrix["lowest_fn"] = conf["false_negatives"]
+            cmatrix["highest_tn"] = conf["true_negatives"]
+            #################################################
+            cmatrix2["highest_tp"] = conf2["true_positives"]
+            cmatrix2["lowest_fp"] = conf2["false_positives"]
+            cmatrix2["lowest_fn"] = conf2["false_negatives"]
+            cmatrix2["highest_tn"] = conf2["true_negatives"]
         if mAP2 > best_map2:
             best_map2 = mAP2
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
