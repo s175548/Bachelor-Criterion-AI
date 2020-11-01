@@ -56,7 +56,7 @@ def main(semi_supervised = True):
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised = get_paths(binary,HPC,False,False)
     else:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
-        model_name = 'MobileNet'
+        model_name = 'DeepLab'
         exp_descrip = ''
     model_s_path=os.path.join(save_path,r'model.pt')
     model_g_spath=os.path.join(save_path,r'model_g.pt')
@@ -155,7 +155,11 @@ def main(semi_supervised = True):
         # noise data
             noise = torch.rand([images.shape[0],50*50]).uniform_().cuda()
         # predict
-        pred_labeled = model_d(images.float())
+        if model_name == 'DeepLab':
+            pred_labeled = model_d(images.float())['out']
+        else:
+            pred_labeled = model_d(images.float())
+
         if semi_supervised:
             pred_unlabel = model_d(images_nl.float())
             pred_fake    = model_d( model_g(noise) )
