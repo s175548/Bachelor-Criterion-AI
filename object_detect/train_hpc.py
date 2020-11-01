@@ -478,10 +478,10 @@ if __name__ == '__main__':
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=val_loader, device=device,
                            path_save=save_folder,bbox_type=bbox_type,
-                           val=True,bbox=True)
+                           val=True,bbox=False)
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=train_loader, device=device,
                            path_save=save_folder,bbox_type=bbox_type,
-                           val=False,bbox=True)
+                           val=False,bbox=False)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
