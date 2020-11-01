@@ -182,7 +182,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=False
+all_classes=True
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -199,17 +199,39 @@ if __name__ == '__main__':
         save_path_model = os.path.join(base_path,model_folder)
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
+
+        parser = argparse.ArgumentParser(description='Take learning rate parameter')
+        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
+        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
+        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
+        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
+        parser.add_argument('scale', metavar='scale', type=str, nargs='+',help='choose either resize or crop')
+        args = vars(parser.parse_args())
+
+        model_name = args['model name'][0]
+        setup = args['scale'][0]
+        if setup == 'resize':
+            scale = True
+        else:
+            scale = False
         if binary:
             if scale:
                 path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
                 path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
                 save_fold = 'full_scale/'
-                dataset = "binary"
+                dataset = "all_binary_scale"
             else:
-                path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-                path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-                save_fold = 'binary/'
-                dataset = "binary"
+                if all_classes:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                    save_fold = 'all_bin/'
+                    dataset = "all_binary"
+                else:
+                    path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                    save_fold = 'binary/'
+                    dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -220,16 +242,6 @@ if __name__ == '__main__':
             path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
             save_fold = 'multi/'
             dataset = "multi"
-
-        parser = argparse.ArgumentParser(description='Take learning rate parameter')
-        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
-        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
-        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
-        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
-        args = vars(parser.parse_args())
-
-        model_name = args['model name'][0]
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
         save_folder = os.path.join(path_save, model_name)
@@ -300,7 +312,7 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        transform_function_train, transform_function_val = get_transform_fun()
+        transform_function_train, transform_function_val = get_transform_fun(resized=scale)
 
         if bbox_type == 'empty':
             train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
