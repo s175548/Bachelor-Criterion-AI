@@ -1,3 +1,7 @@
+import sys
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI/semantic_segmentation')
+
 from data_import.data_loader import DataLoader
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
@@ -99,10 +103,12 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 
 """Arguments"""
 
-Villads = True
+Villads = False
+HPC = True
 model_name = 'DeepLab'
 n_classes = 1
 resize = False
+size = 1024
 scale = 0.5
 binary = True
 device = torch.device('cpu')
@@ -115,6 +121,13 @@ if Villads:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
     model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
+elif HPC:
+    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
+    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
+    path_meta_data = r'samples/model_comparison.csv'
+    save_path = r'/work3/s173934/Bachelorprojekt/exp_results/evaluation/data_all_classes/resized_model'          ###
+    model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -212,18 +225,20 @@ for i in range(len(train_images)):
                                                                             scale=scale)
 
     target = convert_to_image(target.squeeze(), color_dict, target_dict)
-
     pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-    PIL.Image.fromarray(image.astype(np.uint8)).save(
-        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_img.png'.format(file_names_val[i])),
-        format='PNG')
-    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
-        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_pred_color.png'.format(file_names_val[i])),
-        format='PNG')
-    PIL.Image.fromarray(target_color.astype(np.uint8)).save(
-        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_mask_color.png'.format(file_names_val[i])),
-        format='PNG')
+    PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path + r'/{}_img.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path ,  r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(target_color.astype(np.uint8)).save(os.path.join(save_path , r'/{}_mask_color.png'.format(file_names_val[i])),format='PNG')
+    # PIL.Image.fromarray(image.astype(np.uint8)).save(
+    #     os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_img.png'.format(file_names_val[i])),
+    #     format='PNG')
+    # PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+    #     os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_pred_color.png'.format(file_names_val[i])),
+    #     format='PNG')
+    # PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+    #     os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_mask_color.png'.format(file_names_val[i])),
+    #     format='PNG')
 #    PIL.Image.fromarray(pred.astype(np.uint8)).save(
 #        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_pred.png'.format(file_names_val[i])),
 #        format='PNG')
