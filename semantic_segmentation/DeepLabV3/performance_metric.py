@@ -74,7 +74,7 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]][pred_crop == 1] = 255
             if np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0:
                 target_tp[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 255
-                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0x
+                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0
                 target_tp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
                 target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
                 target_tp[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 255
@@ -99,10 +99,12 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 
 """Arguments"""
 
-Villads = True
+Villads = False
+HPC = True
 model_name = 'DeepLab'
 n_classes = 1
 resize = False
+size = 1024
 scale = 0.5
 binary = True
 device = torch.device('cpu')
@@ -115,6 +117,13 @@ if Villads:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
     model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
+elif HPC:
+    path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
+    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
+    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
+    path_meta_data = r'samples/model_comparison.csv'
+    save_path = r'/work3/s173934/Bachelorprojekt/exp_results/data_all_classes/resized_model'          ###
+    path_model = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
