@@ -14,6 +14,6 @@
 echo "Running script..."
 cd /zhome/87/9/127623/BachelorProject
 source test-env/bin/activate
-cd /BachelorProject/cropped_data/Bachelor-Criterion-AI
+cd /zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI
 python3 semantic_segmentation/DeepLabV3/performance_metric.py
 echo "Done"
