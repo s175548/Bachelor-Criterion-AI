@@ -1,3 +1,7 @@
+import sys
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI/semantic_segmentation')
+
 from data_import.data_loader import DataLoader
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
