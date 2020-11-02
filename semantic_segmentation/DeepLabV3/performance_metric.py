@@ -127,7 +127,7 @@ elif HPC:
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/exp_results/data_all_classes/resized_model'          ###
-    path_model = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
+    model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"

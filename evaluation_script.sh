@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J eval
-#BSUB -o eval_%J.out
+#BSUB -J version_eval
+#BSUB -o version_eval_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
