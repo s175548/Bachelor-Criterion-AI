@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py 0.01 resnet50 SGD full
+python3 object_detect/train_hpc.py 0.01 resnet50 SGD full empty crop
 echo "Done"

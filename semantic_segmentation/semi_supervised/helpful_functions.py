@@ -36,6 +36,8 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         parser.add_argument('experiment description', metavar='description',default='semi_supervised', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str,default = 'semi_supervised', nargs='+',help='a save folder for the training loop')
         parser.add_argument('binary_setup', default=True, type=boolean_string, nargs='+', help='binary or multiclass')
+        parser.add_argument('semi_supervised', default=True, type=boolean_string, nargs='+', help='semi_supervised')
+
         args = vars(parser.parse_args())
 
         lr = args['learning rate'][0]
@@ -44,6 +46,7 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         model_name = args['model name'][0]
         exp_descrip = args['experiment description'][0]
         save_folder = args['folder name'][0]
+        semi_supervised = args['semi_supervised'][0]
         binary = args['binary_setup'][0]
         print("train_scope: ", train_scope)
         print("save folder: ", save_folder)
@@ -62,6 +65,7 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
+        return path_original_data, path_meta_data, save_path, path_model, path_train, path_val, dataset_path_ul, model_name,exp_descrip,semi_supervised
 
 
     elif Villads:
@@ -108,12 +112,14 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
     file_names_val = file_names_val[shuffled_index]
     file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+    transform_function = et.ExtCompose([
+        et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),
+        et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    transform_function_val = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtEnhanceContrast(), et.ExtToTensor(),
-         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+    transform_function_val = et.ExtCompose([
+        et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),
+        et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     if binary:
         color_dict = data_loader.color_dict_binary

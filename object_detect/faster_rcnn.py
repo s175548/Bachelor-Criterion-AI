@@ -99,7 +99,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "optimizer_state": optimizer.state_dict(),
             "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
-            "best_map_w_score": best_score,
+            "best_map_top5_score": best_score,
             "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -145,33 +145,44 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
 
 def get_transform_fun(resized=False):
     if resized == True:
-        transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                            et.ExtRandomCrop(scale=0.7,size=None),
-                                            et.ExtEnhanceContrast(),
-                                            et.ExtRandomCrop(size=2048, pad_if_needed=True),
-                                            et.ExtResize(scale=0.5),
-                                            et.ExtRandomHorizontalFlip(p=0.5),
-                                            et.ExtRandomCrop(size=512),
-                                            et.ExtRandomVerticalFlip(p=0.5),
-                                            et.ExtToTensor()])
+        transform_function_train = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                        et.ExtResize(scale=0.33,size=None),
+                                        et.ExtRandomCrop(scale=0.7,size=None),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtRandomCrop(size=472,pad_if_needed=True),
+                                        et.ExtRandomHorizontalFlip(p=0.5),
+                                        et.ExtRandomVerticalFlip(p=0.5),
+                                        et.ExtToTensor()])
+        transform_function_val = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                        et.ExtResize(scale=0.33,size=None),
+                                        et.ExtRandomCrop(scale=0.7,size=None),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtRandomHorizontalFlip(p=0.5),
+                                        et.ExtRandomVerticalFlip(p=0.5),
+                                        et.ExtToTensor()])
     else:
-        transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                            et.ExtRandomHorizontalFlip(p=0.5),
-                                            et.ExtRandomVerticalFlip(p=0.5),
-                                            et.ExtEnhanceContrast(),
-                                            et.ExtToTensor()])
-    return transform_function
+        transform_function_train = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                                  et.ExtRandomHorizontalFlip(p=0.5),
+                                                  et.ExtRandomVerticalFlip(p=0.5),
+                                                  et.ExtEnhanceContrast(),
+                                                  et.ExtToTensor()])
+        transform_function_val = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                                et.ExtRandomHorizontalFlip(p=0.5),
+                                                et.ExtRandomVerticalFlip(p=0.5),
+                                                et.ExtEnhanceContrast(),
+                                                et.ExtToTensor()])
+    return transform_function_train, transform_function_val
 
 #transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC=True
+HPC=False
 tick_bite=False
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
 binary=True
-all_classes=True
+scale=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -188,39 +199,17 @@ if __name__ == '__main__':
         save_path_model = os.path.join(base_path,model_folder)
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
-
-        parser = argparse.ArgumentParser(description='Take learning rate parameter')
-        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
-        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
-        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
-        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
-        parser.add_argument('scale', metavar='scale', type=str, nargs='+',help='choose either resize or crop')
-        args = vars(parser.parse_args())
-
-        model_name = args['model name'][0]
-        setup = args['scale'][0]
-        if setup == 'resize':
-            scale = True
-        else:
-            scale = False
         if binary:
             if scale:
                 path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
                 path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
                 save_fold = 'full_scale/'
-                dataset = "all_binary_scale"
+                dataset = "binary"
             else:
-                if all_classes:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                    save_fold = 'all_bin/'
-                    dataset = "all_binary"
-                else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-                    save_fold = 'binary/'
-                    dataset = "binary"
+                path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+                path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                save_fold = 'binary/'
+                dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -231,6 +220,16 @@ if __name__ == '__main__':
             path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
             save_fold = 'multi/'
             dataset = "multi"
+
+        parser = argparse.ArgumentParser(description='Take learning rate parameter')
+        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
+        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
+        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
+        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
+        args = vars(parser.parse_args())
+
+        model_name = args['model name'][0]
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
         save_folder = os.path.join(path_save, model_name)
@@ -260,7 +259,7 @@ if __name__ == '__main__':
             path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
             path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
             dataset = "multi"
-
+        bbox_type = 'empty'
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
 
@@ -301,22 +300,22 @@ if __name__ == '__main__':
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
-        transform_function = get_transform_fun(resized=scale)
+        transform_function_train, transform_function_val = get_transform_fun()
 
         if bbox_type == 'empty':
-            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
                                     bbox=True, multi=multi,
-                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+                                    transform=transform_function_train, color_dict=color_dict, target_dict=target_dict)
+            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
                                   bbox=True, multi=multi,
-                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                                  transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
         else:
             train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
-                                    transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                                    transform=transform_function_train, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                                   bbox=True, multi=multi,
-                                  transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                                  transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
     else:
         file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
@@ -481,7 +480,6 @@ if __name__ == '__main__':
     print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
     print("Top 5 mAP with nms: ", best_scores)
-
 
     if HPC:
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,

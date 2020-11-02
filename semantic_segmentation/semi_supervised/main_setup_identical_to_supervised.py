@@ -30,10 +30,10 @@ from semantic_segmentation.DeepLabV3.Training_windows import my_def_collate
 from semantic_segmentation.semi_supervised.helpful_functions import get_paths, get_data_loaders,get_data_loaders_unlabelled
 from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
-def main():
+def main(semi_supervised = True):
     #batch_size=16
     step_size = 10000
-    batch_size = 16 #
+    batch_size = 8 #
     val_batch_size = 4
     class_number=3
     lr_g=2e-4
@@ -44,7 +44,7 @@ def main():
     max_iter=20000
     epoch_max = 100
     binary = True
-    HPC = False
+    HPC = True
 
     # Setup random seed
     random_seed = 42
@@ -52,7 +52,12 @@ def main():
     np.random.seed(random_seed)
     random.seed(random_seed)
 
-    path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul = get_paths(binary,HPC,False,False)
+    if HPC:
+        path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised = get_paths(binary,HPC,False,False)
+    else:
+        path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
+        model_name = 'DeepLab'
+        exp_descrip = ''
     model_s_path=os.path.join(save_path,r'model.pt')
     model_g_spath=os.path.join(save_path,r'model_g.pt')
     ################### update lr ###################
@@ -70,7 +75,6 @@ def main():
     del _
 
     ################### build model ###################
-    model_name = 'MobileNet'
     model_g = generator(class_number)
     model_d_dict = discriminator(model=model_name,n_classes=class_number)
     model_d = model_d_dict[model_name]
@@ -110,7 +114,8 @@ def main():
 
     ################### iter train ###################
     epoch = 1
-    while epoch < epoch_max:
+    iter = 0
+    while epoch <= epoch_max:
         loss_g_v=0
         loss_d_v=0
         running_loss = 0
@@ -122,8 +127,10 @@ def main():
         # labeled data
         try:
             _,batch=next(trainloader_iter)
+            iter +=1
         except:
             epoch += 1
+            iter = 1
             print("Epoch",epoch)
             trainloader_iter=enumerate(trainloader)
             _,batch=next(trainloader_iter)
@@ -133,51 +140,62 @@ def main():
         labels=Variable(labels).cuda()
 
         # unlabeled data
-        try:
-            _,batch_nl=next(trainloader_nl_iter)
-        except:
-            trainloader_nl_iter=enumerate(trainloader_nl)
-            _,batch_nl=next(trainloader_nl_iter)
+        if semi_supervised:
+            try:
+                _,batch_nl=next(trainloader_nl_iter)
+            except:
+                trainloader_nl_iter=enumerate(trainloader_nl)
+                _,batch_nl=next(trainloader_nl_iter)
 
-        images_nl=batch_nl
-        images_nl = images_nl[0]
-        images_nl=Variable(images_nl).cuda()
-        if images.shape[0] != images_nl.shape[0]:
-            continue
+            images_nl=batch_nl
+            images_nl = images_nl[0]
+            images_nl=Variable(images_nl).cuda()
+            if images.shape[0] != images_nl.shape[0]:
+                continue
         # noise data
-        noise = torch.rand([images.shape[0],50*50]).uniform_().cuda()
+            noise = torch.rand([images.shape[0],50*50]).uniform_().cuda()
         # predict
-        pred_labeled = model_d(images.float())
-        pred_unlabel = model_d(images_nl.float())
-        pred_fake    = model_d( model_g(noise) )
+        if model_name == 'DeepLab':
+            pred_labeled = model_d(images.float())['out']
+        else:
+            pred_labeled = model_d(images.float())
+
+        if semi_supervised:
+            pred_unlabel = model_d(images_nl.float())
+            pred_fake    = model_d( model_g(noise) )
         # compute loss
 #        loss_labeled = Loss_label(pred_labeled,labels)
         criterion = nn.CrossEntropyLoss(ignore_index=class_number+2, reduction='mean')
         loss_labeled = criterion(pred_labeled, torch.tensor(labels, dtype=torch.long,device='cuda'))
-        loss_unlabel = Loss_unlabel(pred_unlabel)
-        loss_fake    = Loss_fake(pred_fake)
+        if semi_supervised:
+            loss_unlabel = Loss_unlabel(pred_unlabel)
+            loss_fake    = Loss_fake(pred_fake)
 
-        gamma_one = gamma_two = 0.4
-        loss_d       = loss_labeled + gamma_one*loss_fake + gamma_two*loss_unlabel
+        if semi_supervised:
+            gamma_one = gamma_two = 0.4
+            loss_d       = loss_labeled + gamma_one*loss_fake + gamma_two*loss_unlabel
+        else:
+            loss_d = loss_labeled
         loss_d_v += loss_d.data.cpu().numpy().item()
         loss_d.backward()
         optimizer_d.step()
         scheduler_d.step() ### check if it makes sense
 
         ####### train G ##################
-        optimizer_g.zero_grad()
-        #adjust_lr(optimizer_g,lr_g,iters,max_iter,power)
+        if semi_supervised:
+            optimizer_g.zero_grad()
+            #adjust_lr(optimizer_g,lr_g,iters,max_iter,power)
 
-        # predict
-        pred_fake    = model_d( model_g(noise) )
-        loss_g    = -Loss_fake(pred_fake)
-        loss_g_v += loss_g.data.cpu().numpy().item()
-        loss_g.backward()
-        optimizer_g.step()
-        scheduler_g.step()
+            # predict
+            pred_fake    = model_d( model_g(noise) )
+            loss_g    = -Loss_fake(pred_fake)
+            loss_g_v += loss_g.data.cpu().numpy().item()
+            loss_g.backward()
+            optimizer_g.step()
+            scheduler_g.step()
 
         # output loss value, and validate
-        if (epoch%2 == 0):
+        if (epoch%2 == 0 and iter==1):
             print('epoch={} , loss_g={} , loss_d={}'.format(epoch,loss_g_v,loss_d_v))
             print("validation...")
             model_d.eval()
@@ -193,20 +211,11 @@ def main():
         model_d.train()
 
         # save model
-        if epoch%25==0:
-            print(epoch)
-            if epoch%200==0:
-                # fake_dat = model_g(noise)[0].cpu().detach().numpy()
-                # fake_img = Image.fromarray((fake_dat * 255).reshape(256, 256, -1).astype('uint8'))
-                # Image._show(fake_img)
-
-                torch.save(model_d.state_dict(),model_s_path)
-                torch.save(model_g.state_dict(),model_g_spath)
     torch.save(model_d.state_dict(),model_s_path)
     torch.save(model_g.state_dict(),model_g_spath)
 
 
 if __name__ == '__main__':
-    main()
+    main(semi_supervised=True)
 
 
