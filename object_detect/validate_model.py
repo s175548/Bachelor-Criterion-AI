@@ -18,7 +18,7 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
 
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=512),
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
                                     et.ExtRandomHorizontalFlip(p=0.5),
                                     et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtEnhanceContrast(),
@@ -30,7 +30,7 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-scale=True
+scale=False
 multi=False
 
 if __name__ == '__main__':
@@ -109,34 +109,46 @@ if __name__ == '__main__':
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
+
     model_names = ['mobilenet', 'resnet50']
-    model_name = model_names[0]
-    model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((32,), (64,), (128,), (256,), (512,)))
-    PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Models\binary\mobilenet_binary_SGD.pt'
+    model_name = model_names[1]
+    model = define_model(num_classes=2, net=model_name,
+                         data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
+    PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Models\binary\resnet50_full_empty_0.01_binarySGD.pt'
     loaded_model = torch.load(PATH)
     model.load_state_dict(loaded_model["model_state"])
     model.to(device)
     model.eval()
+    save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
 
-    val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model,model_name=model_name,
+    val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model, model_name=model_name,
                                                             data_loader=val_loader,
                                                             device=device,
-                                                            path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary\val',
+                                                            path_save=save_path, bbox_type='empty',
                                                             val=True)
     print("Overall best with nms: ", val_mAP2)
     print("Overall best without nms is: ", val_mAP)
     print("Stats for no nms:")
-    print("Overall best tp: ", cmatrix_val2["true_positives"], " out of ", cmatrix_val2["total_num_defects"], " with ",
-          cmatrix_val2["false_positives"], " false positives, ", cmatrix_val2["false_negatives"], " false negatives and ",
+    print("Overall best tp: ", cmatrix_val2["true_positives"], " out of ", cmatrix_val2["total_num_defects"],
+          " with ",
+          cmatrix_val2["false_positives"], " false positives, ", cmatrix_val2["false_negatives"],
+          " false negatives and ",
           cmatrix_val2["true_negatives"], "true negatives")
     print("Stats for nms:")
-    print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"], " with ",
-          cmatrix_val["false_positives"], " false positives, ", cmatrix_val["false_negatives"], " false negatives and ",
+    print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"],
+          " with ",
+          cmatrix_val["false_positives"], " false positives, ", cmatrix_val["false_negatives"],
+          " false negatives and ",
           cmatrix_val["true_negatives"], "true negatives")
-    print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ", cmatrix_val["bad_leather"],
+    print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ",
+          cmatrix_val["bad_leather"],
           " with bad leather")
-    #train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,data_loader=train_loader,device=device,
-    # path_save = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary\train',val=False)
+    
+    train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,
+                                                            data_loader=train_loader,
+                                                            device=device,
+                                                            path_save = save_path,bbox_type='empty',
+                                                            val=False)
 
 
 

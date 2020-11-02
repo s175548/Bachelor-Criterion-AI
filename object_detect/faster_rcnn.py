@@ -390,6 +390,7 @@ if __name__ == '__main__':
                                                    gamma=0.5)
     loss_train = []
     loss_val = []
+    tp_list, fp_list, tn_list, fn_list = [], [], [], []
     risk = False
     best_score = 0
     best_scores = [0, 0, 0, 0, 0]
@@ -467,6 +468,10 @@ if __name__ == '__main__':
             cmatrix2["highest_tn"] = conf2["true_negatives"]
         if mAP2 > best_map2:
             best_map2 = mAP2
+        tp_list.append(conf["true_positives"])
+        fp_list.append(conf["false_positives"])
+        fn_list.append(conf["false_negatives"])
+        tn_list.append(conf["true_negatives"])
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
     print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train, "epoch ", best_epoch)
@@ -497,3 +502,27 @@ if __name__ == '__main__':
                            val=False,bbox=False)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
                   val_loss=loss_val,exp_description=model_name)
+
+        if HPC:
+            val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model, model_name=model_name,
+                                                                    data_loader=val_loader,
+                                                                    device=device,
+                                                                    path_save=save_path, bbox_type='empty',
+                                                                    val=True)
+            print("Overall best with nms: ", val_mAP2)
+            print("Overall best without nms is: ", val_mAP)
+            print("Stats for no nms:")
+            print("Overall best tp: ", cmatrix_val2["true_positives"], " out of ", cmatrix_val2["total_num_defects"],
+                  " with ",
+                  cmatrix_val2["false_positives"], " false positives, ", cmatrix_val2["false_negatives"],
+                  " false negatives and ",
+                  cmatrix_val2["true_negatives"], "true negatives")
+            print("Stats for nms:")
+            print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"],
+                  " with ",
+                  cmatrix_val["false_positives"], " false positives, ", cmatrix_val["false_negatives"],
+                  " false negatives and ",
+                  cmatrix_val["true_negatives"], "true negatives")
+            print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ",
+                  cmatrix_val["bad_leather"],
+                  " with bad leather")

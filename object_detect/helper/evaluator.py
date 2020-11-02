@@ -5,6 +5,7 @@ import torch
 from sklearn.metrics import average_precision_score
 import object_detect.helper.utils as utils
 import torchvision
+from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from PIL import Image
 
 def do_nms(boxes,scores,preds,threshold=0.3):
@@ -294,6 +295,21 @@ def get_iou_targets(boxes,targets,preds,labels,image,expand=256):
 
     return iou_list, iou_pred
 
+def mask_iou(boxes,mask):
+    #metrics = StreamSegMetrics(4)
+    #metrics.reset()
+    box_mask = np.copy(mask.cpu().numpy())
+    for box in boxes:
+        xmin, ymin, xmax, ymax = box.unbind(0)
+        for i in range(np.shape(box_mask)[0]):
+            for j in range(np.shape(box_mask)[1]):
+                if i >= xmin and i <= xmax:
+                    if j >= ymin and j <= ymax:
+                        box_mask[i,j] = 255
+    Image._show(Image.fromarray(mask.cpu().numpy()))
+    Image._show(Image.fromarray(box_mask))
+    #metrics.update(mask, preds)
+
 def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
     i = 0
@@ -432,10 +448,10 @@ def try_error():
         ac2 += acc2
 
 if __name__ == '__main__':
-        from object_detect.load_data import train_loader
+        from object_detect.load_data import val_loader
         device = torch.device('cpu')
         epoch = 1
-        data_loader = train_loader
+        data_loader = val_loader
         metric_logger = utils.MetricLogger(delimiter="  ")
         metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
         header = 'Epoch: [{}]'.format(epoch)
@@ -460,23 +476,11 @@ if __name__ == '__main__':
             scores2 = torch.tensor([0.7861], dtype=torch.float32)
             labels2 = torch.tensor([1], dtype=torch.int64)
             scores = torch.tensor([0.7861, 0.7633, 0.71, 0.6983, 0.45, 0.35, 0.33], dtype=torch.float32)
-            new_boxes, new_scores = get_non_maximum_supression(outputs,scores,iou_threshold=0.2)
+            new_boxes, new_scores, new_labels = get_non_maximum_supression(outputs2,scores2,labels2,iou_threshold=0.2)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
 
-            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[9]['boxes'].cpu(), labels=targets[9]['labels'].cpu(), image=images[9])
+            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[0]['boxes'].cpu(), preds=new_labels, labels=targets[0]['labels'].cpu(), image=images[0])
 
-           # df, AP, AP2 = get_map2(outputs2, targets[9]['boxes'], scores2,
-           #                                labels2, targets[9]['labels'].cpu(), iou_list=iou, threshold=0.3)
-
-            acc_dict = classifier_metric(iou, iou_pred, new_scores, targets[9]['boxes'].cpu(),labels=targets[9]['labels'].cpu())
-            true_positives += acc_dict["Detected"]
-            false_negatives += acc_dict["Defects"]-acc_dict["Detected"]
-            false_positives += acc_dict["FP"]
-            total_num_defects += acc_dict["Defects"]
-            if acc_dict["Defects"] == 0:
-                if acc_dict["FP"] == 0:
-                    true_negatives += 1
-
-            jo = 1
+            mask_iou(outputs,masks[i])
             #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)
             break

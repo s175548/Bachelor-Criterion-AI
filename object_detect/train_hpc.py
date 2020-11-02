@@ -285,7 +285,10 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 16
+            if scale:
+                batch_size = 8
+            else:
+                batch_size = 16
             val_batch_size = 4
         else:
             batch_size = 8
