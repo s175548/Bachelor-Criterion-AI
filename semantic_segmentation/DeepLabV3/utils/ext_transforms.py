@@ -143,7 +143,7 @@ class ExtCenterCrop(object):
         Returns:
             PIL Image: Cropped image.
         """
-        self.size=(min(img.height,img.width),min(img.height,img.width))
+#        self.size=(min(img.height,img.width),min(img.height,img.width))
         return F.center_crop(img, self.size), F.center_crop(lbl, self.size)
 
     def __repr__(self):
