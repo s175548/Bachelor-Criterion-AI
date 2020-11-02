@@ -392,6 +392,8 @@ if __name__ == '__main__':
     loss_train = []
     loss_val = []
     risk = False
+    best_score = 0
+    best_scores = [0, 0, 0, 0, 0]
     overall_best = 0
     best_map = 0
     best_map2 = 0

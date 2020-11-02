@@ -99,7 +99,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "optimizer_state": optimizer.state_dict(),
             "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
-            "best_map_w_score": best_score,
+            "best_map_top5_score": best_score,
             "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -259,7 +259,7 @@ if __name__ == '__main__':
             path_train = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\train'
             path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\multi\test'
             dataset = "multi"
-
+        bbox_type = 'empty'
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
 
@@ -303,10 +303,10 @@ if __name__ == '__main__':
         transform_function_train, transform_function_val = get_transform_fun()
 
         if bbox_type == 'empty':
-            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
                                     bbox=True, multi=multi,
                                     transform=transform_function_train, color_dict=color_dict, target_dict=target_dict)
-            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
                                   bbox=True, multi=multi,
                                   transform=transform_function_val, color_dict=color_dict, target_dict=target_dict)
         else:
@@ -391,6 +391,8 @@ if __name__ == '__main__':
     loss_train = []
     loss_val = []
     risk = False
+    best_score = 0
+    best_scores = [0, 0, 0, 0, 0]
     overall_best = 0
     best_map = 0
     best_map2 = 0
@@ -428,6 +430,15 @@ if __name__ == '__main__':
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
+        if mAP > best_score:  # save best model
+            best_score = mAP
+            best_scores.append(best_score)
+            best_scores.sort(reverse=True)
+            best_scores = best_scores[:5]
+        elif mAP > min(best_scores):
+            best_scores.append(mAP)
+            best_scores.sort(reverse=True)
+            best_scores = best_scores[:5]
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
@@ -458,7 +469,7 @@ if __name__ == '__main__':
             best_map2 = mAP2
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_trai, "epoch ", best_epoch)
+    print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train, "epoch ", best_epoch)
     print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
     print("Dataset: ", dataset)
     print("Bbox_type: ", bbox_type)
@@ -468,12 +479,13 @@ if __name__ == '__main__':
     print("Stats for no nms")
     print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
+    print("Top 5 mAP with nms: ", best_scores)
 
     if HPC:
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}_{}_{}".format(model_name, layers_to_train, bbox_type, lr, dataset), optim_name=optim,
                    n_epochs=best_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
+                   scheduler=lr_scheduler, best_map=best_map, best_score=best_scores, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=val_loader, device=device,
