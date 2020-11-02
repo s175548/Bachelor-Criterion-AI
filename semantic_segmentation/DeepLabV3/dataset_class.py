@@ -18,7 +18,7 @@ class LeatherData(data.Dataset):
 
     def __init__(self,
                  path_mask,path_img,list_of_filenames,bbox=False,multi=False,
-                 transform=None,color_dict=None,target_dict=None):
+                 transform=None,color_dict=None,target_dict=None,unlabelled =False):
 
 
         self.path_mask = path_mask
@@ -28,6 +28,7 @@ class LeatherData(data.Dataset):
         self.target_dict=target_dict
         self.bbox = bbox
         self.multi = multi
+        self.unlabelled = unlabelled
 
 
         file_names_mask=os.listdir(self.path_mask)
@@ -45,6 +46,12 @@ class LeatherData(data.Dataset):
         Returns:
             tuple: (image, target) where target is the image segmentation.
         """
+        if self.unlabelled:
+            img = Image.open(self.images[index]).convert('RGB')
+            target = Image.fromarray(np.empty( (img.size)) )#target is not needed
+            img, target = self.transform(img,target)
+            return img,target
+
         img = Image.open(self.images[index]).convert('RGB')
         target = np.array(Image.open(self.masks[index]))
         mask_for_bbox = Image.open(self.masks[index]).convert('L')

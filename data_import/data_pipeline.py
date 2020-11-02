@@ -18,10 +18,8 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
 
     if visibility_scores!= "All":
         visibility_idx=data_loader.get_visibility_score(visibility_scores)
-        idx=visibility_idx
     if labels != "All":
         label_idx=data_loader.get_index_for_label(labels)
-        idx=label_idx
     if (labels != "All") and (visibility_scores != "All"):
         idx=np.intersect1d(label_idx,visibility_idx)
     if idx_to_consider != 'All':
@@ -30,8 +28,8 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
 
     for i in idx:
         i = int(i)
-        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary,ignore_good=ignore_good)
-        img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i)
+        img,mask = data_loader.get_image_and_labels([i],labels="All",make_binary=make_binary,ignore_good=ignore_good)
+        img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i,patch_size=1024)
         if crop==True:
             for k in range(len(img_crops)):
                 if exclude_no_mask_crops:

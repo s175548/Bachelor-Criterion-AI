@@ -143,7 +143,7 @@ class ExtCenterCrop(object):
         Returns:
             PIL Image: Cropped image.
         """
-        self.size=(min(img.height,img.width),min(img.height,img.width))
+#        self.size=(min(img.height,img.width),min(img.height,img.width))
         return F.center_crop(img, self.size), F.center_crop(lbl, self.size)
 
     def __repr__(self):
@@ -460,7 +460,6 @@ class ExtRandomCrop(object):
             size = (self.size, self.size)
         else:
             size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
-
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
         if self.padding > 0:
             img = F.pad(img, self.padding)
