@@ -460,7 +460,6 @@ class ExtRandomCrop(object):
             size = (self.size, self.size)
         else:
             size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
-
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
         if self.padding > 0:
             img = F.pad(img, self.padding)

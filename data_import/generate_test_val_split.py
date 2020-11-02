@@ -28,8 +28,6 @@ train,val=data_loader.test_training_split()
 """if you want to split by the skin"""
 #train,val=data_loader.test_training_split_skin()
 
-import_data_and_mask(data_loader,idx_to_consider=val,
-                    path=save_path_val, make_binary=True)
+import_data_and_mask(data_loader,idx_to_consider=val,path=save_path_val, make_binary=True)
 
-import_data_and_mask(data_loader,idx_to_consider=train,
-                     path=save_path_train, make_binary=True)
+import_data_and_mask(data_loader,idx_to_consider=train,path=save_path_train, make_binary=True)
