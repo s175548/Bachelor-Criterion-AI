@@ -15,7 +15,9 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from data_import.data_loader import convert_to_image
 
 
-def error_count(idx, pred,target, data_loader, labels,errors,false_positives,metric,reize=False):
+def error_count(idx, pred_color,target_color, data_loader, labels,errors,false_positives,metric,reize=False):
+    pred=pred_color.copy()
+    target=target_color.copy()
     if np.sum(target==1)!=0:
         masks = data_loader.get_separate_segmentations(
             os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels)
@@ -24,14 +26,16 @@ def error_count(idx, pred,target, data_loader, labels,errors,false_positives,met
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
+            mask = F.center_crop(PIL.Image.fromarray(mask), output_size=256)
+            mask = np.array(mask)
             resize_shape = (int(mask.shape[0] * 0.33), int(mask.shape[1] * 0.33))
             if reize:
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
             mask=np.array(mask)
             row, col = np.where(mask != 0)
-            xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, resize_shape[0]))
+            xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
             xdim_s.append(xdim)
-            ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, resize_shape[1]))
+            ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, mask.shape[1]))
             ydim_s.append(ydim)
             mask = mask[xdim[0]:xdim[1], ydim[0]:ydim[1]]
             defect_found = int(np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0)
@@ -46,18 +50,57 @@ def error_count(idx, pred,target, data_loader, labels,errors,false_positives,met
         for xdim, ydim in zip(xdim_s, ydim_s):
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
             target[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
+    else:
+        xdim_s=None
+        ydim_s=None
     if np.sum(pred==1)>0:
         false_positives+=1
     target[target==2]=0
     metric[2].update(target,pred)
-    return errors,false_positives,metric
+    target_color[target_color==2]=0
+    target_color,pred_color=color_target_pred(target_color, pred_color,pred, xdim_s, ydim_s)
+    return errors,false_positives,metric, target_color,pred_color
+
+def color_target_pred(target,pred,pred_false_pos,xdim_s,ydim_s):
+    target_tp=np.zeros(target.shape)
+    target_fp=np.zeros(target.shape)
+    fill=10
+    if xdim_s != None:
+        for xdim, ydim in zip(xdim_s, ydim_s):
+            pred_crop=pred[xdim[0]:xdim[1], ydim[0]:ydim[1]]
+            pred[xdim[0]:xdim[1], ydim[0]:ydim[1]][pred_crop==1]=255
+            if np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] !=0)>0:
+                target_tp[xdim[0]:xdim[1],ydim[0]:ydim[0]+fill]=255
+                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill]=0
+                target_tp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
+                target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
+                target_tp[xdim[0]:xdim[0]+fill, ydim[0]:ydim[1]] = 255
+                target[xdim[0]:xdim[0]+fill, ydim[0]:ydim[1]] = 0
+                target_tp[xdim[1]-fill:xdim[1], ydim[0]:ydim[1]] = 255
+                target[xdim[1]-fill:xdim[1], ydim[0]:ydim[1]] = 0
+            else:
+                target_fp[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 255
+                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0
+                target_fp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
+                target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
+                target_fp[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 255
+                target[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 0
+                target_fp[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 255
+                target[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 0
+
+    pred_false_pos[pred_false_pos==1]=255
+    pred_rgb=np.dstack((pred_false_pos,pred,np.zeros(pred.shape)))
+    target_rgb=np.dstack((target_fp,target_tp,target*255))
+    return target_rgb,pred_rgb
+
+
 
 """Arguments"""
 
 Villads = True
-model_name = 'MobileNet'
+model_name = 'DeepLab'
 n_classes = 1
-resize=True
+resize=False
 scale=0.5
 binary = True
 device = torch.device('cpu')
@@ -71,7 +114,7 @@ if Villads:
     path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
     path_meta_data = r'samples/model_comparison.csv'
     save_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
-    model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/MobileNet_res_exp0.01.pt'
+    model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -101,18 +144,17 @@ file_names_train = file_names_train[file_names_train != ".DS_S"]
 file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-if resize:
-    transform_function = et.ExtCompose([et.ExtResize(scale=scale),
+
+transform_function = et.ExtCompose([et.ExtCenterCrop(size=256),
                                         et.ExtEnhanceContrast(),
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-else:
-    transform_function = et.ExtCompose([
-                                            et.ExtEnhanceContrast(),
-                                            et.ExtToTensor(),
-                                            et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-
+transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=1024),
+                                        et.ExtResize(scale=scale),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtToTensor(),
+                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
@@ -142,7 +184,7 @@ if data_set == 'train':
 elif data_set == 'val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
-        if i==5:
+        if i==15:
             break
 
 
@@ -169,7 +211,7 @@ for i in range(len(train_images)):
     pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
     target = target.squeeze().numpy()
 
-    errors,false_positives,metric=error_count(int(file_names_val[i]), pred.copy(),target.copy(), data_loader, labels,errors,false_positives,metrics,resize)
+    errors,false_positives,metric,target_color,pred_color=error_count(int(file_names_val[i]), pred.copy(),target.copy(), data_loader, labels,errors,false_positives,metrics,resize)
 
     target = convert_to_image(target.squeeze(), color_dict, target_dict)
 
@@ -177,14 +219,20 @@ for i in range(len(train_images)):
     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
     PIL.Image.fromarray(image.astype(np.uint8)).save(
         os.path.join(save_path, r'binary', model_name, data_set+'1', r'{}_img.png'.format(file_names_val[i])), format='PNG')
-    PIL.Image.fromarray(pred.astype(np.uint8)).save(
-        os.path.join(save_path, r'binary', model_name, data_set+'1', r'{}_pred.png'.format(file_names_val[i])), format='PNG')
-    PIL.Image.fromarray(target.astype(np.uint8)).save(
-        os.path.join(save_path, r'binary', model_name, data_set+'1', r'{}_mask.png'.format(file_names_val[i])), format='PNG')
+    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+        os.path.join(save_path, r'binary', model_name, data_set+'1', r'{}_pred_color.png'.format(file_names_val[i])), format='PNG')
+    PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+        os.path.join(save_path, r'binary', model_name, data_set+'1', r'{}_mask_color.png'.format(file_names_val[i])), format='PNG')
+#    PIL.Image.fromarray(pred.astype(np.uint8)).save(
+#        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_pred.png'.format(file_names_val[i])),
+#        format='PNG')
+#    PIL.Image.fromarray(target.astype(np.uint8)).save(
+#        os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_mask.png'.format(file_names_val[i])),
+#        format='PNG')
 
 labels=['Insect bite','Binary','Good Area']
 new_list=[label+'\n'+'\n'.join([f"{name}, {performance}" for name, performance in metric[i].get_results().items()]) for i,label in enumerate(labels)]
 string='\n\n'.join(new_list)+f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}'
-f=open(os.path.join(save_path,'performance.txt'),'w')
+f=open(os.path.join(save_path,'performance'),'w')
 f.write(string)
 

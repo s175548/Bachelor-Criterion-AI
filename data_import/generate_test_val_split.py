@@ -23,11 +23,13 @@ else:
     save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
     save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
 
-train,val=data_loader.test_training_split()
+train,val=data_loader.test_training_split(villads_dataset=False)
 
 """if you want to split by the skin"""
 #train,val=data_loader.test_training_split_skin()
 
-import_data_and_mask(data_loader,idx_to_consider=val,path=save_path_val, make_binary=True)
+import_data_and_mask(data_loader,idx_to_consider=val,
+                    path=save_path_val, make_binary=True,visibility_scores=[2,3],crop=True)
 
-import_data_and_mask(data_loader,idx_to_consider=train,path=save_path_train, make_binary=True)
+import_data_and_mask(data_loader,idx_to_consider=train,
+                     path=save_path_train, make_binary=True,visibility_scores=[2,3],crop=True)

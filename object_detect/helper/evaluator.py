@@ -12,7 +12,7 @@ def do_nms(boxes,scores,preds,threshold=0.3):
     indicies2 = [i for i in range(len(boxes))]
     for i in range(1,len(boxes)):
         box = boxes[-i]
-        iou_list = check_iou(box=box,boxes=boxes[:-i])
+        iou_list = check_iou(box=box.cpu(),boxes=boxes[:-i].cpu())
         for iou in iou_list:
             if iou > threshold:
                 index = indicies2[-i]
@@ -366,13 +366,6 @@ def get_map2(boxes,target,scores,pred,labels,iou_list,threshold=0.3,print_state=
             mAP = 0
         if np.isnan(mAP2) == True:
             mAP2 = 0
-        if print_state==True:
-            print("boxes: ", boxes)
-            print("targets: ", target)
-            print("iou: ", iou_list)
-            print("scores: ", scores)
-            print("predictions: ", pred)
-            print("labels: ", labels)
         #if len(boxes) > 0:
         #print("boxes: ", boxes)
         #print("targets: ", target)

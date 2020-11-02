@@ -154,13 +154,16 @@ class DataLoader():
                 idx_list.append(idx)
         return idx_list
 
-    def test_training_split(self,p_value=[0.65,0.01]):
+    def test_training_split(self,p_value=[0.65,0.01],villads_dataset=True):
         train_idx=[]
         val_idx=[]
         y_thresh=p_value[0]*65000
         p_value.reverse()
-        idx_to_include=load_idx_to_include()
-        idx_to_include=np.intersect1d(idx_to_include,self.valid_annotations)
+        if villads_dataset:
+            idx_to_include=load_idx_to_include()
+            idx_to_include=np.intersect1d(idx_to_include,self.valid_annotations)
+        else:
+            idx_to_include=self.valid_annotations
         split=self.metadata_csv[0, 1].split('/')[2]
         for idx in idx_to_include[1:]:
             path = self.metadata_csv[idx, 1].split('/')
