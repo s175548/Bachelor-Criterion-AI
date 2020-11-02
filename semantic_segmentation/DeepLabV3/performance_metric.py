@@ -1,6 +1,8 @@
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
-sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI/semantic_segmentation')
+#sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
+#sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI/semantic_segmentation')
+
+sys.path.append('/zhome/db/f/128823/Bachelor/Bachelor-Criterion-AI')
 
 from data_import.data_loader import DataLoader
 import numpy as np
@@ -126,7 +128,7 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/work3/s173934/Bachelorprojekt/exp_results/evaluation/data_all_classes/resized_model'          ###
+    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'          ###
     model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
