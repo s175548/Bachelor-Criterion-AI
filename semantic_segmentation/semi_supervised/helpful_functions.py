@@ -170,6 +170,6 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
         target_dict = data_loader.get_target_dict(labels)
         annotations_dict = data_loader.annotations_dict
 
-    trainloader_nl_dst = LeatherData(path_mask=dataset_path_unlabelled, path_img=dataset_path_unlabelled,list_of_filenames=file_names_train,transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+    trainloader_nl_dst = LeatherData(path_mask=dataset_path_unlabelled, path_img=dataset_path_unlabelled,list_of_filenames=file_names_train,transform=transform_function, color_dict=color_dict, target_dict=target_dict,unlabelled=True)
     trainloader_nl = data.DataLoader(trainloader_nl_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     return trainloader_nl, trainloader_nl_dst

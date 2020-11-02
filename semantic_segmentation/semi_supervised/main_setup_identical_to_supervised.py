@@ -33,7 +33,7 @@ from semantic_segmentation.DeepLabV3.Training_windows import validate
 def main(semi_supervised = True):
     #batch_size=16
     step_size = 10000
-    batch_size = 8 #
+    batch_size = 4 #
     val_batch_size = 4
     class_number=3
     lr_g=2e-4
@@ -115,6 +115,7 @@ def main(semi_supervised = True):
     ################### iter train ###################
     epoch = 1
     iter = 0
+    print("starting training loop")
     while epoch <= epoch_max:
         loss_g_v=0
         loss_d_v=0
@@ -146,6 +147,7 @@ def main(semi_supervised = True):
             except:
                 trainloader_nl_iter=enumerate(trainloader_nl)
                 _,batch_nl=next(trainloader_nl_iter)
+                del _
 
             images_nl=batch_nl
             images_nl = images_nl[0]
@@ -161,8 +163,12 @@ def main(semi_supervised = True):
             pred_labeled = model_d(images.float())
 
         if semi_supervised:
-            pred_unlabel = model_d(images_nl.float())
-            pred_fake    = model_d( model_g(noise) )
+            if model_name == 'DeepLab':
+                pred_unlabel = model_d(images_nl.float())['out']
+                pred_fake    = model_d( model_g(noise) )['out']
+            else:
+                pred_unlabel = model_d(images_nl.float())
+                pred_fake    = model_d( model_g(noise) )
         # compute loss
 #        loss_labeled = Loss_label(pred_labeled,labels)
         criterion = nn.CrossEntropyLoss(ignore_index=class_number+2, reduction='mean')
@@ -187,7 +193,10 @@ def main(semi_supervised = True):
             #adjust_lr(optimizer_g,lr_g,iters,max_iter,power)
 
             # predict
-            pred_fake    = model_d( model_g(noise) )
+            if model_name=='DeepLab':
+                pred_fake    = model_d( model_g(noise) )['out']
+            else:
+                pred_fake    = model_d( model_g(noise) )
             loss_g    = -Loss_fake(pred_fake)
             loss_g_v += loss_g.data.cpu().numpy().item()
             loss_g.backward()
