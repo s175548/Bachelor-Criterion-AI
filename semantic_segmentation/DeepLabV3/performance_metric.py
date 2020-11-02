@@ -74,7 +74,7 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]][pred_crop == 1] = 255
             if np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0:
                 target_tp[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 255
-                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0x
+                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0
                 target_tp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
                 target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
                 target_tp[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 255
