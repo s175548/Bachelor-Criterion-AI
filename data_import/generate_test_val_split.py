@@ -29,7 +29,7 @@ train,val=data_loader.test_training_split(villads_dataset=False)
 #train,val=data_loader.test_training_split_skin()
 
 import_data_and_mask(data_loader,idx_to_consider=val,
-                    path=save_path_val, make_binary=True,visibility_scores=[2,3],crop=True)
+                    path=save_path_val, make_binary=True,visibility_scores=[2,3],crop=True,labels=['Piega','Verruca','Puntura insetto','Background'])
 
 import_data_and_mask(data_loader,idx_to_consider=train,
-                     path=save_path_train, make_binary=True,visibility_scores=[2,3],crop=True)
+                     path=save_path_train, make_binary=True,visibility_scores=[2,3],crop=True,labels=['Piega','Verruca','Puntura insetto','Background'])
