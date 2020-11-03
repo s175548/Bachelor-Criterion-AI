@@ -54,6 +54,7 @@ def main(semi_supervised = True):
 
     if HPC:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised,lr_d = get_paths(binary,HPC,False,False)
+        lr_g = lr_d
     else:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
         model_name = 'DeepLab'
@@ -107,7 +108,7 @@ def main(semi_supervised = True):
     #optimizer_d.zero_grad()
 
     train_img = []
-    for i in range(10,13):
+    for i in range(10,15):
         train_img.append(train_dst.__getitem__(i))
 
     # Set up metrics
@@ -139,14 +140,15 @@ def main(semi_supervised = True):
         try:
             _,batch=next(trainloader_iter)
             iter +=1
-            if iter%2==1:
-                print("Epoch",epoch," and iter: ", iter,"/",len(train_dst))
+            if iter%100==1:
+                print("Epoch",epoch," and iter: ", iter,"/",len(train_dst)/val_batch_size)
         except:
             epoch += 1
             iter = 1
             print("Epoch",epoch)
             trainloader_iter=enumerate(trainloader)
             _,batch=next(trainloader_iter)
+
 
         images,labels=batch
         images=Variable(images).cuda()
@@ -195,11 +197,11 @@ def main(semi_supervised = True):
             loss_d = loss_labeled
         loss_d_v += loss_d.data.cpu().numpy().item()
         loss_d.backward()
+        optimizer_d.step()
         if epoch % 10 == 0:
-            optimizer_d.step()
-            scheduler_d.step() ### check if it makes sense
+            scheduler_d.step()
             for param_group in optimizer_d.param_groups:
-                print("Disc lr: ", param_group['lr'])
+                print("Discriminator lr has been decreased to: ", optimizer_d.param_groups[1]['lr'])
 
         ####### train G ##################
         if semi_supervised:
@@ -214,27 +216,28 @@ def main(semi_supervised = True):
             loss_g    = -Loss_fake(pred_fake)
             loss_g_v += loss_g.data.cpu().numpy().item()
             loss_g.backward()
+            optimizer_g.step()
+
             if epoch%10==0:
-                optimizer_g.step()
                 scheduler_g.step()
                 for param_group in optimizer_g.param_groups:
-                    print("gen lr: ",param_group['lr'])
+                    print("Generator lr has been decreased to: ",param_group['lr'])
 
         # output loss value, and validate
-        if (epoch%2 == 0 and iter==1):
+        if (epoch%1 == 0 and iter==1):
             print('epoch={} , loss_g={} , loss_d={}'.format(epoch,loss_g_v,loss_d_v))
             print("validation...")
             model_d_dict[model_name].eval()
-            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(2),
+            val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(5),
                                                                model=model_d_dict[model_name], loader=val_loader, device='cuda',
                                                                metrics=metrics, model_name=model_name, N=epoch,
-                                                               criterion=criterion, train_images=train_img, lr=0.1,
+                                                               criterion=criterion, train_images=train_img, lr=optimizer_d.param_groups[1]['lr'],
                                                                save_path=save_path,
                                                                color_dict=color_dict, target_dict=target_dict,
                                                                annotations_dict=annotations_dict,
                                                                exp_description='semi_super')
             print(metrics.to_str(val_score))
-            print("TESTER: ",optimizer_d.param_groups[1]['lr'])
+
             if val_score['Mean IoU'] > best_score:  # save best model
                 best_score = val_score['Mean IoU']
                 best_scores.append(best_score)
@@ -256,6 +259,9 @@ def main(semi_supervised = True):
                 best_scores.sort(reverse=True)
                 best_scores = best_scores[:5]
             model_d_dict[model_name].train()
+
+            validation_loss_values.append(validation_loss /len(val_loader))
+            train_loss_values.append(running_loss / len(train_dst))
 
 
 
