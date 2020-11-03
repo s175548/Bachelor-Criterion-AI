@@ -38,10 +38,9 @@ def main(semi_supervised = True):
     lr_g=2e-4
     lr_d=0.01
     weight_decay=5e-4
-    epoch_max = 3
+    epoch_max = 2
     binary = True
     HPC = True
-
     # Setup random seed
     random_seed = 42
     torch.manual_seed(random_seed)
@@ -250,7 +249,7 @@ def main(semi_supervised = True):
             train_loss_values.append(running_loss / len(train_dst))
             generator_losses.append(gen_loss)
 
-    plt.plot(range(generator_losses), generator_losses, '-o')
+    plt.plot(range(len(generator_losses)), generator_losses, '-o')
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
