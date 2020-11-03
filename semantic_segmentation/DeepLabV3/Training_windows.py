@@ -263,7 +263,7 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.close()
     experiment_dict = {}
     best_metric = metrics.to_str(val_score)
-    hyperparams_val = [N_epochs, lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
+    hyperparams_val = [len(train_loss_values), lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
                        best_metric, best_scores, best_classIoU, model_name, default_scope, model]
     hyperparams = ['N_epochs', 'lr', 'batch_size', 'val_batch_size', 'loss_type', 'weight_decay', 'optimizer',
                    'random_seed', 'best_metric', 'best_scores', 'best_classIoU', 'model_backbone', 'default_scope',

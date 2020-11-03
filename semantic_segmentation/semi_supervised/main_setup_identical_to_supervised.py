@@ -38,7 +38,7 @@ def main(semi_supervised = True):
     lr_g=2e-4
     lr_d=0.01
     weight_decay=5e-4
-    epoch_max = 2
+    epoch_max = 130
     binary = True
     HPC = True
     # Setup random seed
@@ -247,7 +247,7 @@ def main(semi_supervised = True):
 
             validation_loss_values.append(validation_loss /len(val_loader))
             train_loss_values.append(running_loss / len(train_dst))
-            generator_losses.append(gen_loss)
+            generator_losses.append(-gen_loss)
 
     plt.plot(range(len(generator_losses)), generator_losses, '-o')
     plt.title('Train Loss')
