@@ -33,7 +33,7 @@ from semantic_segmentation.DeepLabV3.Training_windows import validate
 def main(semi_supervised = True):
     #batch_size=16
     step_size = 1
-    batch_size = 8 #
+    batch_size = 4 #
     val_batch_size = 2
     class_number=3
     lr_g=2e-4
