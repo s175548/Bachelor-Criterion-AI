@@ -17,7 +17,6 @@ class Generator(nn.Module):
                                      nn.BatchNorm2d(192),nn.ReLU(inplace=True))#128*128
         # last layer no relu
         self.deconv4 = nn.Sequential(nn.ConvTranspose2d(192,class_number,3,2,1,1),nn.Tanh())#256*256
-        
     def forward(self,x):
         x = self.linear(x)
         x = x.reshape([-1,768,16,16])

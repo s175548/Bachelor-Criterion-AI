@@ -249,13 +249,13 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
                               model_name, optim, save_path, train_loss_values, val_score, validation_loss_values):
-    plt.plot(range(N_epochs), train_loss_values, '-o')
+    plt.plot(range(train_loss_values), train_loss_values, '-o')
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
-    plt.plot(range(N_epochs), validation_loss_values, '-o')
+    plt.plot(range(train_loss_values), validation_loss_values, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')

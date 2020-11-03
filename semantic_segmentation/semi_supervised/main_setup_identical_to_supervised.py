@@ -31,17 +31,13 @@ from semantic_segmentation.semi_supervised.helpful_functions import get_paths, g
 from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
 def main(semi_supervised = True):
-    #batch_size=16
     step_size = 1
     batch_size = 4 #
     val_batch_size = 2
     class_number=3
     lr_g=2e-4
-    #lr_d=1e-4
     lr_d=0.01
-    power=0.9
     weight_decay=5e-4
-    max_iter=20000
     epoch_max = 5
     binary = True
     HPC = True
@@ -52,6 +48,7 @@ def main(semi_supervised = True):
     np.random.seed(random_seed)
     random.seed(random_seed)
 
+    ########### Retrive paths ##########
     if HPC:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised,lr_d = get_paths(binary,HPC,False,False)
         lr_g = lr_d
@@ -59,16 +56,7 @@ def main(semi_supervised = True):
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
         model_name = 'DeepLab'
         exp_descrip = ''
-    model_s_path=os.path.join(save_path,r'model.pt')
     model_g_spath=os.path.join(save_path,r'model_g.pt')
-    ################### update lr ###################
-    # def lr_poly(base_lr,iters,max_iter,power):
-    #     return base_lr*((1-float(iters)/max_iter)**power)
-    # def adjust_lr(optimizer,base_lr,iters,max_iter,power):
-    #     lr=lr_poly(base_lr,iters,max_iter,power)
-    #     optimizer.param_groups[0]['lr']=lr
-    #     if len(optimizer.param_groups)>1:
-    #         optimizer.param_groups[1]['lr']=lr*10
 
     ################### dataset loader ###################
     trainloader, val_loader, train_dst, _, color_dict, target_dict, annotations_dict = get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size,val_batch_size)
@@ -78,7 +66,6 @@ def main(semi_supervised = True):
     ################### build model ###################
     model_g = generator(class_number)
     model_d_dict = discriminator(model=model_name,n_classes=class_number+1) #number of classes plus an additional fake class
-    #model_d = model_d_dict[model_name]
     model_d_dict[model_name].to(torch.device('cuda'))
 
     #### fine-tune ####
@@ -97,32 +84,30 @@ def main(semi_supervised = True):
     ################### optimizer ###################
     trainloader_iter = enumerate(trainloader)
     trainloader_nl_iter = enumerate(trainloader_nl)
-    optimizer_g=torch.optim.Adam(model_g.parameters(),lr=lr_g,betas=(0.9,0.99),weight_decay=weight_decay)
-    #optimizer_g.zero_grad()
+    optimizer_g= torch.optim.Adam(model_g.parameters(),lr=lr_g,betas=(0.9,0.99),weight_decay=weight_decay)
 
-    #optimizer_d=torch.optim.Adam(model_d.parameters(),lr=lr_d,betas=(0.9,0.99),weight_decay=weight_decay)
-    optim = 'SGD'
+    optim = 'Adam'
     optimizer_d = choose_optimizer(lr_d, model_name, model_d_dict, optim)
     criterion = nn.CrossEntropyLoss(ignore_index=target_dict[annotations_dict['Background']], reduction='mean')
-
-    #optimizer_d.zero_grad()
 
     train_img = []
     for i in range(10,15):
         train_img.append(train_dst.__getitem__(i))
 
     # Set up metrics
-    metrics = StreamSegMetrics(class_number)
+    metrics = StreamSegMetrics(class_number+1) #3 classes plus an additional one for fake data
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
     scheduler_g = torch.optim.lr_scheduler.StepLR(optimizer_g, step_size=step_size, gamma=0.95)
 
     train_loss_values = []
     validation_loss_values = []
+    generator_losses = []
     best_score = 0
     best_scores = [0, 0, 0, 0, 0]
     best_classIoU = [0, 0, 0, 0, 0]
 
     ################### iter train ###################
+    gamma_one = gamma_two = 0.4 #Loss weights
     epoch = 1
     iter = 0
     print("Train set: %d, Val set: %d" % (len(train_dst), len(val_loader)))
@@ -191,11 +176,11 @@ def main(semi_supervised = True):
             loss_fake    = Loss_fake(pred_fake)
 
         if semi_supervised:
-            gamma_one = gamma_two = 0.4
             loss_d       = loss_labeled + gamma_one*loss_fake + gamma_two*loss_unlabel
         else:
             loss_d = loss_labeled
         loss_d_v += loss_d.data.cpu().numpy().item()
+        running_loss = + loss_d.item() * images.size(0)
         loss_d.backward()
         optimizer_d.step()
         if epoch % 10 == 0:
@@ -217,6 +202,7 @@ def main(semi_supervised = True):
             loss_g_v += loss_g.data.cpu().numpy().item()
             loss_g.backward()
             optimizer_g.step()
+            gen_loss = + loss_g.item() * model_g(noise).size(0)
 
             if epoch%10==0:
                 scheduler_g.step()
@@ -262,10 +248,14 @@ def main(semi_supervised = True):
 
             validation_loss_values.append(validation_loss /len(val_loader))
             train_loss_values.append(running_loss / len(train_dst))
+            generator_losses.append(gen_loss)
 
-
-
-
+    plt.plot(range(generator_losses), generator_losses, '-o')
+    plt.title('Train Loss')
+    plt.xlabel('N_epochs')
+    plt.ylabel('Loss')
+    plt.savefig(os.path.join(save_path, exp_descrip + (str(lr_d)) + '_generator_loss'), format='png')
+    plt.close()
     save_plots_and_parameters(best_classIoU, best_scores, True, exp_descrip, optimizer_d.param_groups[1]['lr'], metrics, model_d_dict[model_name],
                               model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
 
