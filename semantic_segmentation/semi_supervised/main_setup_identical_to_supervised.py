@@ -182,7 +182,7 @@ def main(semi_supervised = True):
         running_loss = + loss_d.item() * images.size(0)
         loss_d.backward()
         optimizer_d.step()
-        if epoch % 10 == 0:
+        if (epoch % 10 == 0 and iter==1):
             scheduler_d.step()
             for param_group in optimizer_d.param_groups:
                 print("Discriminator lr has been decreased to: ", optimizer_d.param_groups[1]['lr'])
@@ -203,7 +203,7 @@ def main(semi_supervised = True):
             optimizer_g.step()
             gen_loss = + loss_g.item() * model_g(noise).size(0)
 
-            if epoch%10==0:
+            if (epoch%10==0 and iter==1):
                 scheduler_g.step()
                 for param_group in optimizer_g.param_groups:
                     print("Generator lr has been decreased to: ",param_group['lr'])
