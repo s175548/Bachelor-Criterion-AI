@@ -32,9 +32,9 @@ from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
 def main(semi_supervised = True):
     #batch_size=16
-    step_size = 10000
-    batch_size = 4 #
-    val_batch_size = 4
+    step_size = 1
+    batch_size = 8 #
+    val_batch_size = 2
     class_number=3
     lr_g=2e-4
     #lr_d=1e-4
@@ -42,7 +42,7 @@ def main(semi_supervised = True):
     power=0.9
     weight_decay=5e-4
     max_iter=20000
-    epoch_max = 100
+    epoch_max = 5
     binary = True
     HPC = True
 
@@ -53,7 +53,7 @@ def main(semi_supervised = True):
     random.seed(random_seed)
 
     if HPC:
-        path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised = get_paths(binary,HPC,False,False)
+        path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised,lr_d = get_paths(binary,HPC,False,False)
     else:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
         model_name = 'DeepLab'
@@ -76,9 +76,9 @@ def main(semi_supervised = True):
 
     ################### build model ###################
     model_g = generator(class_number)
-    model_d_dict = discriminator(model=model_name,n_classes=class_number)
-    model_d = model_d_dict[model_name]
-    model_d.to(torch.device('cuda'))
+    model_d_dict = discriminator(model=model_name,n_classes=class_number+1) #number of classes plus an additional fake class
+    #model_d = model_d_dict[model_name]
+    model_d_dict[model_name].to(torch.device('cuda'))
 
     #### fine-tune ####
     #new_params=model.state_dict()
@@ -90,8 +90,8 @@ def main(semi_supervised = True):
     model_g.train()
     model_g.cuda()
 
-    model_d.train()
-    model_d.cuda()
+    model_d_dict[model_name].train()
+    model_d_dict[model_name].cuda()
 
     ################### optimizer ###################
     trainloader_iter = enumerate(trainloader)
@@ -100,21 +100,31 @@ def main(semi_supervised = True):
     #optimizer_g.zero_grad()
 
     #optimizer_d=torch.optim.Adam(model_d.parameters(),lr=lr_d,betas=(0.9,0.99),weight_decay=weight_decay)
-    optimizer_d = choose_optimizer(lr_d, model_name, model_d_dict, 'SGD')
+    optim = 'SGD'
+    optimizer_d = choose_optimizer(lr_d, model_name, model_d_dict, optim)
+    criterion = nn.CrossEntropyLoss(ignore_index=target_dict[annotations_dict['Background']], reduction='mean')
+
     #optimizer_d.zero_grad()
 
     train_img = []
-    for i in range(10,12):
+    for i in range(10,13):
         train_img.append(train_dst.__getitem__(i))
 
     # Set up metrics
     metrics = StreamSegMetrics(class_number)
-    scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.1)
-    scheduler_g = torch.optim.lr_scheduler.StepLR(optimizer_g, step_size=step_size, gamma=0.1)
+    scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
+    scheduler_g = torch.optim.lr_scheduler.StepLR(optimizer_g, step_size=step_size, gamma=0.95)
+
+    train_loss_values = []
+    validation_loss_values = []
+    best_score = 0
+    best_scores = [0, 0, 0, 0, 0]
+    best_classIoU = [0, 0, 0, 0, 0]
 
     ################### iter train ###################
     epoch = 1
     iter = 0
+    print("Train set: %d, Val set: %d" % (len(train_dst), len(val_loader)))
     print("starting training loop")
     while epoch <= epoch_max:
         loss_g_v=0
@@ -129,6 +139,8 @@ def main(semi_supervised = True):
         try:
             _,batch=next(trainloader_iter)
             iter +=1
+            if iter%2==1:
+                print("Epoch",epoch," and iter: ", iter,"/",len(train_dst))
         except:
             epoch += 1
             iter = 1
@@ -158,20 +170,19 @@ def main(semi_supervised = True):
             noise = torch.rand([images.shape[0],50*50]).uniform_().cuda()
         # predict
         if model_name == 'DeepLab':
-            pred_labeled = model_d(images.float())['out']
+            pred_labeled = model_d_dict[model_name](images.float())['out']
         else:
-            pred_labeled = model_d(images.float())
+            pred_labeled = model_d_dict[model_name](images.float())
 
         if semi_supervised:
             if model_name == 'DeepLab':
-                pred_unlabel = model_d(images_nl.float())['out']
-                pred_fake    = model_d( model_g(noise) )['out']
+                pred_unlabel = model_d_dict[model_name](images_nl.float())['out']
+                pred_fake    = model_d_dict[model_name]( model_g(noise) )['out']
             else:
-                pred_unlabel = model_d(images_nl.float())
-                pred_fake    = model_d( model_g(noise) )
+                pred_unlabel = model_d_dict[model_name](images_nl.float())
+                pred_fake    = model_d_dict[model_name]( model_g(noise) )
         # compute loss
 #        loss_labeled = Loss_label(pred_labeled,labels)
-        criterion = nn.CrossEntropyLoss(ignore_index=class_number+2, reduction='mean')
         loss_labeled = criterion(pred_labeled, torch.tensor(labels, dtype=torch.long,device='cuda'))
         if semi_supervised:
             loss_unlabel = Loss_unlabel(pred_unlabel)
@@ -184,8 +195,11 @@ def main(semi_supervised = True):
             loss_d = loss_labeled
         loss_d_v += loss_d.data.cpu().numpy().item()
         loss_d.backward()
-        optimizer_d.step()
-        scheduler_d.step() ### check if it makes sense
+        if epoch % 10 == 0:
+            optimizer_d.step()
+            scheduler_d.step() ### check if it makes sense
+            for param_group in optimizer_d.param_groups:
+                print("Disc lr: ", param_group['lr'])
 
         ####### train G ##################
         if semi_supervised:
@@ -194,22 +208,25 @@ def main(semi_supervised = True):
 
             # predict
             if model_name=='DeepLab':
-                pred_fake    = model_d( model_g(noise) )['out']
+                pred_fake    = model_d_dict[model_name]( model_g(noise) )['out']
             else:
-                pred_fake    = model_d( model_g(noise) )
+                pred_fake    = model_d_dict[model_name]( model_g(noise) )
             loss_g    = -Loss_fake(pred_fake)
             loss_g_v += loss_g.data.cpu().numpy().item()
             loss_g.backward()
-            optimizer_g.step()
-            scheduler_g.step()
+            if epoch%10==0:
+                optimizer_g.step()
+                scheduler_g.step()
+                for param_group in optimizer_g.param_groups:
+                    print("gen lr: ",param_group['lr'])
 
         # output loss value, and validate
         if (epoch%2 == 0 and iter==1):
             print('epoch={} , loss_g={} , loss_d={}'.format(epoch,loss_g_v,loss_d_v))
             print("validation...")
-            model_d.eval()
+            model_d_dict[model_name].eval()
             val_score, ret_samples, validation_loss = validate(ret_samples_ids=range(2),
-                                                               model=model_d, loader=val_loader, device='cuda',
+                                                               model=model_d_dict[model_name], loader=val_loader, device='cuda',
                                                                metrics=metrics, model_name=model_name, N=epoch,
                                                                criterion=criterion, train_images=train_img, lr=0.1,
                                                                save_path=save_path,
@@ -217,11 +234,34 @@ def main(semi_supervised = True):
                                                                annotations_dict=annotations_dict,
                                                                exp_description='semi_super')
             print(metrics.to_str(val_score))
-        model_d.train()
+            print("TESTER: ",optimizer_d.param_groups[1]['lr'])
+            if val_score['Mean IoU'] > best_score:  # save best model
+                best_score = val_score['Mean IoU']
+                best_scores.append(best_score)
+                best_classIoU.append([val_score['Class IoU']])
+                best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU), reverse=True)][:5]
+                best_scores.sort(reverse=True)
+                best_scores = best_scores[:5]
+                save_ckpt(model=model_d_dict[model_name], model_name=model_name, cur_itrs=iter, optimizer=optimizer_d,
+                          scheduler=scheduler_d, best_score=best_score, lr=optimizer_d.param_groups[1]['lr'], save_path=save_path,exp_description=exp_descrip)
+                torch.save(model_g.state_dict(), model_g_spath)
+                np.save('metrics', metrics.to_str(val_score))
+                print("[Val] Overall Acc", iter, val_score['Overall Acc'])
+                print("[Val] Mean IoU", iter, val_score['Mean IoU'])
+                print("[Val] Class IoU", val_score['Class IoU'])
+            elif val_score['Mean IoU'] > min(best_scores):
+                best_scores.append(val_score['Mean IoU'])
+                best_classIoU.append(val_score['Class IoU'])
+                best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU), reverse=True)][:5]
+                best_scores.sort(reverse=True)
+                best_scores = best_scores[:5]
+            model_d_dict[model_name].train()
 
-        # save model
-    torch.save(model_d.state_dict(),model_s_path)
-    torch.save(model_g.state_dict(),model_g_spath)
+
+
+
+    save_plots_and_parameters(best_classIoU, best_scores, True, exp_descrip, optimizer_d.param_groups[1]['lr'], metrics, model_d_dict[model_name],
+                              model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
 
 
 if __name__ == '__main__':
