@@ -38,7 +38,7 @@ def main(semi_supervised = True):
     lr_g=2e-4
     lr_d=0.01
     weight_decay=5e-4
-    epoch_max = 5
+    epoch_max = 3
     binary = True
     HPC = True
 
