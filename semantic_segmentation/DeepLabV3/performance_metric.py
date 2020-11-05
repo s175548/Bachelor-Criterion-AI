@@ -23,7 +23,7 @@ from data_import.data_loader import convert_to_image
 
 
 def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
-                size=None, scale=None):
+                size=None, scale=None,centercrop=False):
     print(idx)
     pred = pred_color.copy()
     target = target_color.copy()
@@ -35,7 +35,8 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
+            if centercrop:
+               mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             mask = np.array(mask)
             if resize:
                 resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
