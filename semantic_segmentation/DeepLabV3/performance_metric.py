@@ -149,6 +149,7 @@ else:
                             pretrained_backbone=True)
 
 model.load_state_dict(checkpoint['model_state'])
+model.to(device)
 model.eval()
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
