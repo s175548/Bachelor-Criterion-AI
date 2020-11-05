@@ -24,7 +24,7 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
             preds = p[i]['labels']
             new_boxes, _, _ = do_nms(boxes2,scores,preds,threshold=0.2)
             bmask = get_bbox_mask(mask=m[i], bbox=boxes)
-            if label[0].any() == 0:
+            if label[0] == 0:
                 bmask2 = get_bbox_mask(mask=m[i], bbox=np.array([]))
             else:
                 bmask2 = get_bbox_mask(mask=m[i], bbox=targets)

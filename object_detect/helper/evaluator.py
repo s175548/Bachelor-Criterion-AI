@@ -5,7 +5,7 @@ import torch
 from sklearn.metrics import average_precision_score
 import object_detect.helper.utils as utils
 import torchvision
-from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
+from sklearn.metrics import confusion_matrix
 from PIL import Image
 
 def do_nms(boxes,scores,preds,threshold=0.3):
@@ -295,20 +295,36 @@ def get_iou_targets(boxes,targets,preds,labels,image,expand=256):
 
     return iou_list, iou_pred
 
-def mask_iou(boxes,mask):
-    #metrics = StreamSegMetrics(4)
-    #metrics.reset()
-    box_mask = np.copy(mask.cpu().numpy())
+def mask_iou(boxes,mask,targets):
+    box_mask = np.copy(mask)
+    target_mask = np.copy(mask)
     for box in boxes:
         xmin, ymin, xmax, ymax = box.unbind(0)
         for i in range(np.shape(box_mask)[0]):
-            for j in range(np.shape(box_mask)[1]):
-                if i >= xmin and i <= xmax:
+            if i >= xmin and i <= xmax:
+                for j in range(np.shape(box_mask)[1]):
                     if j >= ymin and j <= ymax:
-                        box_mask[i,j] = 255
-    Image._show(Image.fromarray(mask.cpu().numpy()))
-    Image._show(Image.fromarray(box_mask))
-    #metrics.update(mask, preds)
+                        box_mask[j,i] = 255
+    for target in targets:
+        x1, y1, x2, y2 = target.unbind(0)
+        for k in range(np.shape(target_mask)[0]):
+            if k >= x1 and k <= x2:
+                for l in range(np.shape(target_mask)[1]):
+                    if l >= y1 and l <= y2:
+                        target_mask[l,k] = 255
+
+    # ytrue, ypred is a flatten vector
+    y_pred = box_mask.flatten()
+    y_true = target_mask.flatten()
+    current = confusion_matrix(y_true, y_pred, labels=[0, 255])
+    # compute mean iou
+    intersection = np.diag(current)
+    ground_truth_set = current.sum(axis=1)
+    predicted_set = current.sum(axis=0)
+    union = ground_truth_set + predicted_set - intersection
+    IoU = intersection / union.astype(np.float32)
+    # IoU = [IoU_background, IoU_defect]
+    return IoU
 
 def get_iou2(boxes,targets, pred, labels):
     iou_list = np.array([])
@@ -465,22 +481,18 @@ if __name__ == '__main__':
             images = list(img.to(device, dtype=torch.float32) for img in images)
             targets = list({k: v.to(device, dtype=torch.long) for k, v in t.items()} for t in labels)
 
-            outputs = torch.tensor([[950, 0, 1500, 320],
-                                  [1, 1, 1200, 1090],
-                                  [500, 1200, 900, 1500],
-                                    [20,20,30,30],
-                                    [550, 1250, 1050, 1400],
-                                    [1000,10,1450,370],
-                                    [10,10, 1400, 1200]], dtype=torch.float32)
+            outputs = torch.tensor([[50, 50, 120, 100],
+                                  [70, 110, 90, 140],
+                                    [150, 60, 270, 190]], dtype=torch.float32)
             outputs2 = torch.tensor([[1, 1, 800, 1090]], dtype=torch.float32)
             scores2 = torch.tensor([0.7861], dtype=torch.float32)
             labels2 = torch.tensor([1], dtype=torch.int64)
-            scores = torch.tensor([0.7861, 0.7633, 0.71, 0.6983, 0.45, 0.35, 0.33], dtype=torch.float32)
-            new_boxes, new_scores, new_labels = get_non_maximum_supression(outputs2,scores2,labels2,iou_threshold=0.2)
             labels = torch.tensor([1, 1, 1], dtype=torch.int64)
+            scores = torch.tensor([0.7861, 0.7633, 0.71], dtype=torch.float32)
+            new_boxes, new_scores, new_labels = get_non_maximum_supression(outputs,scores,labels,iou_threshold=0.2)
 
-            iou, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[0]['boxes'].cpu(), preds=new_labels, labels=targets[0]['labels'].cpu(), image=images[0])
+            iou, iou_pred = get_iou_targets(boxes=outputs, targets=targets[i]['boxes'].cpu(), preds=labels, labels=targets[0]['labels'].cpu(), image=images[i],expand=0)
 
-            mask_iou(outputs,masks[i])
+            mean_iou = mask_iou(outputs,masks[i],targets[0]['boxes'].cpu())
             #joh = torchvision.ops.nms(boxes, scores3, iou_threshold=0.2)
             break

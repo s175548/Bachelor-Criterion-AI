@@ -7,7 +7,7 @@ import torchvision.models.detection.mask_rcnn
 from PIL import Image
 from object_detect.get_bboxes import get_bbox_mask
 import object_detect.helper.utils as utils
-from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric, do_nms, get_iou_targets, check_iou
+from object_detect.helper.evaluator import get_iou2, get_map2, iou_multi, get_class_iou, classifier_metric, do_nms, get_iou_targets, check_iou, mask_iou
 import matplotlib.pyplot as plt
 
 def get_samples(samples,model_name,optim_name,lr,layers,ids,N,path_save,train=True):
@@ -123,6 +123,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
     num_boxes_val = []
     num_boxes_pred = []
     i = 0
+    mIoU = []
     mAP = []
     mAP2 = []
     conf_matrix = {}
@@ -223,6 +224,10 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                                          threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
+
+                    IoU = mask_iou(boxes=new_boxes,mask=masks[j],targets=targets[j]['boxes'].cpu())
+                    mIoU.append(IoU[1])
+
                     if N % 25 == 0:
                         df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold,
@@ -266,6 +271,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                 print("Averaged stats:", metric_logger)
                 print("mean Average Precision for epoch {} with nms: ".format(N), np.mean(mAP))
                 print("mean Average Precision without nms {}: ".format(N), np.mean(mAP2))
+                print("mean IoU with nms: ", np.mean(mIoU))
                 print("TP: ", conf_matrix["true_positives"])
                 print("FP: ", conf_matrix["false_positives"])
                 print("TN: ", conf_matrix["true_negatives"])
@@ -277,6 +283,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("Averaged stats:", metric_logger)
             print("mean Average Precision for epoch {} with nms: ".format(N), np.mean(mAP))
             print("mean Average Precision without nms {}: ".format(N), np.mean(mAP2))
+            print("mean IoU with nms: ", np.mean(mIoU))
             print("TP: ", conf_matrix["true_positives"])
             print("FP: ", conf_matrix["false_positives"])
             print("TN: ", conf_matrix["true_negatives"])
@@ -285,4 +292,4 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("Images with good leather: ", conf_matrix["good_leather"])
             print("Images with bad leather: ", conf_matrix["bad_leather"])
 
-    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix, conf_matrix2
+    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix, conf_matrix2, np.mean(mIoU)
