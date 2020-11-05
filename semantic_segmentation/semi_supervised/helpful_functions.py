@@ -65,7 +65,7 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
-        return path_original_data, path_meta_data, save_path, path_model, path_train, path_val, dataset_path_ul, model_name,exp_descrip,semi_supervised
+        return path_original_data, path_meta_data, save_path, path_model, path_train, path_val, dataset_path_ul, model_name,exp_descrip,semi_supervised,lr
 
 
     elif Villads:

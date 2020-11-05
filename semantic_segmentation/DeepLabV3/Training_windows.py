@@ -83,7 +83,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
             metrics.update(targets, preds)
 
 
-        if N%10 == 0 or N==1:
+        if N%5 == 0 or N==1:
             for (image,target,pred), id in zip(ret_samples,ret_samples_ids):
                 target = convert_to_image(target.squeeze(), color_dict, target_dict)
                 pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
@@ -249,13 +249,13 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
                               model_name, optim, save_path, train_loss_values, val_score, validation_loss_values):
-    plt.plot(range(N_epochs), train_loss_values, '-o')
+    plt.plot(range(len(train_loss_values)), train_loss_values, '-o')
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
-    plt.plot(range(N_epochs), validation_loss_values, '-o')
+    plt.plot(range(len(train_loss_values)), validation_loss_values, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
@@ -263,7 +263,7 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.close()
     experiment_dict = {}
     best_metric = metrics.to_str(val_score)
-    hyperparams_val = [N_epochs, lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
+    hyperparams_val = [len(train_loss_values), lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
                        best_metric, best_scores, best_classIoU, model_name, default_scope, model]
     hyperparams = ['N_epochs', 'lr', 'batch_size', 'val_batch_size', 'loss_type', 'weight_decay', 'optimizer',
                    'random_seed', 'best_metric', 'best_scores', 'best_classIoU', 'model_backbone', 'default_scope',
