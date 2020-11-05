@@ -22,8 +22,9 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from data_import.data_loader import convert_to_image
 
 
-def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, reize=False,
+def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
                 size=None, scale=None):
+    print(idx)
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
@@ -36,8 +37,8 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
             mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             mask = np.array(mask)
-            if reize:
-                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale) * scale)
+            if resize:
+                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
             mask = np.array(mask)
             row, col = np.where(mask != 0)
@@ -165,7 +166,7 @@ transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
+transform_function_resize = et.ExtCompose([
                                            et.ExtResize(scale=scale),
                                            et.ExtEnhanceContrast(),
                                            et.ExtToTensor(),
