@@ -109,7 +109,7 @@ Villads = False
 HPC = True
 model_name = 'DeepLab'
 n_classes = 1
-resize = False
+resize = True
 size = 1024
 scale = 0.5
 binary = True
@@ -184,9 +184,9 @@ else:
     annotations_dict = data_loader.annotations_dict
 
 train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                        transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                        transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
 val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                      transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                      transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
 
 train_images = []
 
@@ -197,8 +197,7 @@ if data_set == 'train':
 elif data_set == 'val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
-        if i == 15:
-            break
+
 
 labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area aperta', 'Area vene', 'Buco', 'Cicatrice',
           'Cicatrice aperta', 'Contaminazione', 'Crease', 'Difetto di lavorazione', 'Dirt', 'Fianco', 'Fiore marcio',
@@ -231,8 +230,8 @@ for i in range(len(train_images)):
     pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path + r'/{}_img.png'.format(file_names_val[i])),format='PNG')
-    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path ,  r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
-    PIL.Image.fromarray(target_color.astype(np.uint8)).save(os.path.join(save_path , r'/{}_mask_color.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path + r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(target_color.astype(np.uint8)).save(os.path.join(save_path + r'/{}_mask_color.png'.format(file_names_val[i])),format='PNG')
     # PIL.Image.fromarray(image.astype(np.uint8)).save(
     #     os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_img.png'.format(file_names_val[i])),
     #     format='PNG')
