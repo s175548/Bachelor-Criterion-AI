@@ -32,7 +32,7 @@ from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
 def main(semi_supervised = True):
     step_size = 10 #Lr first decreases after 100 epochs, which basically means that it
-    batch_size = 4 #
+    batch_size = 2 #
     val_batch_size = 2
     class_number=3
     lr_g=2e-4
@@ -40,7 +40,7 @@ def main(semi_supervised = True):
     weight_decay=5e-4
     epoch_max = 20
     binary = True
-    HPC = True
+    HPC = False
     # Setup random seed
     random_seed = 42
     torch.manual_seed(random_seed)
@@ -84,7 +84,7 @@ def main(semi_supervised = True):
     trainloader_nl_iter = enumerate(trainloader_nl)
     optimizer_g= torch.optim.Adam(model_g.parameters(),lr=lr_g,betas=(0.9,0.99),weight_decay=weight_decay)
 
-    optim = 'Adam'
+    optim = 'SGD'
     optimizer_d = choose_optimizer(lr_d, model_name, model_d_dict, optim)
     criterion = nn.CrossEntropyLoss(reduction='mean')
     # criterion = nn.CrossEntropyLoss(ignore_index=target_dict[annotations_dict['Background']], reduction='mean')
@@ -157,6 +157,9 @@ def main(semi_supervised = True):
         # predict
         if model_name == 'DeepLab':
             pred_labeled = model_d_dict[model_name](images.float())['out']
+            # test = Image.fromarray((np.transpose(images[0].cpu().numpy(), (1, 2, 0)) / np.max(images[0].cpu().numpy()) * 255).astype(np.uint8))
+            # Image._show(test)
+
         else:
             pred_labeled = model_d_dict[model_name](images.float())
 

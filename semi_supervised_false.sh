@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/semi_supervised/main_setup_identical_to_supervised.py 0.01 DeepLab Adam True semi_setup semi_super/no_semi True False
+python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.01 DeepLab Adam True semi_setup semi_super/no_semi True False
 echo "Done"
