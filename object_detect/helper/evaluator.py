@@ -319,7 +319,7 @@ def mask_iou(boxes,mask,targets):
     y_true = target_mask.flatten()
     try:
         current = confusion_matrix(y_true, y_pred, labels=[0, 255])
-    else:
+    except:
         print(np.shape(y_true))
         print(np.max(y_true))
         print(np.min(y_true))
