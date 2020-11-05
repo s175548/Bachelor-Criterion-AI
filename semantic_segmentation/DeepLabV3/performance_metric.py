@@ -169,7 +169,7 @@ transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size)
+transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
                                            et.ExtResize(scale=scale),
                                            et.ExtEnhanceContrast(),
                                            et.ExtToTensor(),
