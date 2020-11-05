@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionSemiSupervised01
-#BSUB -o versionSemiSupervised01%J.out
+#BSUB -J version_eval
+#BSUB -o version_eval_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -12,8 +12,8 @@
 # end of BSUB options
 
 echo "Running script..."
-cd ..
+cd /zhome/87/9/127623/BachelorProject
 source test-env/bin/activate
-cd Bachelor-Criterion-AI
-python3 semantic_segmentation/semi_supervised/main_setup_identical_to_supervised.py 0.01 DeepLab Adam True semi_setup semi_super/no_semi True False
+cd /zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI
+python3 semantic_segmentation/DeepLabV3/performance_metric.py
 echo "Done"

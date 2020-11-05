@@ -1,3 +1,18 @@
+import torch
+from semantic_segmentation.semi_supervised.generator import generator
+import PIL,numpy as np
+from PIL import Image
+model = generator(3)
+model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_super\lr\01\model_g.pt'))
+model.eval()
+for i in range(4):
+    noise = torch.rand([3,50*50]).uniform_()
+    output = model(noise)
+    test_noise = Image.fromarray( (noise[0].reshape(50,50).numpy()*255).astype(np.uint8) )
+    Image._show(test_noise)
+    test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
+    Image._show(test)
+    print(torch.sum(output))
 # save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images'
 # import numpy as np,os
 # from PIL import Image
