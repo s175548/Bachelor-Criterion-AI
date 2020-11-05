@@ -37,7 +37,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             mask = np.array(mask)
             if reize:
-                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale) * scale)
+                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
             mask = np.array(mask)
             row, col = np.where(mask != 0)
