@@ -112,9 +112,9 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
     file_names_val = file_names_val[shuffled_index]
     file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-    transform_function = et.ExtCompose([
-        et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),
-        et.ExtRandomRotation(random.randint(0,359)),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+    # transform_function = et.ExtCompose([et.ExtCenterCrop(size=SIZE),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+    #      et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     transform_function_val = et.ExtCompose([
