@@ -4,6 +4,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 
 from semantic_segmentation.semi_supervised.Training_win_semi import *
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
+from semantic_segmentation.semi_supervised.helpful_functions import get_data_loaders_unlabelled
 from data_import.data_loader import DataLoader
 import argparse,json,ast
 from PIL import Image
@@ -59,6 +60,8 @@ if __name__ == "__main__":
             #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
             path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/val'
+            dataset_path_ul = r'/work3/s173934/Bachelorprojekt/all'
+
         else:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
@@ -86,6 +89,8 @@ if __name__ == "__main__":
             #path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
+            dataset_path_ul = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\trained_models'
+
         else:
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
@@ -159,10 +164,16 @@ if __name__ == "__main__":
     val_loader = data.DataLoader(
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
 
+    # Load dataloader for unlabelled data:
+    if semi_supervised:
+        trainloader_nl, _ = get_data_loaders_unlabelled(binary, path_original_data, path_meta_data, dataset_path_ul,
+                                                    batch_size)
+    else:
+        trainloader_nl = None
+
     train_img = []
     for i in range(5):
         train_img.append(train_dst.__getitem__(i))
-
 
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
@@ -176,4 +187,8 @@ if __name__ == "__main__":
     if train_scope == '':
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
-    training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope)
+    if semi_supervised:
+        training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised,ul_loader=trainloader_nl)
+
+    else:
+        training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)

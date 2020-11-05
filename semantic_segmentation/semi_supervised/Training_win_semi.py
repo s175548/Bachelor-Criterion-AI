@@ -25,12 +25,13 @@ import pickle
 import matplotlib.pyplot as plt
 from data_import.data_loader import convert_to_image
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
+from semantic_segmentation.semi_supervised.generator import generator
 
 num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=500#1000
-#lr=0.01 # Is a parameter in training()
+lr_g = 2e-4
 lr_policy='step'
 step_size=10000
 batch_size= 8 # 16
@@ -41,7 +42,7 @@ random_seed=1
 val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 5
+N_epochs= 100
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -120,8 +121,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None,val_loader=None,train_dst=None, val_dst=None,
-             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = '',optim='SGD',default_scope = True):
-
+             save_path = os.getcwd(),lr=0.01,train_images = None,color_dict=None,target_dict=None,annotations_dict=None,exp_description = '',optim='SGD',default_scope = True,semi_supervised=False,ul_loader=None):
 
     model_dict={}
     if model=='DeepLab':
@@ -133,7 +133,6 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
-
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
         if default_scope:
@@ -141,7 +140,13 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
         else:
             grad_check(model_dict[model])
 
-
+    ###Load generator semi_super##
+    if semi_supervised:
+        #Load model
+        model_g = generator(n_classes+2)
+        model_g.train()
+        model_g.cuda()
+        optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.9, 0.99), weight_decay=weight_decay)
 
     # Setup visualization
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
