@@ -224,7 +224,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                                          threshold=threshold)
                     mAP.append(AP)
                     mAP2.append(AP2)
-
                     IoU = mask_iou(boxes=new_boxes,mask=masks[j],targets=targets[j]['boxes'].cpu())
                     mIoU.append(IoU[1])
 
@@ -292,4 +291,4 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             print("Images with good leather: ", conf_matrix["good_leather"])
             print("Images with bad leather: ", conf_matrix["bad_leather"])
 
-    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix, conf_matrix2, np.mean(mIoU)
+    return np.mean(mAP),np.mean(mAP2),np.mean(loss_list),np.mean(np.array(num_boxes_pred)),np.mean(np.array(num_boxes_val)), conf_matrix, conf_matrix2, np.nanmean(mIoU)
