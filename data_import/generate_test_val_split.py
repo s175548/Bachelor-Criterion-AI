@@ -4,7 +4,7 @@ from data_import.data_pipeline import import_data_and_mask
 from data_import.data_loader import DataLoader
 import os
 
-Villads = True
+Villads = False
 Johannes = False
 if Villads:
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
@@ -20,8 +20,8 @@ elif Johannes:
     save_path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\full_scale\val'
 else:
     data_loader = DataLoader()
-    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3\train'
-    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3\val'
+    save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\train'
+    save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\val'
 
 train,val=data_loader.test_training_split(villads_dataset=False)
 

@@ -146,7 +146,7 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
     return train_loader, val_loader, train_dst, val_dst, color_dict, target_dict, annotations_dict
 
 def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset_path_unlabelled,batch_size):
-    data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
+    data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data,size=256)
     labels = ['Piega', 'Verruca', 'Puntura insetto', 'Background']
 
     file_names_train = np.array([image_name[:-4] for image_name in os.listdir(dataset_path_unlabelled) if image_name[-5] != "k"])
@@ -156,7 +156,7 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     file_names_train = file_names_train[file_names_train != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None), et.ExtRandomCrop(size=SIZE, pad_if_needed=True),
+        [et.ExtRandomCrop(scale=0.7, size=None), et.ExtRandomCrop(size=size, pad_if_needed=True),
          et.ExtRandomRotation(random.randint(0, 359)), et.ExtRandomHorizontalFlip(p=0.5),
          et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),
