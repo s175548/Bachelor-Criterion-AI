@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionSemiSupervised01
-#BSUB -o versionSemiSupervised01%J.out
+#BSUB -J versionSemiSupervised01_true
+#BSUB -o versionSemiSupervised01_true%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/semi_supervised/main_setup_identical_to_supervised.py 0.01 DeepLab Adam True semi_setup semi_super/lr/01 True True
+python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.01 DeepLab SGD False semi_setup semi_super/semi True True
 echo "Done"
