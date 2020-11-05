@@ -3,29 +3,29 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 from semantic_segmentation.semi_supervised.Training_win_semi import *
+from torch.utils import data
+from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.helpful_functions import get_data_loaders_unlabelled
 from data_import.data_loader import DataLoader
 import argparse,json,ast
 from PIL import Image
 from torchvision import transforms
-
-
-
 def boolean_string(s):
     if s not in {'False', 'True'}:
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =True
-semi_supervised = False
-Villads=False
-binary=True
-model_name = ''
-optimizer = ''
-exp_descrip = ''
-train_scope = ''
 if __name__ == "__main__":
+    HPC = True
+    SIZE = 256
+    semi_supervised = False
+    Villads = False
+    binary = True
+    model_name = ''
+    optimizer = ''
+    exp_descrip = ''
+    train_scope = ''
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
         path_model = r'/work3/s173934/Bachelorprojekt/'
@@ -58,8 +58,10 @@ if __name__ == "__main__":
         if binary:
             #path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/val'
+            # path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
+            # path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_recreate/train'
+            path_val = r'//work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_recreate/val'
             dataset_path_ul = r'/work3/s173934/Bachelorprojekt/all'
 
         else:
@@ -87,8 +89,10 @@ if __name__ == "__main__":
         if binary:
             #path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\train'
             #path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
-            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
-            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
+            # path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
+            # path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
+            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\train'
+            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\val'
             dataset_path_ul = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\trained_models'
 
         else:
@@ -134,14 +138,8 @@ if __name__ == "__main__":
 #                                                                                   std=[0.229, 0.224, 0.225])])
 #     #
     # #FOR EXTENDED DATASET EXPERIMENT
-    transform_function = transform_function = et.ExtCompose([
-        et.ExtRandomHorizontalFlip(p=0.5),
-        et.ExtRandomCrop(size=256),
-        et.ExtEnhanceContrast(),
-        et.ExtRandomVerticalFlip(p=0.5),
-        et.ExtToTensor(),
-        et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225])])
+    transform_function = et.ExtCompose([et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomCrop(size=SIZE),et.ExtEnhanceContrast(),et.ExtRandomVerticalFlip(p=0.5),et.ExtToTensor(),
+                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])])
 
     if binary:
         color_dict = data_loader.color_dict_binary
@@ -159,15 +157,12 @@ if __name__ == "__main__":
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
-    train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
-    val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
+    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     # Load dataloader for unlabelled data:
     if semi_supervised:
-        trainloader_nl, _ = get_data_loaders_unlabelled(binary, path_original_data, path_meta_data, dataset_path_ul,
-                                                    batch_size)
+        trainloader_nl, _ = get_data_loaders_unlabelled(binary, path_original_data, path_meta_data, dataset_path_ul,batch_size,size = SIZE)
     else:
         trainloader_nl = None
 
@@ -188,7 +183,8 @@ if __name__ == "__main__":
         train_scope = True
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
     if semi_supervised:
-        training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised,ul_loader=trainloader_nl)
+        training(n_classes=1, model=model_name, load_models=False, model_path=path_model, train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst, save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict, annotations_dict=annotations_dict, exp_description = exp_descrip, optim=optimizer, default_scope = train_scope, semi_supervised=semi_supervised,
+                 trainloader_nl=trainloader_nl)
 
     else:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)
