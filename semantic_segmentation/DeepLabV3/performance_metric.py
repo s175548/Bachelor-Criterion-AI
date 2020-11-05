@@ -138,7 +138,7 @@ else:
     save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet\predictions'
     model_path = r'E:\downloads_hpc_bachelor\exp_results\backbone\classifier_only\ResNet\DeepLab_backbone_exp0.01.pt'
 
-checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+checkpoint = torch.load(model_path, map_location=device)
 
 if model_name == 'DeepLab':
     model = deeplabv3_resnet101(pretrained=True, progress=True, num_classes=21, aux_loss=None)
