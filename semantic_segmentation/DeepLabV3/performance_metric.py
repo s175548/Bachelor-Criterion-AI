@@ -37,26 +37,28 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
             if centercrop:
                mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
-            mask = np.array(mask)
-            if resize:
-                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
-                mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
-            mask = np.array(mask)
-            row, col = np.where(mask != 0)
-            xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
-            xdim_s.append(xdim)
-            ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, mask.shape[1]))
-            ydim_s.append(ydim)
-            mask = mask[xdim[0]:xdim[1], ydim[0]:ydim[1]]
-            defect_found = int(np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0)
-            if label == 'Insect bite':
-                errors[1, 0] += 1
-                errors[1, 1] += defect_found
-                metric[0].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+            if np.sum(mask == 1) != 0:
+                if resize:
+                    resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
+                    mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+                mask = np.array(mask)
+                row, col = np.where(mask != 0)
+                xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
+                xdim_s.append(xdim)
+                ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, mask.shape[1]))
+                ydim_s.append(ydim)
+                mask = mask[xdim[0]:xdim[1], ydim[0]:ydim[1]]
+                defect_found = int(np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0)
+                if label == 'Insect bite':
+                    errors[1, 0] += 1
+                    errors[1, 1] += defect_found
+                    metric[0].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+                else:
+                    errors[0, 0] += 1
+                    errors[0, 1] += defect_found
+                    metric[1].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
             else:
-                errors[0, 0] += 1
-                errors[0, 1] += defect_found
-                metric[1].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+                pass
         for xdim, ydim in zip(xdim_s, ydim_s):
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
             target[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
@@ -167,7 +169,7 @@ transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_resize = et.ExtCompose([
+transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size)
                                            et.ExtResize(scale=scale),
                                            et.ExtEnhanceContrast(),
                                            et.ExtToTensor(),
@@ -226,7 +228,7 @@ for i in range(len(train_images)):
     errors, false_positives, metric, target_color, pred_color = error_count(int(file_names_val[i]), pred.copy(),
                                                                             target.copy(), data_loader, labels, errors,
                                                                             false_positives, metrics, resize, size=size,
-                                                                            scale=scale)
+                                                                            scale=scale,centercrop=True)
 
     target = convert_to_image(target.squeeze(), color_dict, target_dict)
     pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
