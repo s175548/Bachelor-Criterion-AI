@@ -33,15 +33,15 @@ total_itrs=500#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 2 # 16
-val_batch_size= 1 #4
+batch_size= 8 # 16
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 20
+N_epochs= 5
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):

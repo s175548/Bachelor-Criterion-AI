@@ -54,8 +54,8 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         save_path = os.path.join(save_path, save_folder)
 
         if binary:
-            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_vis_2_and_3/val'
             dataset_path_ul = r'/work3/s173934/Bachelorprojekt/all'
 
         else:
@@ -84,8 +84,10 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
         #dataset_path_ul = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images'
         dataset_path_ul = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\trained_models'
         if binary:
-            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
-            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
+            #path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
+            #path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
+            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3\train'
+            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3\val'
         else:
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
