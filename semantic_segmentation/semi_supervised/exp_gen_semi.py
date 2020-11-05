@@ -57,8 +57,8 @@ if __name__ == "__main__":
         if binary:
             #path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_vis_2_and_3/val'
+            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/train'
+            path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3/val'
         else:
             path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/train'
             path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_vis_2_and_3/val'
