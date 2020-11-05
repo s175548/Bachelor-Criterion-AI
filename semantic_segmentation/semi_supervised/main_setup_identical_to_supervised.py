@@ -31,14 +31,14 @@ from semantic_segmentation.semi_supervised.helpful_functions import get_paths, g
 from semantic_segmentation.DeepLabV3.Training_windows import validate
 ################### Hyper parameter ################### 
 def main(semi_supervised = True):
-    step_size = 1
+    step_size = 10 #Lr first decreases after 100 epochs, which basically means that it
     batch_size = 4 #
     val_batch_size = 2
     class_number=3
     lr_g=2e-4
     lr_d=0.01
     weight_decay=5e-4
-    epoch_max = 130
+    epoch_max = 20
     binary = True
     HPC = True
     # Setup random seed
@@ -50,7 +50,6 @@ def main(semi_supervised = True):
     ########### Retrive paths ##########
     if HPC:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul,model_name,exp_descrip, semi_supervised,lr_d = get_paths(binary,HPC,False,False)
-        lr_g = lr_d
     else:
         path_original_data, path_meta_data, save_path,path_model,dataset_path_train,dataset_path_val,datset_path_ul= get_paths(binary,HPC,False,False)
         model_name = 'DeepLab'
@@ -64,7 +63,7 @@ def main(semi_supervised = True):
 
     ################### build model ###################
     model_g = generator(class_number)
-    model_d_dict = discriminator(model=model_name,n_classes=class_number+1) #number of classes plus an additional fake class
+    model_d_dict = discriminator(model=model_name,n_classes=class_number) #number of classes plus an additional fake class??? I
     model_d_dict[model_name].to(torch.device('cuda'))
 
     #### fine-tune ####
@@ -87,7 +86,8 @@ def main(semi_supervised = True):
 
     optim = 'Adam'
     optimizer_d = choose_optimizer(lr_d, model_name, model_d_dict, optim)
-    criterion = nn.CrossEntropyLoss(ignore_index=target_dict[annotations_dict['Background']], reduction='mean')
+    criterion = nn.CrossEntropyLoss(reduction='mean')
+    # criterion = nn.CrossEntropyLoss(ignore_index=target_dict[annotations_dict['Background']], reduction='mean')
 
     train_img = []
     for i in range(10,15):
@@ -231,7 +231,7 @@ def main(semi_supervised = True):
                 best_scores.sort(reverse=True)
                 best_scores = best_scores[:5]
                 save_ckpt(model=model_d_dict[model_name], model_name=model_name, cur_itrs=iter, optimizer=optimizer_d,
-                          scheduler=scheduler_d, best_score=best_score, lr=optimizer_d.param_groups[1]['lr'], save_path=save_path,exp_description=exp_descrip)
+                          scheduler=scheduler_d, best_score=best_score, lr=0.01, save_path=save_path,exp_description=exp_descrip)
                 torch.save(model_g.state_dict(), model_g_spath)
                 np.save('metrics', metrics.to_str(val_score))
                 print("[Val] Overall Acc", iter, val_score['Overall Acc'])
@@ -247,7 +247,8 @@ def main(semi_supervised = True):
 
             validation_loss_values.append(validation_loss /len(val_loader))
             train_loss_values.append(running_loss / len(train_dst))
-            generator_losses.append(-gen_loss)
+            if semi_supervised:
+                generator_losses.append(-gen_loss)
 
     plt.plot(range(len(generator_losses)), generator_losses, '-o')
     plt.title('Train Loss')
@@ -260,6 +261,6 @@ def main(semi_supervised = True):
 
 
 if __name__ == '__main__':
-    main(semi_supervised=True)
+    main(semi_supervised=False)
 
 
