@@ -89,7 +89,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,conf=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,best_ious=None,conf=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -100,6 +100,7 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
             "best_map_w_score": best_score,
+            "best_ious": best_ious,
             "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -202,8 +203,10 @@ if __name__ == '__main__':
         setup = args['scale'][0]
         if setup == 'resize':
             scale = True
+            num_epoch = 80
         else:
             scale = False
+            num_epoch = 100
         if binary:
             if scale:
                 path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
@@ -239,7 +242,6 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
@@ -400,6 +402,8 @@ if __name__ == '__main__':
     overall_best = 0
     best_map = 0
     best_map2 = 0
+    best_iou = 0
+    best_ious = [0, 0, 0, 0, 0]
     val_boxes = []
     val_targets = []
     cmatrix = {}
@@ -430,7 +434,7 @@ if __name__ == '__main__':
         # update the learning rate
         lr_scheduler.step()
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2 = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
+        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2, mIoU = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
                                                      data_loader=val_loader,
                                                      device=device,N=epoch+1,
                                                      loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
@@ -443,6 +447,16 @@ if __name__ == '__main__':
             best_scores.append(mAP)
             best_scores.sort(reverse=True)
             best_scores = best_scores[:5]
+        if mIoU > best_iou:
+            best_iou = mIoU
+            best_ious.append(best_iou)
+            best_ious.sort(reverse=True)
+            best_ious = best_ious[:5]
+        elif mIoU > min(best_ious):
+            best_ious.append(mIoU)
+            best_ious.sort(reverse=True)
+            best_ious = best_ious[:5]
+
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
@@ -484,13 +498,15 @@ if __name__ == '__main__':
     print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
     print("Top 5 mAP with nms: ", best_scores)
+    print("Best mean IoU of defects with nms: ", best_iou)
+    print("Top 5 best mean IoU of defects with nms: ", best_ious)
 
 
     if HPC:
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}_{}_{}".format(model_name, layers_to_train, bbox_type, lr, dataset), optim_name=optim,
                    n_epochs=best_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_scores, conf=conf, losses=loss_train, val_losses=loss_val)
+                   scheduler=lr_scheduler, best_map=best_map, best_score=best_scores, best_ious=best_ious, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=val_loader, device=device,

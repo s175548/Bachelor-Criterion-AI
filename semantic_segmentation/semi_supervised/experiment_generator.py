@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # #FOR EXTENDED DATASET EXPERIMENT
     transform_function = transform_function = et.ExtCompose([
         et.ExtRandomHorizontalFlip(p=0.5),
-        et.ExtRandomCrop(size=256),
+        et.ExtRandomCrop(size=120),
         et.ExtEnhanceContrast(),
         et.ExtRandomVerticalFlip(p=0.5),
         et.ExtToTensor(),
