@@ -203,8 +203,10 @@ if __name__ == '__main__':
         setup = args['scale'][0]
         if setup == 'resize':
             scale = True
+            num_epoch = 80
         else:
             scale = False
+            num_epoch = 100
         if binary:
             if scale:
                 path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
@@ -240,7 +242,6 @@ if __name__ == '__main__':
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 100
     else:
         device = torch.device('cpu')
         lr = 0.01
