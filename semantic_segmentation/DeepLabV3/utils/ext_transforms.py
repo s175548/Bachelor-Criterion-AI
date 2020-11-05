@@ -437,8 +437,10 @@ class ExtRandomCrop(object):
         """
         w, h = img.size
         tw,th = output_size
-        i = random.randint(0, h - th)
-        j = random.randint(0, w - tw)
+        if h-th < 0:
+            a = 2
+        i = random.randint(0, abs(h - th))
+        j = random.randint(0,abs(w - tw))
         if w != h and img.size==output_size:
             min_dim = np.min(img.size)
             tw, th = min_dim, min_dim

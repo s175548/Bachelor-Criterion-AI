@@ -48,6 +48,7 @@ class LeatherData(data.Dataset):
         """
         if self.unlabelled:
             img = Image.open(self.images[index]).convert('RGB')
+            w, h = img.size
             target = Image.fromarray(np.empty( (img.size)) )#target is not needed
             img, target = self.transform(img,target)
             return img,target
