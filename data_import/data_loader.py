@@ -343,13 +343,17 @@ class DataLoader():
 
         for i in range(crop_count_height):
             for j in range(crop_count_width):
-                image = img[i * patch_size_0:(i + 1) * patch_size_0, j * patch_size_1:(j + 1) * patch_size_1]
-                split_imgs[i*crop_count_width+j] = image
                 if with_pad:
-                    large_img = padded_img[i * patch_size_0:(i + 1) * patch_size_0+padding, j * patch_size_1:(j + 1) * patch_size_1+padding]
-                    pad_split_imgs[i*crop_count_width+j] = large_img
+                    large_img = padded_img[i * patch_size_0:(i + 1) * patch_size_0 + padding,
+                                j * patch_size_1:(j + 1) * patch_size_1 + padding]
+                    pad_split_imgs[i * crop_count_width + j] = large_img
+                else:
+                    image = img[i * patch_size_0:(i + 1) * patch_size_0, j * patch_size_1:(j + 1) * patch_size_1]
+                    split_imgs[i*crop_count_width+j] = image
+        patch_dimensions=(patch_size_0,patch_size_1)
 
-        return split_imgs, (crop_count_height,crop_count_width ), pad_split_imgs
+
+        return split_imgs, (crop_count_height,crop_count_width), pad_split_imgs,patch_dimensions
 
 def load_idx_to_include():
     idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')
