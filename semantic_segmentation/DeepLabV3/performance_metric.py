@@ -113,7 +113,7 @@ resize = False
 size = 1024
 scale = 0.5
 binary = True
-device = torch.device('cpu')
+device = torch.device('cuda')
 data_set = 'val'
 
 if Villads:
