@@ -143,8 +143,10 @@ class ExtCenterCrop(object):
         Returns:
             PIL Image: Cropped image.
         """
-#        self.size=(min(img.height,img.width),min(img.height,img.width))
-        return F.center_crop(img, self.size), F.center_crop(lbl, self.size)
+        if self.size[0]>np.minimum(img.size[0],img.size[1]):
+            return img, lbl
+        else:
+            return F.center_crop(img, self.size), F.center_crop(lbl, self.size)
 
     def __repr__(self):
         return self.__class__.__name__ + '(size={0})'.format(self.size)
@@ -452,32 +454,27 @@ class ExtRandomCrop(object):
             PIL Image: Cropped label.
         """
         if self.size != None and not self.pad_if_needed:
-            if np.min(img.size)<self.size:
-                size=img.size
+            if type(self.size)==int:
+                if np.min(img.size)<self.size:
+                    self.size=img.size
+                else:
+                    self.size = (self.size, self.size)
             else:
-                size = (self.size, self.size)
+                pass
         elif self.pad_if_needed:
-            size = (self.size, self.size)
+            if type(self.size) == int:
+                self.size = (self.size, self.size)
+            else:
+                pass
         else:
-            size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
+            self.size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
-        if self.padding > 0:
-            img = F.pad(img, self.padding)
-            lbl = F.pad(lbl, self.padding)
-        # pad the width if needed
- #       if self.pad_if_needed and img.size[0] < size[1]:
- #           img = F.pad(img,fill=2, padding=int((1 + size[1] - img.size[0]) / 2))
- #           lbl = F.pad(lbl,fill=2, padding=int((1 + size[1] - lbl.size[0]) / 2))
 
-        # pad the height if needed
- #       if self.pad_if_needed and img.size[1] < size[0]:
- #           img = F.pad(img, fill=2, padding=int((1 + size[0] - img.size[1]) / 2))
- #           lbl = F.pad(lbl, fill=2, padding=int((1 + size[0] - lbl.size[1]) / 2))
         if self.pad_if_needed:
-            img = F.pad(img,padding=self.size,padding_mode='reflect')
-            lbl = F.pad(lbl,padding=self.size,padding_mode='reflect')
+            img = F.pad(img,padding=(int((self.size[0]-img.size[0])/2),int((self.size[1]-img.size[1])/2)),padding_mode='reflect')
+            lbl = F.pad(lbl,padding=(int((self.size[0]-lbl.size[0])/2),int((self.size[1]-lbl.size[1])/2)),padding_mode='reflect')
 
-        i, j, h, w = self.get_params(img, size)
+        i, j, h, w = self.get_params(img, self.size)
 
         return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)
 

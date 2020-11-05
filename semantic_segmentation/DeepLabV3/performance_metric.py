@@ -22,8 +22,9 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from data_import.data_loader import convert_to_image
 
 
-def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, reize=False,
-                size=None, scale=None):
+def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
+                size=None, scale=None,centercrop=False):
+    print(idx)
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
@@ -34,27 +35,31 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
+            if centercrop:
+               mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             mask = np.array(mask)
-            if reize:
-                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale) * scale)
-                mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
-            mask = np.array(mask)
-            row, col = np.where(mask != 0)
-            xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
-            xdim_s.append(xdim)
-            ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, mask.shape[1]))
-            ydim_s.append(ydim)
-            mask = mask[xdim[0]:xdim[1], ydim[0]:ydim[1]]
-            defect_found = int(np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0)
-            if label == 'Insect bite':
-                errors[1, 0] += 1
-                errors[1, 1] += defect_found
-                metric[0].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+            if np.sum(mask == 1) != 0:
+                if resize:
+                    resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
+                    mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+                mask = np.array(mask)
+                row, col = np.where(mask != 0)
+                xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
+                xdim_s.append(xdim)
+                ydim = (np.maximum(np.min(col) - buffer, 0), np.minimum(np.max(col) + buffer, mask.shape[1]))
+                ydim_s.append(ydim)
+                mask = mask[xdim[0]:xdim[1], ydim[0]:ydim[1]]
+                defect_found = int(np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0)
+                if label == 'Insect bite':
+                    errors[1, 0] += 1
+                    errors[1, 1] += defect_found
+                    metric[0].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+                else:
+                    errors[0, 0] += 1
+                    errors[0, 1] += defect_found
+                    metric[1].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
             else:
-                errors[0, 0] += 1
-                errors[0, 1] += defect_found
-                metric[1].update(mask, pred[xdim[0]:xdim[1], ydim[0]:ydim[1]])
+                pass
         for xdim, ydim in zip(xdim_s, ydim_s):
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
             target[xdim[0]:xdim[1], ydim[0]:ydim[1]] = 0
@@ -109,8 +114,8 @@ Villads = False
 HPC = True
 model_name = 'DeepLab'
 n_classes = 1
-resize = False
-size = 1024
+resize = True
+size = 2048
 scale = 0.5
 binary = True
 device = torch.device('cuda')
@@ -138,7 +143,7 @@ else:
     save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet\predictions'
     model_path = r'E:\downloads_hpc_bachelor\exp_results\backbone\classifier_only\ResNet\DeepLab_backbone_exp0.01.pt'
 
-checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+checkpoint = torch.load(model_path, map_location=device)
 
 if model_name == 'DeepLab':
     model = deeplabv3_resnet101(pretrained=True, progress=True, num_classes=21, aux_loss=None)
@@ -149,6 +154,7 @@ else:
                             pretrained_backbone=True)
 
 model.load_state_dict(checkpoint['model_state'])
+model.to(device)
 model.eval()
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
@@ -183,9 +189,9 @@ else:
     annotations_dict = data_loader.annotations_dict
 
 train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                        transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                        transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
 val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                      transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+                      transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
 
 train_images = []
 
@@ -196,8 +202,7 @@ if data_set == 'train':
 elif data_set == 'val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
-        if i == 15:
-            break
+
 
 labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area aperta', 'Area vene', 'Buco', 'Cicatrice',
           'Cicatrice aperta', 'Contaminazione', 'Crease', 'Difetto di lavorazione', 'Dirt', 'Fianco', 'Fiore marcio',
@@ -224,14 +229,14 @@ for i in range(len(train_images)):
     errors, false_positives, metric, target_color, pred_color = error_count(int(file_names_val[i]), pred.copy(),
                                                                             target.copy(), data_loader, labels, errors,
                                                                             false_positives, metrics, resize, size=size,
-                                                                            scale=scale)
+                                                                            scale=scale,centercrop=True)
 
     target = convert_to_image(target.squeeze(), color_dict, target_dict)
     pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path + r'/{}_img.png'.format(file_names_val[i])),format='PNG')
-    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path ,  r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
-    PIL.Image.fromarray(target_color.astype(np.uint8)).save(os.path.join(save_path , r'/{}_mask_color.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path + r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
+    PIL.Image.fromarray(target_color.astype(np.uint8)).save(os.path.join(save_path + r'/{}_mask_color.png'.format(file_names_val[i])),format='PNG')
     # PIL.Image.fromarray(image.astype(np.uint8)).save(
     #     os.path.join(save_path, r'binary', model_name, data_set + '1', r'{}_img.png'.format(file_names_val[i])),
     #     format='PNG')

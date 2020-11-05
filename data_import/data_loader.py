@@ -328,8 +328,10 @@ class DataLoader():
         crop_count_height = img.shape[0] // patch_size
         crop_count_width = img.shape[1] // patch_size
         n_imgs = crop_count_height * crop_count_width
+        patch_size_0=img.shape[0] // crop_count_height
+        patch_size_1=img.shape[1] // crop_count_width
 
-        split_dimensions = (patch_size, patch_size, 3)
+        split_dimensions = (patch_size_0, patch_size_1, 3)
         split_imgs = np.empty((n_imgs, *split_dimensions),dtype=np.float32)
         if with_pad:
             pad_split_dimensions = (img.shape[0]+padding, img.shape[1]+padding, 3)
@@ -341,13 +343,17 @@ class DataLoader():
 
         for i in range(crop_count_height):
             for j in range(crop_count_width):
-                image = img[i * patch_size:(i + 1) * patch_size, j * patch_size:(j + 1) * patch_size]
-                split_imgs[i*crop_count_width+j] = image
                 if with_pad:
-                    large_img = padded_img[i * patch_size:(i + 1) * patch_size+padding, j * patch_size:(j + 1) * patch_size+padding]
-                    pad_split_imgs[i*crop_count_width+j] = large_img
+                    large_img = padded_img[i * patch_size_0:(i + 1) * patch_size_0 + padding,
+                                j * patch_size_1:(j + 1) * patch_size_1 + padding]
+                    pad_split_imgs[i * crop_count_width + j] = large_img
+                else:
+                    image = img[i * patch_size_0:(i + 1) * patch_size_0, j * patch_size_1:(j + 1) * patch_size_1]
+                    split_imgs[i*crop_count_width+j] = image
+        patch_dimensions=(patch_size_0,patch_size_1)
 
-        return split_imgs, (crop_count_height,crop_count_width ), pad_split_imgs
+
+        return split_imgs, (crop_count_height,crop_count_width), pad_split_imgs,patch_dimensions
 
 def load_idx_to_include():
     idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')

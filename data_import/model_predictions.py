@@ -1,22 +1,16 @@
-from data_import.data_loader import convert_to_image
 from data_import.data_loader import DataLoader
-from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
-from tqdm import tqdm
-import random,json
 import numpy as np
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
 import torch
 from torchvision.models.segmentation import deeplabv3_resnet101
-import os
 import PIL
-import pickle
-import matplotlib.pyplot as plt
 from data_import.data_loader import convert_to_image
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 from torch.utils import data
 import os
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 batch_size= 16 # 16
