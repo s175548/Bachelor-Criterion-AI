@@ -7,7 +7,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 from tqdm import tqdm
-from PIL import ImageFile
+from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel
@@ -154,7 +154,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     # Set up optimizer for discriminator
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
+    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
+
+
 
 
     # ==========   Train Loop   ==========#

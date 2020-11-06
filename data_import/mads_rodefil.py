@@ -13,6 +13,18 @@ for i in range(4):
     test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
     Image._show(test)
     print(torch.sum(output))
+
+### LINE 220 Training_win_semi
+# loss_labeled_test1 = criterion_d_test1(pred_labeled, labels)
+# loss_labeled_test2 = criterion_d_test2(pred_labeled, labels)
+#
+# if 2 in np.unique(labels.cpu().numpy()):
+#     for i in range(4):
+#         image_test = np.transpose(images[i].cpu().numpy(), (1, 2, 0))
+#         image_test = Image.fromarray((image_test / np.max(image_test) * 255).astype('uint8'))
+#         Image._show(image_test)
+#         mask_test = Image.fromarray((labels[0].cpu().numpy() * 125).astype('uint8'))
+#         Image._show(mask_test)
 # save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images'
 # import numpy as np,os
 # from PIL import Image
