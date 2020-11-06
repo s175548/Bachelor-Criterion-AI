@@ -35,9 +35,12 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            if centercrop:
-               mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             mask = np.array(mask)
+            if centercrop:
+                if size > np.minimum(mask.size[0], mask.size[1]):
+                    pass
+                else:
+                    mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
             if np.sum(mask == 1) != 0:
                 if resize:
                     resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
@@ -110,15 +113,15 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 
 """Arguments"""
 
-Villads = True
-HPC = False
+Villads = False
+HPC = True
 model_name = 'DeepLab'
 n_classes = 1
 resize = True
-size = 256
+size = 2048
 scale = 0.5
 binary = True
-device = torch.device('cpu')
+device = torch.device('cuda')
 data_set = 'val'
 
 if Villads:
