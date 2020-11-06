@@ -24,7 +24,6 @@ from data_import.data_loader import convert_to_image
 
 def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
                 size=None, scale=None,centercrop=False):
-    print(idx)
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
@@ -35,17 +34,17 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            mask = np.array(mask)
             if centercrop:
-                if size > np.minimum(mask.size[0], mask.size[1]):
+                if size > np.min(mask.shape):
                     pass
                 else:
                     mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
+            mask = np.array(mask)
+            if resize:
+                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
+                mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+            mask=np.array(mask).astype(np.uint8)
             if np.sum(mask == 1) != 0:
-                if resize:
-                    resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
-                    mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
-                mask = np.array(mask)
                 row, col = np.where(mask != 0)
                 xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
                 xdim_s.append(xdim)
@@ -116,6 +115,7 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 Villads = False
 HPC = True
 model_name = 'DeepLab'
+model_resize=False
 n_classes = 1
 resize = True
 size = 2048
@@ -136,8 +136,11 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'          ###
-    model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
+    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'
+    if model_resize:###
+        model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
+    else:
+        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/binary_vs_multi/binary/ResNet/DeepLab_binary_exp0.01.pt"
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -168,16 +171,18 @@ file_names_train = file_names_train[file_names_train != ".DS_S"]
 file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+if not resize:
+    transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtToTensor(),
+                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
-                                           et.ExtResize(scale=scale),
-                                           et.ExtEnhanceContrast(),
-                                           et.ExtToTensor(),
-                                           et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+else:
+    transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
+                                               et.ExtResize(scale=scale),
+                                               et.ExtEnhanceContrast(),
+                                               et.ExtToTensor(),
+                                               et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])
@@ -216,9 +221,7 @@ labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area ape
 metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
 errors = np.array([[0, 0], [0, 0]])
-
 for i in range(len(train_images)):
-    print(i)
     image = train_images[i][0].unsqueeze(0)
     target = train_images[i][1]
     image = image.to(device, dtype=torch.float32)
