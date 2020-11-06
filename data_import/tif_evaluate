@@ -10,7 +10,7 @@ from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
-tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/41.png'
+tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/521.png'
 data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
 

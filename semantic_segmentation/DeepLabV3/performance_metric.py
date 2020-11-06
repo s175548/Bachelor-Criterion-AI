@@ -115,6 +115,7 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 Villads = False
 HPC = True
 model_name = 'DeepLab'
+model_resize=False
 n_classes = 1
 resize = True
 size = 2048
@@ -135,8 +136,11 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'          ###
-    model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'       ###
+    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'
+    if model_resize:###
+        model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
+    else:
+        model_path=r"work3/s173934/Bachelorprojekt/exp_results/binary_vs_multi/binary/ResNet/DeepLab_binary_exp0.01.pt"
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -167,16 +171,18 @@ file_names_train = file_names_train[file_names_train != ".DS_S"]
 file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
-transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+if not resize:
+    transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtToTensor(),
+                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
-                                           et.ExtResize(scale=scale),
-                                           et.ExtEnhanceContrast(),
-                                           et.ExtToTensor(),
-                                           et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+else:
+    transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
+                                               et.ExtResize(scale=scale),
+                                               et.ExtEnhanceContrast(),
+                                               et.ExtToTensor(),
+                                               et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])
