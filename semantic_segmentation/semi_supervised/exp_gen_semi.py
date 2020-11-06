@@ -60,8 +60,8 @@ if __name__ == "__main__":
             #path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
             # path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
             # path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-            path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-            path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+            path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_recreate/train'
+            path_val = r'//work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_recreate/val'
             dataset_path_ul = r'/work3/s173934/Bachelorprojekt/all'
 
         else:
