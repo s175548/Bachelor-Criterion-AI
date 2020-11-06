@@ -24,7 +24,6 @@ from data_import.data_loader import convert_to_image
 
 def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
                 size=None, scale=None,centercrop=False):
-    print(idx)
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
@@ -35,17 +34,17 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            mask = np.array(mask)
             if centercrop:
-                if size > np.minimum(mask.size[0], mask.size[1]):
+                if size > np.min(mask.shape):
                     pass
                 else:
                     mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
+            mask = np.array(mask)
+            if resize:
+                resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
+                mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+            mask=np.array(mask).astype(np.uint8)
             if np.sum(mask == 1) != 0:
-                if resize:
-                    resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
-                    mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
-                mask = np.array(mask)
                 row, col = np.where(mask != 0)
                 xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
                 xdim_s.append(xdim)
@@ -216,9 +215,7 @@ labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area ape
 metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
 errors = np.array([[0, 0], [0, 0]])
-
 for i in range(len(train_images)):
-    print(i)
     image = train_images[i][0].unsqueeze(0)
     target = train_images[i][1]
     image = image.to(device, dtype=torch.float32)
