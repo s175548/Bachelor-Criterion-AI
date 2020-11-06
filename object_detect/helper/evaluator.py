@@ -322,11 +322,10 @@ def mask_iou(boxes,mask,targets):
     y_true = target_mask.flatten()
 
     y_mask = np.array([y for y in range(len(y_true)) if y_true[y] == 0 or y_true[y] == 255])
-    print(np.shape(y_true))
-    print(np.max(y_true))
-    print(np.min(y_true))
-    print(len(y_mask))
-    current = confusion_matrix(y_true[y_mask], y_pred[y_mask], labels=[0, 255])
+    if len(y_mask) == 0:
+        return np.array([np.nan, np.nan])
+    else:
+        current = confusion_matrix(y_true[y_mask], y_pred[y_mask], labels=[0, 255])
     # compute mean iou
     intersection = np.diag(current)
     ground_truth_set = current.sum(axis=1)
