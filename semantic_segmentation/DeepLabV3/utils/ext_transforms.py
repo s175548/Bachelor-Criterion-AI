@@ -437,8 +437,10 @@ class ExtRandomCrop(object):
         """
         w, h = img.size
         tw,th = output_size
-        i = random.randint(0, h - th)
-        j = random.randint(0, w - tw)
+        if h-th < 0:
+            a = 2
+        i = random.randint(0, abs(h - th))
+        j = random.randint(0,abs(w - tw))
         if w != h and img.size==output_size:
             min_dim = np.min(img.size)
             tw, th = min_dim, min_dim
@@ -471,8 +473,8 @@ class ExtRandomCrop(object):
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
 
         if self.pad_if_needed:
-            img = F.pad(img,padding=(int((self.size[0]-img.size[0])/2),int((self.size[1]-img.size[1])/2)),padding_mode='reflect')
-            lbl = F.pad(lbl,padding=(int((self.size[0]-lbl.size[0])/2),int((self.size[1]-lbl.size[1])/2)),padding_mode='reflect')
+            img = F.pad(img,padding=(int(abs((self.size[0]-img.size[0])/2)),abs(int((self.size[1]-img.size[1])/2))),padding_mode='reflect')
+            lbl = F.pad(lbl,padding=(int(abs((self.size[0]-lbl.size[0])/2)),abs(int((self.size[1]-lbl.size[1])/2))),padding_mode='reflect')
 
         if self.size[0]>np.minimum(img.size[0],img.size[1]) and self.scale==None:
             return img, lbl

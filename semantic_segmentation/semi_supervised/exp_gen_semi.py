@@ -19,7 +19,7 @@ def boolean_string(s):
 if __name__ == "__main__":
     HPC = True
     SIZE = 256
-    semi_supervised = False
+    semi_supervised = True
     Villads = False
     binary = True
     model_name = ''
@@ -91,8 +91,8 @@ if __name__ == "__main__":
             #path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_binary_vis_2_and_3\val'
             # path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\train'
             # path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_all_classes\val'
-            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\train'
-            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\val'
+            path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3_recreate\train'
+            path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\data_binary_vis_2_and_3_recreate\val'
             dataset_path_ul = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\trained_models'
 
         else:
@@ -157,8 +157,8 @@ if __name__ == "__main__":
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
-    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
+    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
 
     # Load dataloader for unlabelled data:
     if semi_supervised:

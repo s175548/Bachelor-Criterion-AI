@@ -97,7 +97,7 @@ def get_paths(binary=True,HPC=True,Villads=False,Johannes=False):
     return path_original_data, path_meta_data, save_path,path_model,path_train,path_val,dataset_path_ul
 
 
-def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size=16,val_batch_size=4):
+def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train,dataset_path_val,batch_size=16,val_batch_size=4,size=512):
     data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
     labels = ['Piega', 'Verruca', 'Puntura insetto', 'Background']
 
@@ -116,11 +116,11 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
 
     # transform_function = et.ExtCompose([et.ExtCenterCrop(size=SIZE),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
     #      et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
+    transform_function = et.ExtCompose([et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=size,pad_if_needed=True),et.ExtRandomHorizontalFlip(p=0.5), et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     transform_function_val = et.ExtCompose([
-        et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=SIZE,pad_if_needed=True),
+        et.ExtRandomCrop(scale=0.7, size=None),et.ExtRandomCrop(size=size,pad_if_needed=True),
         et.ExtEnhanceContrast(), et.ExtToTensor(),et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     if binary:
@@ -145,8 +145,8 @@ def get_data_loaders(binary,path_original_data,path_meta_data,dataset_path_train
         val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
     return train_loader, val_loader, train_dst, val_dst, color_dict, target_dict, annotations_dict
 
-def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset_path_unlabelled,batch_size):
-    data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data,size=256)
+def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset_path_unlabelled,batch_size,size=512):
+    data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
     labels = ['Piega', 'Verruca', 'Puntura insetto', 'Background']
 
     file_names_train = np.array([image_name[:-4] for image_name in os.listdir(dataset_path_unlabelled) if image_name[-5] != "k"])
@@ -157,7 +157,7 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
 
     transform_function = et.ExtCompose(
         [et.ExtRandomCrop(scale=0.7, size=None), et.ExtRandomCrop(size=size, pad_if_needed=True),
-         et.ExtRandomRotation(random.randint(0, 359)), et.ExtRandomHorizontalFlip(p=0.5),
+         et.ExtRandomHorizontalFlip(p=0.5),
          et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
