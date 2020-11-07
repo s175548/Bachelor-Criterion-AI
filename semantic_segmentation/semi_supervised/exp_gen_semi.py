@@ -18,7 +18,7 @@ def boolean_string(s):
 
 if __name__ == "__main__":
     HPC = True
-    SIZE = 256
+    SIZE = 512
     semi_supervised = True
     Villads = False
     binary = True
