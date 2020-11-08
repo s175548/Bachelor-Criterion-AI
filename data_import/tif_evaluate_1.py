@@ -64,7 +64,7 @@ else:
     model=_segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
 
 
-model.load_state_dict(checkpoint['model_state'],map_location=device)
+model.load_state_dict(checkpoint['model_state'])
 model.eval()
 data_loader = DataLoader(data_path=path_original_data ,metadata_path=path_meta_data)
 
