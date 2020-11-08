@@ -331,11 +331,11 @@ class DataLoader():
         patch_size_0=img.shape[0] // crop_count_height
         patch_size_1=img.shape[1] // crop_count_width
 
-        split_dimensions = (patch_size_0, patch_size_1, 3)
+        split_dimensions = (patch_size_0+2*padding, patch_size_1+2*padding, 3)
         split_imgs = np.empty((n_imgs, *split_dimensions),dtype=np.float32)
         if with_pad:
-            pad_split_dimensions = (img.shape[0]+padding, img.shape[1]+padding, 3)
-            pad_split_imgs = np.empty((n_imgs, *pad_split_dimensions))
+            pad_split_dimensions = (img.shape[0]+2*padding, img.shape[1]+2*padding, 3)
+            pad_split_imgs = split_imgs
             padded_img = self.pad_tif(img, padding//2)
         else:
             pad_split_imgs = np.empty([0])
