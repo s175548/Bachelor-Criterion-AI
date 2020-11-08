@@ -29,7 +29,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
     if np.sum(target == 1) != 0:
         masks = data_loader.get_separate_segmentations(
             os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels)
-        buffer = 42
+        buffer = 84
         xdim_s = []
         ydim_s = []
         for mask in masks:
