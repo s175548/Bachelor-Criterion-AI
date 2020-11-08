@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/zhome/db/f/128823/Bachelor/Bachelor-Criterion-AI')
+
 from PIL import Image
 from data_import.tif_import import load_tif_as_numpy_array
 from data_import.data_loader import DataLoader
@@ -9,9 +12,7 @@ import PIL
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
-import sys
 
-sys.path.append('/zhome/db/f/128823/Bachelor/Bachelor-Criterion-AI')
 
 binary=True
 device=torch.device('cuda')
