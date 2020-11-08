@@ -64,8 +64,8 @@ if model_name=='DeepLab':
 else:
     model=_segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
 
-
 model.load_state_dict(checkpoint['model_state'])
+model.to(device)
 model.eval()
 
 
