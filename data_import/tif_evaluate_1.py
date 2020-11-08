@@ -11,6 +11,7 @@ from torchvision.models.segmentation import deeplabv3_resnet101
 import PIL
 from semantic_segmentation.DeepLabV3.network.modeling import _segm_mobilenet
 import os
+import torchvision.transforms.functional as F
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
@@ -34,7 +35,7 @@ if Villads:
     path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
     path_meta_data = r'samples/model_comparison.csv'
     save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
-    tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/521.png'
+    tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/69.png'
     model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
 
 elif HPC:
@@ -43,14 +44,14 @@ elif HPC:
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/resized_model'
-    tif_path='/zhome/db/f/128823/Bachelor/data_all_classes/tif_image/521.png'
+    tif_path='/zhome/db/f/128823/Bachelor/data_all_classes/tif_image'
     if model_resize:###
         model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
     else:
         model_path=r"work3/s173934/Bachelorprojekt/exp_results/binary_vs_multi/binary/ResNet/DeepLab_binary_exp0.01.pt"
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-array = load_tif_as_numpy_array(tif_path)
+array = load_tif_as_numpy_array(tif_path+'/521.png')
 split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
@@ -82,19 +83,31 @@ else:
 
 
 target_tif=[]
-label=Image.fromarray(np.zeros((patch_dimensions[0]+100,patch_dimensions[1]+100,3),dtype=np.uint8))
 for i in range(split_x_y[0]):
     print(i)
     pred_stack=[]
     for j in range(split_x_y[1]):
         print(j)
-        image,_=transform_function(Image.fromarray(split_imgs[i*split_x_y[1]+j].astype(np.uint8)),label)
+        label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].shape,dtype=np.uint8))
+        image=Image.fromarray(split_imgs[i*split_x_y[1]+j].astype(np.uint8))
+        if j==0:
+            F.pad(image,padding=(0,0,50,0),padding_mode='reflect')
+        if j==split_x_y[1]-1:
+            F.pad(image, padding=(50, 0, 0, 0),padding_mode='reflect')
+        if i==0:
+            F.pad(image, padding=(0, 50, 0, 0), padding_mode='reflect')
+        if i==split_x_y[0]-1:
+            F.pad(image, padding=(0, 0, 0, 50), padding_mode='reflect')
+
+        image,_=transform_function(image,label)
         image = image.unsqueeze(0).to(device, dtype=torch.float32)
         if model_name == 'DeepLab':
             output = model(image)['out']
         else:
             output = model(image)
         pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
+
+
         pred=pred[50:-50,50:-50]
         if isinstance(pred_stack,list):
             pred_stack=pred
