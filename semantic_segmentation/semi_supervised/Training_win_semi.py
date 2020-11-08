@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 2e-4
+lr_g = 1e-4
 lr_policy='step'
 step_size=10000
 batch_size= 6 # 16
@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
+N_epochs= 150
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -133,7 +133,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = gamma_two = .3  # Loss weights
+        gamma_one = gamma_two = .2  # Loss weights
 
         #Load model
         model_g = generator(3)
