@@ -20,7 +20,7 @@ model_resize=True
 resize=True
 model_name='DeepLab'
 n_classes=1
-patch_size=2048
+patch_size=1024
 Villads=False
 HPC=True
 
