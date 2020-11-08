@@ -29,7 +29,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
     if np.sum(target == 1) != 0:
         masks = data_loader.get_separate_segmentations(
             os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels)
-        buffer = 42
+        buffer = 84
         xdim_s = []
         ydim_s = []
         for mask in masks:
@@ -117,8 +117,8 @@ HPC = True
 model_name = 'DeepLab'
 model_resize=False
 n_classes = 1
-resize = True
-size = 2048
+resize = False
+size = 1048
 scale = 0.5
 binary = True
 device = torch.device('cuda')
@@ -178,7 +178,7 @@ if not resize:
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 else:
-    transform_function_resize = et.ExtCompose([et.ExtCenterCrop(size=size),
+    transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
                                                et.ExtResize(scale=scale),
                                                et.ExtEnhanceContrast(),
                                                et.ExtToTensor(),
@@ -197,9 +197,9 @@ else:
     annotations_dict = data_loader.annotations_dict
 
 train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                        transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
+                        transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                      transform=transform_function_resize, color_dict=color_dict, target_dict=target_dict)
+                      transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
 train_images = []
 
