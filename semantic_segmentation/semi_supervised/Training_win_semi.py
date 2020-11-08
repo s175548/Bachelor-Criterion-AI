@@ -7,7 +7,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
 from tqdm import tqdm
-from PIL import ImageFile
+from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel
@@ -27,7 +27,7 @@ total_itrs=1000
 lr_g = 2e-4
 lr_policy='step'
 step_size=10000
-batch_size= 16 # 16
+batch_size= 6 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
+N_epochs= 150
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -129,10 +129,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         #Define various variables
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         generator_losses = []
-        gamma_one = gamma_two = 0.4  # Loss weights
+        gamma_one = gamma_two = .3  # Loss weights
 
         #Load model
-        model_g = generator(n_classes+2)
+        model_g = generator(3)
         model_g.train()
         model_g.cuda()
         optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.9, 0.99), weight_decay=weight_decay)
@@ -154,7 +154,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     # Set up optimizer for discriminator
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+2, reduction='mean')
+    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
+
+
 
 
     # ==========   Train Loop   ==========#
