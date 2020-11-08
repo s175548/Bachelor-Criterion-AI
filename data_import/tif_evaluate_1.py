@@ -24,10 +24,7 @@ patch_size=2048
 Villads=False
 HPC=True
 
-data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-array = load_tif_as_numpy_array(tif_path)
-split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=256,
-                                                                         padding=100,with_pad=False)  # Set padding to make better image predictions
+  # Set padding to make better image predictions
 
 
 
