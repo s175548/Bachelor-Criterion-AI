@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
+N_epochs= 100
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -129,6 +129,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         #Define various variables
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         generator_losses = []
+        loss_labels_d =[]
+        loss_unlabelled_d = []
+        loss_fake_d = []
+        loss_fake_g = []
         gamma_one = gamma_two = .3  # Loss weights
 
         #Load model
@@ -228,6 +232,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 running_loss = + loss_d.item() * images.size(0)
                 interval_loss += np_loss
 
+
                 ####### train G ##################
                 if semi_supervised:
                     optimizer_g.zero_grad()
@@ -284,16 +289,43 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
             if semi_supervised:
+                loss_labels_d.append(loss_labeled)
+                loss_unlabelled_d.append(loss_unlabel)
+                loss_fake_d.append(loss_fake)
+                loss_fake_g.append(loss_g)
+
+
                 generator_losses.append(-gen_loss)
 
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
         if semi_supervised:
-            plt.plot(range(len(generator_losses)), generator_losses, '-o')
+            plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
             plt.title('Train Loss')
             plt.xlabel('N_epochs')
             plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_generator_loss'), format='png')
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
+            plt.close()
+
+            plt.plot(range(len(loss_unlabelled_d)), loss_unlabelled_d, '-o')
+            plt.title('Train Loss')
+            plt.xlabel('N_epochs')
+            plt.ylabel('Loss')
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_unlabelled_d'), format='png')
+            plt.close()
+
+            plt.plot(range(len(loss_fake_d)), loss_fake_d, '-o')
+            plt.title('Train Loss')
+            plt.xlabel('N_epochs')
+            plt.ylabel('Loss')
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_d'), format='png')
+            plt.close()
+
+            plt.plot(range(len(loss_fake_g)), loss_fake_g, '-o')
+            plt.title('Train Loss')
+            plt.xlabel('N_epochs')
+            plt.ylabel('Loss')
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_g'), format='png')
             plt.close()
 
 
