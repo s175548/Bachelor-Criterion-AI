@@ -21,11 +21,10 @@ resize=True
 model_name='DeepLab'
 n_classes=1
 patch_size=2048
-data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
 Villads=False
 HPC=True
 
-
+data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
 array = load_tif_as_numpy_array(tif_path)
 split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=256,
                                                                          padding=100,with_pad=False)  # Set padding to make better image predictions
@@ -53,6 +52,11 @@ elif HPC:
     else:
         model_path=r"work3/s173934/Bachelorprojekt/exp_results/binary_vs_multi/binary/ResNet/DeepLab_binary_exp0.01.pt"
 
+data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
+array = load_tif_as_numpy_array(tif_path)
+split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=256,
+                                                                         padding=100,with_pad=False)
+
 checkpoint=torch.load(model_path,map_location=device)
 
 if model_name=='DeepLab':
@@ -72,20 +76,20 @@ split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(arra
                                                                          padding=100,with_pad=False)
 
 if not resize:
-    transform_function = et.ExtCompose([et.ExtRandomCrop(size=(patch_dimensions[0]+100,patch_dimensions[1]+100),pad_if_needed=True),
+    transform_function = et.ExtCompose([
                                         et.ExtEnhanceContrast(),
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 else:
     transform_function = et.ExtCompose(
-        [et.ExtResize(scale=0.5),et.ExtRandomCrop(size=(int(patch_dimensions[0]*0.5) + 100, int(patch_dimensions[1]*0.5) + 100), pad_if_needed=True),
+        [et.ExtResize(scale=0.5),
          et.ExtEnhanceContrast(),
          et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 
 target_tif=[]
-label=Image.fromarray(np.zeros((patch_dimensions[0],patch_dimensions[1],3),dtype=np.uint8))
+label=Image.fromarray(np.zeros((patch_dimensions[0]+100,patch_dimensions[1]+100,3),dtype=np.uint8))
 for i in range(split_x_y[0]):
     print(i)
     pred_stack=[]

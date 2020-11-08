@@ -324,7 +324,7 @@ class DataLoader():
         padded_img = np.pad(image, (extra_h, extra_w), 'reflect')
         return padded_img
 
-    def generate_tif_patches(self, img, patch_size=512,padding = 100,with_pad = False):
+    def generate_tif_patches(self, img, patch_size=512,padding = 50,with_pad = True):
         crop_count_height = img.shape[0] // patch_size
         crop_count_width = img.shape[1] // patch_size
         n_imgs = crop_count_height * crop_count_width
@@ -344,8 +344,9 @@ class DataLoader():
         for i in range(crop_count_height):
             for j in range(crop_count_width):
                 if with_pad:
-                    large_img = padded_img[i * patch_size_0:(i + 1) * patch_size_0 + padding,
-                                j * patch_size_1:(j + 1) * patch_size_1 + padding]
+                    xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
+                    ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
+                    large_img = padded_img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
                     pad_split_imgs[i * crop_count_width + j] = large_img
                 else:
                     image = img[i * patch_size_0:(i + 1) * patch_size_0, j * patch_size_1:(j + 1) * patch_size_1]
