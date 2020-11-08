@@ -66,11 +66,7 @@ else:
 
 model.load_state_dict(checkpoint['model_state'])
 model.eval()
-data_loader = DataLoader(data_path=path_original_data ,metadata_path=path_meta_data)
 
-array = load_tif_as_numpy_array(tif_path)
-split_imgs, split_x_y,_,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
-                                                                         padding=100,with_pad=False)
 
 if not resize:
     transform_function = et.ExtCompose([
@@ -95,7 +91,7 @@ for i in range(split_x_y[0]):
         image,_=transform_function(Image.fromarray(split_imgs[i*split_x_y[1]+j].astype(np.uint8)),label)
         image = image.unsqueeze(0).to(device, dtype=torch.float32)
         if model_name == 'DeepLab':
-            output = model(image.float())['out']
+            output = model(image)['out']
         else:
             output = model(image)
         pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
