@@ -119,8 +119,8 @@ if __name__ == "__main__":
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
 #Resize transform function
-if trans_func:
-    transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+    if trans_func:
+        transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
                                                                   et.ExtRandomCrop(scale=0.7),
                                                                   et.ExtEnhanceContrast(),
                                                                   et.ExtRandomCrop(size=2048, pad_if_needed=True),
@@ -133,8 +133,8 @@ if trans_func:
                                                                                   std=[0.229, 0.224, 0.225])])
 
     #Random crop 256,256
-else:
-    transform_function = transform_function = et.ExtCompose( [et.ExtRandomCrop(size=256),
+    else:
+        transform_function = transform_function = et.ExtCompose( [et.ExtRandomCrop(size=256),
         et.ExtRandomHorizontalFlip(p=0.5),
         et.ExtRandomVerticalFlip(p=0.5),
         et.ExtEnhanceContrast(),
