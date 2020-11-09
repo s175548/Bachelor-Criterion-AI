@@ -1,5 +1,5 @@
 #!/bin/sh
-#BSUB -J rn_full_scale_
+#BSUB -J rn_full_scale
 #BSUB -o rn_full_scale_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py 0.01 resnet50 SGD full empty resize
+python3 object_detect/train_hpc.py 0.01 resnet50 SGD full empty resize extended
 echo "Done"
