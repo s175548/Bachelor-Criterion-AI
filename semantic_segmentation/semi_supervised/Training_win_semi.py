@@ -26,7 +26,7 @@ save_val_results=False
 total_itrs=1000
 lr_g = 1e-4
 lr_policy='step'
-step_size=10000
+step_size=1
 batch_size= 16 # 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
@@ -281,7 +281,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
                     model_d.train()
-                scheduler_d.step()
+                # if cur_epochs%10 ==0:
+                #     scheduler_d.step()
+                #     scheduler_g.step()
 
                 if cur_itrs >= total_itrs:
                     break
