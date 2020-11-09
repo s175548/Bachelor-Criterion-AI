@@ -187,7 +187,7 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
                 images = images.to(device, dtype=torch.float32)
                 labels = labels.to(device, dtype=torch.long)
-
+                print("Image count in bach: ",images.size(0))
                 optimizer.zero_grad()
                 if model_name=='DeepLab':
                     outputs = model(images)['out']
