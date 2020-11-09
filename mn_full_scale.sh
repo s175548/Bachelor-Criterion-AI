@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J mn_full_scale_
-#BSUB -o mn_full_scale_%J.out
+#BSUB -J mn_full_sc_
+#BSUB -o mn_full_sc_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/train_hpc.py 0.01 mobilenet SGD full empty resize
+python3 object_detect/train_hpc.py 0.01 mobilenet SGD full empty resize extended
 echo "Done"
