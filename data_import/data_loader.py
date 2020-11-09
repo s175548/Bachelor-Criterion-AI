@@ -216,11 +216,9 @@ class DataLoader():
         colors = np.array([[np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255)] for _ in
                   range(60)])
         for color,key_val in zip(colors,sorted(list(self.annotations_dict.items()))):
-            if key_val[0][:4] == "Good":
-                color_dict[int(key_val[1])]=np.array([0,0,0])
-#            elif binary and key_val[0] in self.insect_bite_names:
-#                color_dict[int(key_val[1])] = colors[0]
-            elif binary and key_val[0] != 'Background':
+#            if key_val[0][:4] == "Good":
+#                color_dict[int(key_val[1])]=np.array([0,0,0])
+            if binary and key_val[0] != 'Background':
                 color_dict[int(key_val[1])] = np.array([255, 255, 255])
             else:
                 color_dict[int(key_val[1])]=color

@@ -4,12 +4,12 @@ from data_import.data_pipeline import import_data_and_mask
 from data_import.data_loader import DataLoader
 import os
 
-Villads = False
+Villads = True
 Johannes = False
 if Villads:
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    save_path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
-    save_path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
+    save_path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train_good"
+    save_path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val_good"
 
 elif Johannes:
     path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
@@ -28,8 +28,16 @@ train,val=data_loader.test_training_split(villads_dataset=False)
 """if you want to split by the skin"""
 #train,val=data_loader.test_training_split_skin()
 
+labels=['Good','Good Area','Good Area_grain01','Good Area_grain04','Good Area_grain05',
+ 'Good Area_grain06',
+ 'Good Area_grain07',
+ 'Good Area_grain09',
+ 'Good area',
+ 'Good area_grain08',
+ 'Good area_grain10',]
+
 import_data_and_mask(data_loader,idx_to_consider=val,
-                    path=save_path_val, make_binary=True,crop=True,exclude_no_mask_crops=True,labels=['Piega','Verruca','Puntura insetto','Background'])
+                    path=save_path_val, make_binary=True,exclude_no_mask_crops=True,labels=labels,visibility_scores=[2,3],crop=True)
 
 import_data_and_mask(data_loader,idx_to_consider=train,
-                     path=save_path_train, make_binary=True,crop=True,exclude_no_mask_crops=True)
+                     path=save_path_train, make_binary=True,exclude_no_mask_crops=True,labels=labels,visibility_scores=[2,3],crop=True)
