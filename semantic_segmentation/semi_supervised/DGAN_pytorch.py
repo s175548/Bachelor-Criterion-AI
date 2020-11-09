@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
-    image_size = 100 # 64
+    image_size = 128 # 64
 
     # Number of channels in the training images. For color images this is 3
     nc = 3
@@ -45,13 +45,13 @@ if __name__ == '__main__':
     nz = 100
 
     # Size of feature maps in generator
-    ngf = 100
+    ngf = 64
 
     # Size of feature maps in discriminator
-    ndf = 100
+    ndf = 64
 
     # Number of training epochs
-    num_epochs = 50
+    num_epochs = 100
 
     # Learning rate for optimizers
     lr = 0.0002
@@ -143,7 +143,7 @@ if __name__ == '__main__':
             self.ngpu = ngpu
             self.main = nn.Sequential(
                 # input is (nc) x 64 x 64
-                nn.Conv2d(nc, ndf, 4, 2, 1, bias=False),
+                nn.Conv2d(nc, ndf, 4, 2, 1, bias=False), #in channels, #out channels, # kernelsize=4, #stride, #padding
                 nn.LeakyReLU(0.2, inplace=True),
                 # state size. (ndf) x 32 x 32
                 nn.Conv2d(ndf, ndf * 2, 4, 2, 1, bias=False),
