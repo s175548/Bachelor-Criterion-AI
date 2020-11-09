@@ -209,10 +209,16 @@ if __name__ == '__main__':
             num_epoch = 100
         if binary:
             if scale:
-                path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                save_fold = 'full_scale/'
-                dataset = "all_binary_scale"
+                if all_classes:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                    save_fold = 'full_scale/'
+                    dataset = "all_binary_scale"
+                else:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
+                    save_fold = 'three_scale/'
+                    dataset = "binary_scale"
             else:
                 if all_classes:
                     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
@@ -220,8 +226,8 @@ if __name__ == '__main__':
                     save_fold = 'all_bin/'
                     dataset = "all_binary"
                 else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
                     save_fold = 'binary/'
                     dataset = "binary"
         elif tick_bite:
@@ -490,6 +496,7 @@ if __name__ == '__main__':
     print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train, "epoch ", best_epoch)
     print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
     print("Dataset: ", dataset)
+    print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     print("Bbox_type: ", bbox_type)
     print("Stats for nms")
     print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
