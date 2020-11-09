@@ -12,8 +12,8 @@
 # end of BSUB options
 
 echo "Running script..."
-cd /zhome/87/9/127623/BachelorProject
+cd cd ..
 source test-env/bin/activate
-cd /zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI
+cd Bachelor-Criterion-AI
 python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 DeepLab SGD False extended_dataset_resize_false resize_vs_randomcrop/all_class_dataset/randomcrop True False
 echo "Done"
