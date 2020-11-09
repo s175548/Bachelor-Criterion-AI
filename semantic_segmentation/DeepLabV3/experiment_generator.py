@@ -20,6 +20,8 @@ def boolean_string(s):
 HPC =True
 Villads=False
 binary=True
+batchsize= 8 # 16
+val_batchsize= 4 #4
 model_name = ''
 optimizer = ''
 exp_descrip = ''

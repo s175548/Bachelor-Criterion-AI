@@ -32,11 +32,11 @@ if __name__ == '__main__':
     workers = 4
 
     # Batch size during training
-    batch_size = 64 #128
+    batch_size = 128 #128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
-    image_size = 128 # 64
+    image_size = 64 # 64
 
     # Number of channels in the training images. For color images this is 3
     nc = 3
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     ndf = 64
 
     # Number of training epochs
-    num_epochs = 100
+    num_epochs = 25
 
     # Learning rate for optimizers
     lr = 0.0002
@@ -93,35 +93,94 @@ if __name__ == '__main__':
             nn.init.normal_(m.weight.data, 1.0, 0.02)
             nn.init.constant_(m.bias.data, 0)
 
-    class Generator(nn.Module):
+    #
+    # class Generator(nn.Module):
+    #     def __init__(self, class_number):
+    #         super().__init__()
+    #         self.linear = nn.Sequential(nn.Linear(10 * 10, 768 * 16 * 16), nn.ReLU(inplace=True))
+    #         # reshape
+    #         self.deconv1 = nn.Sequential(nn.ConvTranspose2d(768, 384, 3, 2, 1, 1),
+    #                                      nn.BatchNorm2d(384), nn.ReLU(inplace=True))  # 32*32
+    #         self.deconv2 = nn.Sequential(nn.ConvTranspose2d(384, 256, 3, 2, 1, 1),
+    #                                      nn.BatchNorm2d(256), nn.ReLU(inplace=True))  # 64*64
+    #         self.deconv3 = nn.Sequential(nn.ConvTranspose2d(256, 192, 3, 2, 1, 1),
+    #                                      nn.BatchNorm2d(192), nn.ReLU(inplace=True))  # 128*128
+    #         # last layer no relu
+    #         self.deconv4 = nn.Sequential(nn.ConvTranspose2d(192, class_number, 3, 2, 1, 1), nn.Tanh())  # 256*256
+    #
+    #     def forward(self, x):
+    #         x = self.linear(x)
+    #         x = x.reshape([-1, 768, 16, 16])
+    #         x = self.deconv1(x)
+    #         x = self.deconv2(x)
+    #         x = self.deconv3(x)
+    #         x = self.deconv4(x)
+    #
+    #         return x
+    class Generator(nn.Module): #version
         def __init__(self, ngpu):
             super(Generator, self).__init__()
             self.ngpu = ngpu
-            self.main = nn.Sequential(
-                # input is Z, going into a convolution
-                nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
-                nn.BatchNorm2d(ngf * 8),
-                nn.ReLU(True),
-                # state size. (ngf*8) x 4 x 4
-                nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
-                nn.BatchNorm2d(ngf * 4),
-                nn.ReLU(True),
+            self.C1 = nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False)
+            self.B1 = nn.BatchNorm2d(ngf * 8)
+            self.Rel1 = nn.ReLU(True)
+
+            self.C2 = nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False)
+            self.B2 = nn.BatchNorm2d(ngf * 4)
+            self.Rel2 = nn.ReLU(True)
                 # state size. (ngf*4) x 8 x 8
-                nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
-                nn.BatchNorm2d(ngf * 2),
-                nn.ReLU(True),
+            self.C3 = nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False)
+            self.B3 = nn.BatchNorm2d(ngf * 2)
+            self.Rel3 = nn.ReLU(True)
                 # state size. (ngf*2) x 16 x 16
-                nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
-                nn.BatchNorm2d(ngf),
-                nn.ReLU(True),
+            self.C4 = nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False)
+            self.B4 = nn.BatchNorm2d(ngf)
+            self.Rel4 = nn.ReLU(True)
                 # state size. (ngf) x 32 x 32
-                nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
-                nn.Tanh()
+            self.C5 = nn.ConvTranspose2d(ngf, nc, 4, 2, 1, bias=False)
+            self.T5 = nn.Tanh()
                 # state size. (nc) x 64 x 64
-            )
+
+            # self.main = nn.Sequential(
+            #             #     # input is Z, going into a convolution
+            #             #     nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
+            #             #     nn.BatchNorm2d(ngf * 8),
+            #             #     nn.ReLU(True),
+            #             #     # state size. (ngf*8) x 4 x 4
+            #             #     nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+            #             #     nn.BatchNorm2d(ngf * 4),
+            #             #     nn.ReLU(True),
+            #             #     # state size. (ngf*4) x 8 x 8
+            #             #     nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+            #             #     nn.BatchNorm2d(ngf * 2),
+            #             #     nn.ReLU(True),
+            #             #     # state size. (ngf*2) x 16 x 16
+            #             #     nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
+            #             #     nn.BatchNorm2d(ngf),
+            #             #     nn.ReLU(True),
+            #             #     # state size. (ngf) x 32 x 32
+            #             #     nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
+            #             #     nn.Tanh()
+            #             #     # state size. (nc) x 64 x 64
+            #             # )
 
         def forward(self, input):
-            return self.main(input)
+            x = self.C1(input)
+            x = self.B1(x)
+            x = self.Rel1(x)
+            x = self.C2(input)
+            x = self.B2(x)
+            x = self.Rel2(x)
+            x = self.C3(input)
+            x = self.B3(x)
+            x = self.Rel3(x)
+            x = self.C4(input)
+            x = self.B4(x)
+            x = self.Rel4(x)
+            x = self.C5(x)
+            x = self.T5(x)
+            return x
+            # return self.main(input)
 
     # Create the generator
     netG = Generator(ngpu).to(device)
