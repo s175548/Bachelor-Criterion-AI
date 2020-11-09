@@ -10,10 +10,9 @@
 #BSUB -u s173934@win.dtu.dk
 #BSUB -N
 # end of BSUB options
-
 echo "Running script..."
-cd cd ..
+cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 DeepLab SGD False extended_dataset_resize_false resize_vs_randomcrop/all_class_dataset/randomcrop True False
+python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 DeepLab SGD False extended_dataset_resize_true resize_vs_randomcrop/all_class_dataset/randomcrop True False
 echo "Done"
