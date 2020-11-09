@@ -157,9 +157,9 @@ else:
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
     train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
+        train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     val_loader = data.DataLoader(
-        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
+        val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     train_img = []
     for i in range(5):
