@@ -310,10 +310,12 @@ if __name__ == '__main__':
         N_files = len(file_names_train)
         shuffled_index = np.random.permutation(len(file_names_train))
         file_names_train = file_names_train[shuffled_index]
-        file_names_train = file_names_train[file_names_train != ".DS_S"]
+        file_names_train = file_names_train[file_names_train != ".DS_S.png"]
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
+        file_names_val = file_names_val[file_names_val != ".DS_S.png"]
+
 
         transform_function = get_transform_fun(resized=scale)
 
