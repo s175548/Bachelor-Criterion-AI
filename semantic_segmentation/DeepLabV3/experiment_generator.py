@@ -17,7 +17,7 @@ def boolean_string(s):
         raise ValueError('Not a valid boolean string')
     return s == 'True'
 
-HPC =False
+HPC =True
 Villads=False
 binary=True
 model_name = ''
@@ -37,6 +37,8 @@ if __name__ == "__main__":
         parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
         parser.add_argument('binary_setup', default=True, type=boolean_string, nargs='+', help='binary or multiclass')
+        parser.add_argument('resize_transform function', default=True, type=boolean_string, nargs='+', help='transform_func')
+
         # parser.add_argument('binary_setup',default=True, metavar='setup', type=bool,action='store_false', nargs='+', help='binary or multiclass')
         args = vars(parser.parse_args())
 
@@ -47,6 +49,7 @@ if __name__ == "__main__":
         exp_descrip = args['experiment description'][0]
         save_folder = args['folder name'][0]
         binary = args['binary_setup'][0]
+        trans_func = args['resize_transform function'][0]
         print("train_scope: ", train_scope)
         print("save folder: ",save_folder)
         print("binary: ", binary)
@@ -113,25 +116,26 @@ if __name__ == "__main__":
     file_names_val=file_names_val[shuffled_index]
     file_names_val=file_names_val[file_names_val != ".DS_S"]
 
-# FOR RESIZE
-#     transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-#                                                                   et.ExtRandomCrop(scale=0.7),
-#                                                                   et.ExtEnhanceContrast(),
-#                                                                   et.ExtRandomCrop(size=2048, pad_if_needed=True),
-#                                                                   et.ExtResize(scale=0.5),
-#                                                                   et.ExtRandomHorizontalFlip(p=0.5),
-#                                                                   et.ExtRandomCrop(size=512),
-#                                                                   et.ExtRandomVerticalFlip(p=0.5),
-#                                                                   et.ExtToTensor(),
-#                                                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-#                                                                                   std=[0.229, 0.224, 0.225])])
-#     #
-    # #FOR EXTENDED DATASET EXPERIMENT
-    transform_function = transform_function = et.ExtCompose([
+#Resize transform function
+if trans_func:
+    transform_function = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                                                  et.ExtRandomCrop(scale=0.7),
+                                                                  et.ExtEnhanceContrast(),
+                                                                  et.ExtRandomCrop(size=2048, pad_if_needed=True),
+                                                                  et.ExtResize(scale=0.5),
+                                                                  et.ExtRandomHorizontalFlip(p=0.5),
+                                                                  et.ExtRandomCrop(size=512),
+                                                                  et.ExtRandomVerticalFlip(p=0.5),
+                                                                  et.ExtToTensor(),
+                                                                  et.ExtNormalize(mean=[0.485, 0.456, 0.406],
+                                                                                  std=[0.229, 0.224, 0.225])])
+
+    #Random crop 256,256
+else:
+    transform_function = transform_function = et.ExtCompose( [et.ExtRandomCrop(size=256),
         et.ExtRandomHorizontalFlip(p=0.5),
-        et.ExtRandomCrop(size=256),
-        et.ExtEnhanceContrast(),
         et.ExtRandomVerticalFlip(p=0.5),
+        et.ExtEnhanceContrast(),
         et.ExtToTensor(),
         et.ExtNormalize(mean=[0.485, 0.456, 0.406],
                         std=[0.229, 0.224, 0.225])])

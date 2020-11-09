@@ -3,7 +3,7 @@ from semantic_segmentation.semi_supervised.generator import generator
 import PIL,numpy as np
 from PIL import Image
 model = generator(3)
-model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_super\lr\01\model_g.pt'))
+model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_super\new_setup\semi\model_g.pt'))
 model.eval()
 for i in range(4):
     noise = torch.rand([3,50*50]).uniform_()
