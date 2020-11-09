@@ -155,7 +155,7 @@ def get_transform_fun(resized=False):
                                             et.ExtRandomVerticalFlip(p=0.5),
                                             et.ExtToTensor()])
     else:
-        transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=100),
                                             et.ExtRandomHorizontalFlip(p=0.5),
                                             et.ExtRandomVerticalFlip(p=0.5),
                                             et.ExtEnhanceContrast(),
@@ -309,10 +309,10 @@ if __name__ == '__main__':
         transform_function = get_transform_fun(resized=scale)
 
         if bbox_type == 'empty':
-            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-            val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+            val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                                   bbox=True, multi=multi,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         else:
