@@ -158,7 +158,10 @@ if __name__ == '__main__':
     model.load_state_dict(loaded_model["model_state"])
     model.to(device)
     model.eval()
-    save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
+    if HPC:
+        save_path = path_save
+    else:
+        save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
 
     val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model, model_name=model_name,
                                                             data_loader=val_loader,
