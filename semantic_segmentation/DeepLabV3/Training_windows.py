@@ -187,7 +187,6 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
                 images = images.to(device, dtype=torch.float32)
                 labels = labels.to(device, dtype=torch.long)
-                print("Image count in bach: ",images.size(0))
                 optimizer.zero_grad()
                 if model_name=='DeepLab':
                     outputs = model(images)['out']
@@ -205,8 +204,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
-                    print("Epoch %d, Itrs %d/%d, Loss=%f" %
-                          (cur_epochs, cur_itrs, total_itrs, interval_loss))
+                    print("Epoch %d, Itrs %d/%d, Loss=%f images in batch=%d" %
+                          (cur_epochs, cur_itrs, total_itrs, interval_loss,images.size(0)))
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
