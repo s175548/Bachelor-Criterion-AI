@@ -197,7 +197,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     iou_target2, iou_pred2 = get_iou_targets(boxes=boxes, targets=targets[j]['boxes'].cpu(),
                                                              preds=preds,
                                                              labels=targets[j]['labels'].cpu(), image=images[j],
-                                                             expand=16)
+                                                             expand=25)
                     acc_dict2 = classifier_metric(iou_target2, iou_pred2, scores, targets[j]['boxes'].cpu(),
                                                   targets[j]['labels'].cpu())
 
