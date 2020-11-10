@@ -127,7 +127,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     if semi_supervised:
         #Define various variables
         model_g_spath = os.path.join(save_path, r'model_g.pt')
-        generator_losses = []
+        G_loss = []
+        D_loss = []
         loss_labels_d =[]
         loss_unlabelled_d = []
         loss_fake_d = []
@@ -252,7 +253,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1 and cur_epochs%10 ==0:
+                if cur_itrs==1 and cur_epochs%5 ==0:
                     print("validation...")
                     model_d.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
@@ -295,8 +296,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_fake_d.append(loss_fake)
                 loss_fake_g.append(loss_g)
 
-
-                generator_losses.append(-gen_loss)
+                D_loss.append(loss_d.item())
+                G_loss.append(-loss_g.item())
 
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
@@ -328,6 +329,16 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.ylabel('Loss')
             plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_g'), format='png')
             plt.close()
+
+            plt.figure(figsize=(10, 5))
+            plt.title("Generator and Discriminator Loss During Training")
+            plt.plot(G_loss, label="G")
+            plt.plot(D_loss, label="D")
+            plt.xlabel("iterations")
+            plt.ylabel("Loss")
+            plt.legend()
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
+            plt.show()
 
 
 
