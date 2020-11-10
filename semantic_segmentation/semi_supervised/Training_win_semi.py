@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 1e-4
+lr_g = 0.0002
 lr_policy='step'
 step_size=1
 batch_size= 2# 16
@@ -288,7 +288,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if cur_itrs >= total_itrs:
                     break
 
-            validation_loss_values.append(validation_loss /len(val_dst))
+            #validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
@@ -350,7 +350,7 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
-    plt.plot(range(len(train_loss_values)), validation_loss_values, '-o')
+    plt.plot(range(len(validation_loss_values)), validation_loss_values, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')

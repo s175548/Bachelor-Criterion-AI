@@ -90,7 +90,7 @@ if __name__ == "__main__":
         path_val = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\data_binary_vis_2_and_3_recreate\val'
         dataset_path_ul = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\trained_models'
         path2 = r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bach\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
-        lr = 0.01  #
+        lr = 0.0002 #
         path_meta_data = r'samples/model_comparison.csv'
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet'
