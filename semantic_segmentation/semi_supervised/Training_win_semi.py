@@ -354,7 +354,7 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
-    plt.plot(range(len(train_loss_values)), validation_loss_values, '-o')
+    plt.plot(range(len(validation_loss_values)), validation_loss_values, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
