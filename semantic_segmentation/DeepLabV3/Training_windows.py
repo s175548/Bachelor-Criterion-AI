@@ -204,8 +204,8 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
-                    print("Epoch %d, Itrs %d/%d, Loss=%f images in batch=%d" %
-                          (cur_epochs, cur_itrs, total_itrs, interval_loss,images.size(0)))
+                    print("Epoch %d, Itrs %d/%d, Loss=%f" %
+                          (cur_epochs, cur_itrs, total_itrs, interval_loss))
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
@@ -262,9 +262,9 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.close()
     experiment_dict = {}
     best_metric = metrics.to_str(val_score)
-    hyperparams_val = [len(train_loss_values), lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
+    hyperparams_val = [len(train_loss_values), lr, loss_type, weight_decay, optim, random_seed,
                        best_metric, best_scores, best_classIoU, model_name, default_scope, model]
-    hyperparams = ['N_epochs', 'lr', 'batch_size', 'val_batch_size', 'loss_type', 'weight_decay', 'optimizer',
+    hyperparams = ['N_epochs', 'lr', 'loss_type', 'weight_decay', 'optimizer',
                    'random_seed', 'best_metric', 'best_scores', 'best_classIoU', 'model_backbone', 'default_scope',
                    'model architecture']
     for idx, key in enumerate(hyperparams):
