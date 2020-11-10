@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 1e-4
+lr_g = 0.0002
 lr_policy='step'
 step_size=1
 batch_size= 2# 16
@@ -125,6 +125,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
     ###Load generator semi_super##
     if semi_supervised:
+        from semantic_segmentation.semi_supervised.generator import weights_init
         #Define various variables
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         G_loss = []
@@ -136,10 +137,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         gamma_one = gamma_two = .2  # Loss weights
 
         #Load model
-        model_g = generator(3)
+        model_g = generator(1) #arg = number of gpu's
+        model_g.apply(weights_init)
         model_g.train()
         model_g.cuda()
-        optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.9, 0.99), weight_decay=weight_decay)
+        optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.5, 0.999), weight_decay=weight_decay)
         scheduler_g = torch.optim.lr_scheduler.StepLR(optimizer_g, step_size=step_size, gamma=0.95)
         trainloader_nl_iter = enumerate(trainloader_nl)
 
@@ -156,6 +158,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer for discriminator
+    print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
     criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
@@ -201,8 +204,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     if images.shape[0] != images_nl.shape[0]:
                         print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
                         continue
-                    noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
-
+                    #noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
+                    b_size = images[0].to(device).size(0)
+                    noise = torch.randn(b_size, 100, 1, 1, device=device)
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
                 if model_name=='DeepLab':
@@ -288,7 +292,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if cur_itrs >= total_itrs:
                     break
 
-            validation_loss_values.append(validation_loss /len(val_dst))
+            #validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
@@ -379,7 +383,7 @@ def choose_optimizer(lr, model, model_dict, optim):
         optimizer = torch.optim.Adam(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
             {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, weight_decay=weight_decay)
+        ], lr=lr, weight_decay=weight_decay,betas=(0.5, 0.999))
     else:
         optimizer = torch.optim.RMSprop(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
