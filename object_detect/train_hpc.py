@@ -206,7 +206,7 @@ if __name__ == '__main__':
             all_classes = True
         if setup == 'resize':
             scale = True
-            num_epoch = 80
+            num_epoch = 75
         else:
             scale = False
             num_epoch = 100
