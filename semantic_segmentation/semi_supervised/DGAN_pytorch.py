@@ -406,7 +406,8 @@ if __name__ == '__main__':
     ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
     ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-
+    torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
+    torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')
 
     # Grab a batch of real images from the dataloader
     real_batch = next(iter(dataloader))

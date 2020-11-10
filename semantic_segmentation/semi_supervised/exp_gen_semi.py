@@ -17,7 +17,7 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = True
+    HPC = False
     SIZE = 256
     semi_supervised = True
     Villads = False
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
-        lr = 0.01
+        lr = 0.01 #
         path_meta_data = r'samples/model_comparison.csv'
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
@@ -167,7 +167,7 @@ if __name__ == "__main__":
         trainloader_nl = None
 
     train_img = []
-    for i in range(5):
+    for i in range(2):
         train_img.append(train_dst.__getitem__(i))
 
 

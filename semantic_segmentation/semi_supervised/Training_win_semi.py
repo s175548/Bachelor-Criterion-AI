@@ -27,16 +27,15 @@ total_itrs=1000
 lr_g = 1e-4
 lr_policy='step'
 step_size=1
-batch_size= 16 # 16
-val_batch_size= 4 #4
+batch_size= 2# 16
+val_batch_size= 2 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
-
+N_epochs= 20
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -201,7 +200,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     if images.shape[0] != images_nl.shape[0]:
                         print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
                         continue
-                    noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda()
+                    noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
 
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
@@ -253,10 +252,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1:
+                if cur_itrs==1 and cur_epochs%10 ==0:
                     print("validation...")
                     model_d.eval()
-                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
+                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
                         model=model_d, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion_d,train_images=train_images,lr=lr,save_path=save_path,
                                                                       color_dict=color_dict,target_dict=target_dict,annotations_dict=annotations_dict,exp_description=exp_description)
                     print(metrics.to_str(val_score))
@@ -267,9 +266,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU),reverse=True)][:5]
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
-                        save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
-                        if semi_supervised:
-                            torch.save(model_g.state_dict(), model_g_spath)
+                        #save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
+                        #if semi_supervised:
+                            #torch.save(model_g.state_dict(), model_g_spath)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
