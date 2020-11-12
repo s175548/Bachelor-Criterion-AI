@@ -15,6 +15,7 @@ import torchvision.transforms.functional as F
 Image.MAX_IMAGE_PIXELS = None
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
+#'/RED_HALF02_grain_01_v.tif'
 
 binary=True
 device=torch.device('cuda')
@@ -53,7 +54,7 @@ elif HPC:
 
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
+image=load_tif_as_numpy_array(tif_path+'WALKNAPPA_VDA_04_grain_01_v.tif')
 split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
@@ -113,5 +114,5 @@ for i in range(split_x_y[0]):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/red_half_01.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/walk_nappa_01.png')
 
