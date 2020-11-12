@@ -210,6 +210,12 @@ def get_bbox_mask(mask,bbox):
         bounding_box_mask = cv2.rectangle(bounding_box_mask.copy(), (bbox[i][0], bbox[i][1]), (bbox[i][2], bbox[i][3]), (155, 255, 0), 2)
     return bounding_box_mask
 
+def create_mask_from_bbox(boxes,size):
+    mask = np.empty(size)
+    for box in boxes:
+        x1, y1, x2, y2 = box
+        mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
+    return mask
 
 def find_background(image):
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
