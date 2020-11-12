@@ -59,8 +59,101 @@ class Generator(nn.Module):
         return x
 
 
+
+
+class Generator_pytorchTut(nn.Module): #version
+    def __init__(self, ngpu):
+        # Number of channels in the training images. For color images this is 3
+        nc = 3
+        super(Generator_pytorchTut, self).__init__()
+        nz = 100
+        # Size of feature maps in generator
+        ngf = 64
+        # Size of feature maps in discriminator
+        ndf = 64
+        self.ngpu = ngpu
+        self.C1 = nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False)
+        self.B1 = nn.BatchNorm2d(ngf * 8)
+        self.Rel1 = nn.ReLU(True)
+
+        self.C2 = nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False)
+        self.B2 = nn.BatchNorm2d(ngf * 4)
+        self.Rel2 = nn.ReLU(True)
+            # state size. (ngf*4) x 8 x 8
+        self.C3 = nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False)
+        self.B3 = nn.BatchNorm2d(ngf * 2)
+        self.Rel3 = nn.ReLU(True)
+            # state size. (ngf*2) x 16 x 16
+        self.C4 = nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False)
+        self.B4 = nn.BatchNorm2d(ngf)
+        self.Rel4 = nn.ReLU(True)
+            # state size. (ngf) x 32 x 32
+        self.C5 = nn.ConvTranspose2d(ngf, int(ngf/2), 4, 2, 1, bias=False)
+        self.B5 = nn.BatchNorm2d(int(ngf/2))
+        self.Rel5 = nn.ReLU(True)
+
+        self.C6 = nn.ConvTranspose2d(int(ngf/2), int(ngf/4), 4, 2, 1, bias=False)
+        self.B6 = nn.BatchNorm2d(int(ngf/4))
+        self.Rel6 = nn.ReLU(True)
+
+        self.C7 = nn.ConvTranspose2d(int(ngf/4), nc, 4, 2, 1, bias=False)
+        self.T7 = nn.Tanh()
+            # state size. (nc) x 64 x 64
+
+        self.main = nn.Sequential(
+                        # input is Z, going into a convolution
+                        nn.ConvTranspose2d( nz, ngf * 8, 4, 1, 0, bias=False),
+                        nn.BatchNorm2d(ngf * 8),
+                        nn.ReLU(True),
+                        # state size. (ngf*8) x 4 x 4
+                        nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False),
+                        nn.BatchNorm2d(ngf * 4),
+                        nn.ReLU(True),
+                        # state size. (ngf*4) x 8 x 8
+                        nn.ConvTranspose2d( ngf * 4, ngf * 2, 4, 2, 1, bias=False),
+                        nn.BatchNorm2d(ngf * 2),
+                        nn.ReLU(True),
+                        # state size. (ngf*2) x 16 x 16
+                        nn.ConvTranspose2d( ngf * 2, ngf, 4, 2, 1, bias=False),
+                        nn.BatchNorm2d(ngf),
+                        nn.ReLU(True),
+                        # state size. (ngf) x 32 x 32
+                        nn.ConvTranspose2d( ngf, nc, 4, 2, 1, bias=False),
+                        nn.Tanh()
+                        # state size. (nc) x 64 x 64
+                    )
+
+    def forward(self, input):
+        # return self.main(input)
+        x = self.C1(input)
+        x = self.B1(x)
+        x = self.Rel1(x)
+        x = self.C2(x)
+        x = self.B2(x)
+        x = self.Rel2(x)
+        x = self.C3(x)
+        x = self.B3(x)
+        x = self.Rel3(x)
+        x = self.C4(x)
+        x = self.B4(x)
+        x = self.Rel4(x)
+        x = self.C5(x)
+        x = self.B5(x)
+        x = self.Rel5(x)
+        x = self.C6(x)
+        x = self.B6(x)
+        x = self.Rel6(x)
+        x = self.C7(x)
+        x = self.T7(x)
+        return x
+        # return self.main(input)
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
 def generator(class_number):
-    model = Generator(class_number)
+    model = Generator_pytorchTut(1)
     return model
-  
-  

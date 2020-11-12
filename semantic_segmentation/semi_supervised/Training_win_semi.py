@@ -24,19 +24,18 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 1e-4
+lr_g = 0.0002
 lr_policy='step'
 step_size=1
-batch_size= 16 # 16
-val_batch_size= 4 #4
+batch_size= 2# 16
+val_batch_size= 2 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
-
+N_epochs= 20
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -126,9 +125,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
     ###Load generator semi_super##
     if semi_supervised:
+        from semantic_segmentation.semi_supervised.generator import weights_init
         #Define various variables
         model_g_spath = os.path.join(save_path, r'model_g.pt')
-        generator_losses = []
+        G_loss = []
+        D_loss = []
         loss_labels_d =[]
         loss_unlabelled_d = []
         loss_fake_d = []
@@ -136,10 +137,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         gamma_one = gamma_two = .2  # Loss weights
 
         #Load model
-        model_g = generator(3)
+        model_g = generator(1) #arg = number of gpu's
+        model_g.apply(weights_init)
         model_g.train()
         model_g.cuda()
-        optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.9, 0.99), weight_decay=weight_decay)
+        optimizer_g = torch.optim.Adam(model_g.parameters(), lr=lr_g, betas=(0.5, 0.999), weight_decay=weight_decay)
         scheduler_g = torch.optim.lr_scheduler.StepLR(optimizer_g, step_size=step_size, gamma=0.95)
         trainloader_nl_iter = enumerate(trainloader_nl)
 
@@ -156,6 +158,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer for discriminator
+    print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
     criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
@@ -201,8 +204,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     if images.shape[0] != images_nl.shape[0]:
                         print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
                         continue
-                    noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda()
-
+                    #noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
+                    b_size = images[0].to(device).size(0)
+                    noise = torch.randn(b_size, 100, 1, 1, device=device)
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
                 if model_name=='DeepLab':
@@ -253,10 +257,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1:
+                if cur_itrs==1 and cur_epochs%5 ==0:
                     print("validation...")
                     model_d.eval()
-                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(5),
+                    val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
                         model=model_d, loader=val_loader, device=device, metrics=metrics,model_name=model_name,N=cur_epochs,criterion=criterion_d,train_images=train_images,lr=lr,save_path=save_path,
                                                                       color_dict=color_dict,target_dict=target_dict,annotations_dict=annotations_dict,exp_description=exp_description)
                     print(metrics.to_str(val_score))
@@ -267,9 +271,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU),reverse=True)][:5]
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
-                        save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
-                        if semi_supervised:
-                            torch.save(model_g.state_dict(), model_g_spath)
+                        #save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
+                        #if semi_supervised:
+                            #torch.save(model_g.state_dict(), model_g_spath)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
@@ -288,7 +292,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if cur_itrs >= total_itrs:
                     break
 
-            validation_loss_values.append(validation_loss /len(val_dst))
+            #validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
@@ -296,8 +300,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_fake_d.append(loss_fake)
                 loss_fake_g.append(loss_g)
 
-
-                generator_losses.append(-gen_loss)
+                D_loss.append(loss_d.item())
+                G_loss.append(-loss_g.item())
 
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
@@ -330,6 +334,16 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_g'), format='png')
             plt.close()
 
+            plt.figure(figsize=(10, 5))
+            plt.title("Generator and Discriminator Loss During Training")
+            plt.plot(G_loss, label="G")
+            plt.plot(D_loss, label="D")
+            plt.xlabel("iterations")
+            plt.ylabel("Loss")
+            plt.legend()
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
+            plt.show()
+
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
@@ -340,7 +354,7 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.ylabel('Loss')
     plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_train_loss'), format='png')
     plt.close()
-    plt.plot(range(len(train_loss_values)), validation_loss_values, '-o')
+    plt.plot(range(len(validation_loss_values)), validation_loss_values, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
@@ -369,7 +383,7 @@ def choose_optimizer(lr, model, model_dict, optim):
         optimizer = torch.optim.Adam(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},
             {'params': model_dict[model].classifier.parameters(), 'lr': lr},
-        ], lr=lr, weight_decay=weight_decay)
+        ], lr=lr, weight_decay=weight_decay,betas=(0.5, 0.999))
     else:
         optimizer = torch.optim.RMSprop(params=[
             {'params': model_dict[model].backbone.parameters(), 'lr': 0.3 * lr},

@@ -38,7 +38,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     metric_logger = utils.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', utils.SmoothedValue(window_size=1, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
-    lr_scheduler = None
     i = 0
     path_save = save_folder
     num_boxes = []
@@ -73,10 +72,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
         losses.backward()
         optimizer.step()
 
-
-        if lr_scheduler is not None:
-            lr_scheduler.step()
-
         ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
 
         if risk==True:
@@ -108,11 +103,9 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     return model, np.mean(np.array(loss_list)), np.mean(np.array(num_boxes_pred)), np.mean(np.array(num_boxes))
 
 
-def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,multi=False,threshold=0.3):
+def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,loss_list,save_folder,risk=True,HPC=True,multi=False,scale=True,threshold=0.3):
     n_threads = torch.get_num_threads()
     torch.set_num_threads(n_threads)
-    if N % 25 == 0:
-        print("N_threads: ", n_threads)
     model.eval()
     if HPC:
         path_save = save_folder
@@ -176,10 +169,14 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     preds = outputs[j]['labels'].cpu()
 
                     new_boxes, new_scores, new_preds = do_nms(boxes, scores, preds, threshold=0.2)
+                    if scale == True:
+                        expand = 42
+                    else:
+                        expand = 21
                     iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(),
                                                            preds=new_preds,
                                                            labels=targets[j]['labels'].cpu(), image=images[j],
-                                                           expand=16)
+                                                           expand=expand)
                     acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu(),
                                                  targets[j]['labels'].cpu())
 
@@ -197,7 +194,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     iou_target2, iou_pred2 = get_iou_targets(boxes=boxes, targets=targets[j]['boxes'].cpu(),
                                                              preds=preds,
                                                              labels=targets[j]['labels'].cpu(), image=images[j],
-                                                             expand=25)
+                                                             expand=expand)
                     acc_dict2 = classifier_metric(iou_target2, iou_pred2, scores, targets[j]['boxes'].cpu(),
                                                   targets[j]['labels'].cpu())
 
@@ -227,7 +224,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     IoU = mask_iou(boxes=new_boxes,mask=masks[j],targets=targets[j]['boxes'].cpu())
                     mIoU.append(IoU[1])
 
-                    if N % 25 == 0:
+                    if N % 40 == 0:
                         df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
                                            outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold,
                                            print_state=True)
@@ -240,7 +237,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
             samples.append((images, masks, targets, outputs))
-            if N % 50 == 0:
+            if N % 40 == 0:
                 metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
 
@@ -266,7 +263,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
         # gather the stats from all processes
         metric_logger.synchronize_between_processes()
         if HPC:
-            if N % 25 == 0:
+            if N % 40 == 0:
                 print("Averaged stats:", metric_logger)
                 print("mean Average Precision for epoch {} with nms: ".format(N), np.mean(mAP))
                 print("mean Average Precision without nms {}: ".format(N), np.mean(mAP2))

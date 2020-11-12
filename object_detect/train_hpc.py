@@ -89,7 +89,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,best_ious=None,conf=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,best_map=None,best_score=None,best_ious=None,conf=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -97,7 +97,6 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "n_epochs": n_epochs,
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
-            "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
             "best_map_w_score": best_score,
             "best_ious": best_ious,
@@ -111,7 +110,6 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "n_epochs": n_epochs,
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
-            "scheduler_state": scheduler.state_dict(),
             "best_score": best_score,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -172,7 +170,6 @@ if tick_bite:
 else:
     splitted_data = True
 binary=True
-all_classes=False
 multi=False
 load_model=False
 if __name__ == '__main__':
@@ -197,22 +194,34 @@ if __name__ == '__main__':
         parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
         parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
         parser.add_argument('scale', metavar='scale', type=str, nargs='+',help='choose either resize or crop')
+        parser.add_argument('dataset', metavar='dataset', type=str, nargs='+',help='choose either three or extended')
         args = vars(parser.parse_args())
 
         model_name = args['model name'][0]
         setup = args['scale'][0]
+        classes = args['dataset'][0]
+        if classes == 'three':
+            all_classes = False
+        else:
+            all_classes = True
         if setup == 'resize':
             scale = True
-            num_epoch = 80
+            num_epoch = 75
         else:
             scale = False
             num_epoch = 100
         if binary:
             if scale:
-                path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                save_fold = 'full_scale/'
-                dataset = "all_binary_scale"
+                if all_classes:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                    save_fold = 'full_scale/'
+                    dataset = "all_binary_scale"
+                else:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
+                    save_fold = 'three_scale/'
+                    dataset = "binary_scale"
             else:
                 if all_classes:
                     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
@@ -220,8 +229,8 @@ if __name__ == '__main__':
                     save_fold = 'all_bin/'
                     dataset = "all_binary"
                 else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
                     save_fold = 'binary/'
                     dataset = "binary"
         elif tick_bite:
@@ -290,7 +299,7 @@ if __name__ == '__main__':
             if scale:
                 batch_size = 8
             else:
-                batch_size = 16
+                batch_size = 8
             val_batch_size = 4
         else:
             batch_size = 8
@@ -305,6 +314,8 @@ if __name__ == '__main__':
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
+        file_names_val = file_names_val[file_names_val != ".DS_S"]
+
 
         transform_function = get_transform_fun(resized=scale)
 
@@ -389,11 +400,6 @@ if __name__ == '__main__':
     else:
         optimizer = torch.optim.RMSprop(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
 
-    # and a learning rate scheduler which decreases the learning rate by
-    # 10x every 50 epochs
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=500,
-                                                   gamma=0.5)
     loss_train = []
     loss_val = []
     risk = False
@@ -431,13 +437,15 @@ if __name__ == '__main__':
                                             data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
-        # update the learning rate
-        lr_scheduler.step()
+
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2, mIoU = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
-                                                     data_loader=val_loader,
-                                                     device=device,N=epoch+1,
-                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
+        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2, mIoU = evaluate(model, model_name, optim_name=optim, lr=lr,
+                                                                        layers=layers_to_train,
+                                                                        data_loader=val_loader,
+                                                                        device=device,N=epoch+1,
+                                                                        loss_list=curr_loss_val,
+                                                                        save_folder=save_folder,
+                                                                        risk=risk,multi=multi,scale=scale)
         if mAP > best_score:  # save best model
             best_score = mAP
             best_scores.append(best_score)
@@ -490,6 +498,7 @@ if __name__ == '__main__':
     print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train, "epoch ", best_epoch)
     print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
     print("Dataset: ", dataset)
+    print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     print("Bbox_type: ", bbox_type)
     print("Stats for nms")
     print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
@@ -506,7 +515,7 @@ if __name__ == '__main__':
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
                    model_name="{}_{}_{}_{}_{}".format(model_name, layers_to_train, bbox_type, lr, dataset), optim_name=optim,
                    n_epochs=best_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_scores, best_ious=best_ious, conf=conf, losses=loss_train, val_losses=loss_val)
+                   best_map=best_map, best_score=best_scores, best_ious=best_ious, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
         _,_,_,_ = validate(model=best_model, model_name=model_name,
                            data_loader=val_loader, device=device,

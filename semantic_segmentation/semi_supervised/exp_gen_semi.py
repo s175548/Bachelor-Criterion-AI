@@ -17,10 +17,11 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = True
+    HPC = False
     SIZE = 256
     semi_supervised = True
     Villads = False
+    DellXPS = True
     binary = True
     model_name = ''
     optimizer = ''
@@ -81,7 +82,16 @@ if __name__ == "__main__":
         lr = 0.01
         path_meta_data = r'samples/model_comparison.csv'
 
-
+    elif DellXPS:
+        save_path = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\results'
+        path_model = save_path
+        path_original_data = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\leather_patches'
+        path_train = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\data_binary_vis_2_and_3_recreate\train'
+        path_val = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\data_binary_vis_2_and_3_recreate\val'
+        dataset_path_ul = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\trained_models'
+        path2 = r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bach\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
+        lr = 0.0002 #
+        path_meta_data = r'samples/model_comparison.csv'
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet'
         path_model = save_path
@@ -99,7 +109,7 @@ if __name__ == "__main__":
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
-        lr = 0.01
+        lr = 0.0002 #
         path_meta_data = r'samples/model_comparison.csv'
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
@@ -167,7 +177,7 @@ if __name__ == "__main__":
         trainloader_nl = None
 
     train_img = []
-    for i in range(5):
+    for i in range(2):
         train_img.append(train_dst.__getitem__(i))
 
 
@@ -176,7 +186,7 @@ if __name__ == "__main__":
         model_name = 'MobileNet'
         #model_name =
     if optimizer == '':
-        optimizer = 'SGD'
+        optimizer = 'Adam'
     if exp_descrip == '':
         exp_descrip = 'no_decrip'
     if train_scope == '':

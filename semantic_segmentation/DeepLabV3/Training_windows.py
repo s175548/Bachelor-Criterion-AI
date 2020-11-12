@@ -33,15 +33,15 @@ total_itrs=500#1000
 #lr=0.01 # Is a parameter in training()
 lr_policy='step'
 step_size=10000
-batch_size= 2 # 16
-val_batch_size= 1 #4
+# batchsize= 8 # 16
+# val_batchsize= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 70 # 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 20
+N_epochs= 100
 
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
@@ -187,7 +187,6 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
 
                 images = images.to(device, dtype=torch.float32)
                 labels = labels.to(device, dtype=torch.long)
-
                 optimizer.zero_grad()
                 if model_name=='DeepLab':
                     outputs = model(images)['out']
@@ -263,9 +262,9 @@ def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_des
     plt.close()
     experiment_dict = {}
     best_metric = metrics.to_str(val_score)
-    hyperparams_val = [len(train_loss_values), lr, batch_size, val_batch_size, loss_type, weight_decay, optim, random_seed,
+    hyperparams_val = [len(train_loss_values), lr, loss_type, weight_decay, optim, random_seed,
                        best_metric, best_scores, best_classIoU, model_name, default_scope, model]
-    hyperparams = ['N_epochs', 'lr', 'batch_size', 'val_batch_size', 'loss_type', 'weight_decay', 'optimizer',
+    hyperparams = ['N_epochs', 'lr', 'loss_type', 'weight_decay', 'optimizer',
                    'random_seed', 'best_metric', 'best_scores', 'best_classIoU', 'model_backbone', 'default_scope',
                    'model architecture']
     for idx, key in enumerate(hyperparams):
