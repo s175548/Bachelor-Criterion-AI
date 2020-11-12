@@ -44,8 +44,8 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/data_binary_all_classes/tif_img'
-    tif_path= r'/zhome/db/f/128823/Bachelor/data_binary_all_classes/tif_img'
+    save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
+    tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
     if model_resize:###
         model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
     else:
@@ -88,13 +88,13 @@ else:
 
 
 target_tif=[]
-for i in range(split_x_y[1]):
+for i in range(split_x_y[0]):
     print(i)
     pred_stack=[]
-    for j in range(split_x_y[0]):
+    for j in range(split_x_y[1]):
         print(j)
-        label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].size,dtype=np.uint8))
-        image=split_imgs[i*split_x_y[1]+j]
+        label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].shape,dtype=np.uint8))
+        image=Image.fromarray[split_imgs[i*split_x_y[1]+j]]
         image,_=transform_function(image,label)
         image = image.unsqueeze(0).to(device, dtype=torch.float32)
         if model_name == 'DeepLab':
