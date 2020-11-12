@@ -3,6 +3,7 @@ from PIL import Image
 from torchvision import datasets, transforms
 from data_import.draw_contours import draw_contours2,extract_bounding_box_coords
 import matplotlib.pyplot as plt
+Image.MAX_IMAGE_PIXELS = None
 
 
 
@@ -65,7 +66,7 @@ class DataLoader():
 
 
 
-    def get_image_and_labels(self,images_idx,labels="All",ignore_good=False,make_binary=True):
+    def get_image_and_labels(self,images_idx,labels="All",make_binary=True):
             """     input: give index/indices of the wanted images in the dataset
                     output: image(s) and mask(s) of the given index/indices
             """
@@ -93,12 +94,42 @@ class DataLoader():
                 images.append(image)
             return (images,segmentation_masks)
 
+    def get_tif_mask(self,img_name='RED_HALF02_grain_01_v.tif',
+                     mask_name='annotations_RED_HALF02_grain_01_v.tif.json',
+                     tif_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images',
+                                 labels="All", make_binary=True):
+        """     input: give index/indices of the wanted images in the dataset
+                output: image(s) and mask(s) of the given index/indices
+        """
+        if labels == 'All':
+            labels = self.annotations_dict.keys()
+        if make_binary:
+            color_map_dict = self.color_dict_binary
+        else:
+            color_map_dict = self.color_dict
 
-    def read_segmentation_file(self,filepath,labels='All'):
+        mask = self.read_segmentation_file(os.path.join(tif_path,mask_name),
+                                           labels=labels,tif_dict=False)
+        image = np.array(PIL.Image.open(os.path.join(tif_path,img_name)))
+        back_mask = get_background_mask(image)
+        back_mask[(np.array(back_mask) != 0) & (np.squeeze(mask) != 0)] = 0
+        mask_1d = np.squeeze(mask) + np.array(back_mask) / 255 * self.annotations_dict["Background"]
+        mask = np.dstack((mask, mask, mask))
+        back_mask=np.array(back_mask) / 255
+        back_mask=np.dstack((back_mask, back_mask, back_mask))*color_map_dict[53]
+        mask_3d =mask+back_mask
+        return image,mask_1d, mask_3d
+
+
+
+    def read_segmentation_file(self,filepath,labels='All',tif_dict=False):
         """     Helper function, that simply opens segmentation file, draws a contour from this.
                 Output: Segmentation retrieved from filename
         """
-        label_dict=self.annotations_dict.copy()
+        if tif_dict:
+            label_dict=get_all_annotations(self,tif_dict=True)
+        else:
+            label_dict=self.annotations_dict.copy()
         seg = self.get_json_file_content(filepath)
         if labels=='All':
             labels=list(label_dict.keys())
@@ -129,7 +160,7 @@ class DataLoader():
 
 
 
-    def get_all_annotations(self):
+    def get_all_annotations(self,tif_dict=False):
         label_names_set=set()
         label_dict_new={}
         for annotation_path in self.metadata_csv[self.valid_annotations,3]:
@@ -138,7 +169,10 @@ class DataLoader():
             for label in seg["annotations"]:
                 label_names_set.add(label["label"])
         for i,label_name in enumerate(np.sort(list(label_names_set))):
-            label_dict_new[label_name]=i
+            if tif_dict:
+                label_dict_new[label_name] = 1
+            else:
+                label_dict_new[label_name]=i
         label_dict_new['Background']=len(list(label_dict_new.keys()))
         return label_dict_new
 
@@ -335,6 +369,14 @@ class DataLoader():
                     xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
                     ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
                     large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1],:]
+                    if j == 0:
+                        F.pad(large_image, padding=(0, 0, 50, 0), padding_mode='reflect')
+                    if j == split_x_y[1] - 1:
+                        F.pad(large_image, padding=(50, 0, 0, 0), padding_mode='reflect')
+                    if i == 0:
+                        F.pad(large_image, padding=(0, 50, 0, 0), padding_mode='reflect')
+                    if i == split_x_y[0] - 1:
+                        F.pad(large_image, padding=(0, 0, 0, 50), padding_mode='reflect')
                     pad_split_imgs.append(large_img)
 
         patch_dimensions=(patch_size_0,patch_size_1)
@@ -437,6 +479,7 @@ def get_background_mask(image):
 if __name__ == '__main__':
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
+    img, mask_1d,mask_3d=data_loader.get_tif_mask()
     #train,val=data_loader.test_training_split()
     #for data in [train,val] :
     #    idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))
