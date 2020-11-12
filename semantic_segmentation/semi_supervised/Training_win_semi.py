@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.002
+lr_g = 0.0002
 lr_policy='step'
 step_size=1
 batch_size= 2# 16
@@ -285,6 +285,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
                     model_d.train()
+                    validation_loss_values.append(validation_loss / len(val_dst))
+                    train_loss_values.append(running_loss / len(train_dst))
                 # if cur_epochs%10 ==0:
                 #     scheduler_d.step()
                 #     scheduler_g.step()
@@ -292,8 +294,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if cur_itrs >= total_itrs:
                     break
 
-            validation_loss_values.append(validation_loss /len(val_dst))
-            train_loss_values.append(running_loss / len(train_dst))
+
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
                 loss_unlabelled_d.append(loss_unlabel)
