@@ -23,7 +23,7 @@ else:
     save_path_train =r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\train'
     save_path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\test_data_binary_vis_2_and_3\val'
 
-train,val=data_loader.test_training_split(villads_dataset=False)
+train,val=data_loader.test_training_split(villads_dataset=True)
 
 """if you want to split by the skin"""
 #train,val=data_loader.test_training_split_skin()
@@ -37,7 +37,7 @@ labels=['Good','Good Area','Good Area_grain01','Good Area_grain04','Good Area_gr
  'Good area_grain10',]
 
 import_data_and_mask(data_loader,idx_to_consider=val,
-                    path=save_path_val, make_binary=True,exclude_no_mask_crops=True,visibility_scores=[2,3],crop=False)
+                    path=save_path_val, make_binary=True,exclude_no_mask_crops=False,crop=False)
 
 #import_data_and_mask(data_loader,idx_to_consider=train,
 #                     path=save_path_train, make_binary=True,exclude_no_mask_crops=True,labels=labels,visibility_scores=[2,3],crop=True)
