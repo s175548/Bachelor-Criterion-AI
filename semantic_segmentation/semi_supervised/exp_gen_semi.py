@@ -17,11 +17,11 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = False
+    HPC = True
     SIZE = 256
     semi_supervised = True
     Villads = False
-    DellXPS = True
+    DellXPS = False
     binary = True
     model_name = ''
     optimizer = ''
