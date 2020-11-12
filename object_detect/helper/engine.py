@@ -204,6 +204,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
             if risk==True:
                 model.train()
+                images = list(img.to(device, dtype=torch.float32) for img in image)
                 loss_dict = model(images, targets)
 
                 # reduce losses over all GPUs for logging purposes
@@ -212,6 +213,7 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
+
                 model.eval()
             i+=1
 
