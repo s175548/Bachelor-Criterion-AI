@@ -16,6 +16,7 @@ Image.MAX_IMAGE_PIXELS = None
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 #'/RED_HALF02_grain_01_v.tif'
+#'/WALKNAPPA_VDA_04_grain_01_v.tif'
 
 binary=True
 device=torch.device('cuda')
@@ -50,11 +51,12 @@ elif HPC:
     if model_resize:###
         model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
     else:
-        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/randomcrop/DeepLab_ThreeClass_resize_false0.01.pt"
+        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
+
 
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/WALKNAPPA_VDA_04_grain_01_v.tif')
+image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
 split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
@@ -114,5 +116,5 @@ for i in range(split_x_y[0]):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/vda_04_01.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/red_half_02_01_all_classes.png')
 
