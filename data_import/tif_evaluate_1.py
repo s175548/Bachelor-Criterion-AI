@@ -54,7 +54,6 @@ elif HPC:
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
 image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
-image=image[:500,:]
 split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
