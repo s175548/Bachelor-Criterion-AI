@@ -455,31 +455,23 @@ class ExtRandomCrop(object):
             PIL Image: Cropped image.
             PIL Image: Cropped label.
         """
-        if self.size != None and not self.pad_if_needed:
+        if self.size != None:
             if type(self.size)==int:
-                if np.min(img.size)<self.size:
-                    self.size=img.size
-                else:
-                    self.size = (self.size, self.size)
+                size=(self.size,self.size)
             else:
-                pass
-        elif self.pad_if_needed:
-            if type(self.size) == int:
-                self.size = (self.size, self.size)
-            else:
-                pass
+                size=self.size
         else:
-            self.size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
+            size=(int(img.size[0]*self.scale), int(img.size[1]*self.scale) )
         assert img.size == lbl.size, 'size of img and lbl should be the same. %s, %s'%(img.size, lbl.size)
 
         if self.pad_if_needed:
-            img = F.pad(img,padding=(int(abs((self.size[0]-img.size[0])/2)),abs(int((self.size[1]-img.size[1])/2))),padding_mode='reflect')
-            lbl = F.pad(lbl,padding=(int(abs((self.size[0]-lbl.size[0])/2)),abs(int((self.size[1]-lbl.size[1])/2))),padding_mode='reflect')
+            img = F.pad(img,padding=(int(abs((size[0]-img.size[0])/2)),abs(int((size[1]-img.size[1])/2))),padding_mode='reflect')
+            lbl = F.pad(lbl,padding=(int(abs((size[0]-lbl.size[0])/2)),abs(int((size[1]-lbl.size[1])/2))),padding_mode='reflect')
 
-        if self.size[0]>np.minimum(img.size[0],img.size[1]) and self.scale==None:
+        if np.min(size)>np.min(img.size):
             return img, lbl
         else:
-            i, j, h, w = self.get_params(img, self.size)
+            i, j, h, w = self.get_params(img, size)
             return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)
 
     def __repr__(self):
@@ -513,9 +505,11 @@ class ExtResize(object):
 
         """
         if self.scale != None:
-            self.size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
+            size=(int(img.size[1]*self.scale), int(img.size[0]*self.scale))
+        else:
+            size=(self.size,self.size)
 
-        return F.resize(img, self.size, self.interpolation), F.resize(lbl, self.size, Image.NEAREST)
+        return F.resize(img, size, self.interpolation), F.resize(lbl, size, Image.NEAREST)
 
     def __repr__(self):
         interpolate_str = _pil_interpolation_to_str[self.interpolation]

@@ -129,10 +129,6 @@ class DataLoader():
 
 
 
-
-
-
-
     def get_all_annotations(self):
         label_names_set=set()
         label_dict_new={}
@@ -216,9 +212,9 @@ class DataLoader():
         colors = np.array([[np.random.randint(0,255),np.random.randint(0,255),np.random.randint(0,255)] for _ in
                   range(60)])
         for color,key_val in zip(colors,sorted(list(self.annotations_dict.items()))):
-#            if key_val[0][:4] == "Good":
-#                color_dict[int(key_val[1])]=np.array([0,0,0])
-            if binary and key_val[0] != 'Background':
+            if key_val[0][:4] == "Good":
+                color_dict[int(key_val[1])]=np.array([0,0,0])
+            elif binary and key_val[0] != 'Background':
                 color_dict[int(key_val[1])] = np.array([255, 255, 255])
             else:
                 color_dict[int(key_val[1])]=color
@@ -330,29 +326,21 @@ class DataLoader():
         patch_size_1=img.shape[1] // crop_count_width
 
         split_dimensions = (patch_size_0+2*padding, patch_size_1+2*padding, 3)
-        split_imgs = np.empty((n_imgs, *split_dimensions),dtype=np.float32)
         if with_pad:
-            pad_split_dimensions = (img.shape[0]+2*padding, img.shape[1]+2*padding, 3)
             pad_split_imgs = []
             padded_img = self.pad_tif(img, padding//2)
-        else:
-            pad_split_imgs = np.empty([0])
-
 
         for i in range(crop_count_height):
             for j in range(crop_count_width):
-                if with_pad:
                     xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
                     ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
-                    large_img = padded_img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
+                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1],:]
                     pad_split_imgs.append(large_img)
-                else:
-                    image = img[i * patch_size_0:(i + 1) * patch_size_0, j * patch_size_1:(j + 1) * patch_size_1]
-                    split_imgs[i*crop_count_width+j] = image
+
         patch_dimensions=(patch_size_0,patch_size_1)
 
 
-        return split_imgs, (crop_count_height,crop_count_width), pad_split_imgs,patch_dimensions
+        return pad_split_imgs, (crop_count_height,crop_count_width),patch_dimensions
 
 def load_idx_to_include():
     idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')
