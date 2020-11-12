@@ -72,6 +72,7 @@ if __name__ == '__main__':
     patch_size = 128
 
     array = load_tif_as_numpy_array(tif_path)
+    #image, mask, _ = data_loader.get_tif_mask()
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
@@ -101,15 +102,6 @@ if __name__ == '__main__':
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].shape, dtype=np.uint8))
             image = Image.fromarray(split_imgs[i * split_x_y[1] + j].astype(np.uint8))
             size = image.size
-
-            if j == 0:
-                F.pad(image, padding=(0, 0, 50, 0), padding_mode='reflect')
-            if j == split_x_y[1] - 1:
-                F.pad(image, padding=(50, 0, 0, 0), padding_mode='reflect')
-            if i == 0:
-                F.pad(image, padding=(0, 50, 0, 0), padding_mode='reflect')
-            if i == split_x_y[0] - 1:
-                F.pad(image, padding=(0, 0, 0, 50), padding_mode='reflect')
 
             image, _ = transform_function(image, label)
             image = image.unsqueeze(0).to(device, dtype=torch.float32)
