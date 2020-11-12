@@ -17,14 +17,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 binary=True
-device=torch.device('cpu')
+device=torch.device('cuda')
 model_resize=False
 resize=False
 model_name='DeepLab'
 n_classes=1
-patch_size=128
-Villads=True
-HPC=False
+patch_size=1024
+Villads=False
+HPC=True
 
   # Set padding to make better image predictions
 
@@ -54,7 +54,6 @@ elif HPC:
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
 image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
-image=image[:1000,:]
 split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
@@ -75,17 +74,17 @@ model.to(device)
 model.eval()
 
 
-if not resize:
-    transform_function = et.ExtCompose([
-                                        et.ExtEnhanceContrast(),
-                                        et.ExtToTensor(),
-                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-else:
+if resize:
     transform_function = et.ExtCompose(
         [et.ExtResize(scale=0.5),
          et.ExtEnhanceContrast(),
          et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+else:
+    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
+                                        et.ExtToTensor(),
+                                        et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 
 target_tif=[]
@@ -94,7 +93,7 @@ for i in range(split_x_y[0]):
     pred_stack=[]
     for j in range(split_x_y[1]):
         print(j)
-        label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].shape,dtype=np.uint8))
+        label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].size,dtype=np.uint8))
         image=split_imgs[i*split_x_y[1]+j]
         image,_=transform_function(image,label)
         image = image.unsqueeze(0).to(device, dtype=torch.float32)
