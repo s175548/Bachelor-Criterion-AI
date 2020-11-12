@@ -45,13 +45,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
     for (images, labels, masks) in metric_logger.log_every(data_loader, print_freq, header):
         images = list(img.to(device, dtype=torch.float32) for img in images)
         targets = list({k: v.to(device) for k,v in t.items()} for t in labels)
-        nb = []
-        nt = []
-        #nb.append(np.mean([len(targets[j]['boxes']) for j in range(len(targets))]))
-        #nt.append(np.mean([len(targets[j]['labels']) for j in range(len(targets))]))
-
-        if nb > nt:
-            print("Something wrong.. hmm")
 
         loss_dict = model(images, targets)
         losses = sum(loss for loss in loss_dict.values())
@@ -72,29 +65,6 @@ def train_one_epoch(model, model_name, optim_name, lr, optimizer, layers, data_l
         losses.backward()
         optimizer.step()
 
-        ids = [targets[l]['image_id'].cpu() for l in range(len(targets))]
-
-        if risk==True:
-            if i < 5:
-                if HPC:
-                    if epoch % 25 == 0:
-                        samples = []
-                        model.eval()
-                        outputs = model(images)
-                        num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
-                        num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
-                        model.train()
-                        samples.append((images, masks, targets, outputs))
-                        #get_samples(samples,model_name,optim_name,lr,layers,ids,N=epoch,path_save=path_save,train=True)
-                else:
-                    samples = []
-                    model.eval()
-                    outputs = model(images)
-                    num_boxes.append(np.mean([len(targets[j]['boxes']) for j in range(len(ids))]))
-                    num_boxes_pred.append(np.mean([len(outputs[k]['boxes']) for k in range(len(ids))]))
-                    model.train()
-                    samples.append((images, masks, targets, outputs))
-                    #get_samples(samples, model_name, optim_name, lr, ids, N=epoch, path_save=path_save, train=True)
         i+=1
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
@@ -224,15 +194,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
                     IoU = mask_iou(boxes=new_boxes,mask=masks[j],targets=targets[j]['boxes'].cpu())
                     mIoU.append(IoU[1])
 
-                    if N % 40 == 0:
-                        df3,_,_ = get_map2(outputs[j]['boxes'], targets[j]['boxes'], outputs[j]['scores'],
-                                           outputs[j]['labels'].cpu(), targets[j]['labels'].cpu(), iou_list=iou2, threshold=threshold,
-                                           print_state=True)
-                        df3, _, _ = get_map2(new_boxes, targets[j]['boxes'], new_scores,
-                                             new_preds, targets[j]['labels'].cpu(), iou_list=iou,
-                                             threshold=threshold,
-                                             print_state=True)
-
             samples = []
             num_boxes_val.append(np.mean([len(targets[i]['boxes']) for i in range(len(ids))]))
             num_boxes_pred.append(np.mean([len(outputs[i]['boxes']) for i in range(len(ids))]))
@@ -251,12 +212,6 @@ def evaluate(model, model_name, optim_name, lr, layers, data_loader, device,N,lo
 
                 loss_value = losses_reduced.item()
                 loss_list.append(loss_value)
-#                if i < 100:
-#                    if HPC:
-#                        if N % 100 == 0:
-#                            get_samples(samples,model_name,optim_name,lr,layers,ids,N=N,path_save=path_save,train=False)
-#                    else:
-#                        get_samples(samples, model_name, optim_name, lr, layers,ids, N=N, path_save=path_save, train=False)
                 model.eval()
             i+=1
 
