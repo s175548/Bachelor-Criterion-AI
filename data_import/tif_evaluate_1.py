@@ -16,14 +16,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 binary=True
-device=torch.device('cuda')
+device=torch.device('cpu')
 model_resize=True
 resize=True
 model_name='DeepLab'
 n_classes=1
-patch_size=1024
-Villads=False
-HPC=True
+patch_size=128
+Villads=True
+HPC=False
 
   # Set padding to make better image predictions
 
@@ -35,7 +35,7 @@ if Villads:
     path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
     path_meta_data = r'samples/model_comparison.csv'
     save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
-    tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img/69.png'
+    tif_path = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/img'
     model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
 
 elif HPC:
@@ -51,8 +51,8 @@ elif HPC:
         model_path=r"work3/s173934/Bachelorprojekt/exp_results/binary_vs_multi/binary/ResNet/DeepLab_binary_exp0.01.pt"
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-array = load_tif_as_numpy_array(tif_path+'/521.png')
-_, split_x_y,split_imgs,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
+array = load_tif_as_numpy_array(tif_path+'/41.png')
+split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
 checkpoint=torch.load(model_path,map_location=device)

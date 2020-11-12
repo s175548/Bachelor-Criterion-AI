@@ -26,6 +26,7 @@ transform_function = et.ExtCompose([et.ExtCenterCrop(size=1024),
 HPC=True
 splitted_data=True
 binary=True
+tif=False
 
 if __name__ == '__main__':
 
@@ -41,81 +42,13 @@ if __name__ == '__main__':
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
-        parser = argparse.ArgumentParser(description='Take parameters')
-        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
-        parser.add_argument('scale', metavar='scale', type=str, nargs='+',help='choose either resize or crop')
-        parser.add_argument('dataset', metavar='dataset', type=str, nargs='+',help='choose either three or extended')
-        args = vars(parser.parse_args())
-        model_name = args['model name'][0]
-        setup = args['scale'][0]
-        classes = args['dataset'][0]
-        if setup == 'resize':
-            scale = True
-        else:
-            scale = False
-        if classes == 'three':
-            all_classes = False
-        else:
-            all_classes = True
-        if binary:
-            if scale:
-                if all_classes:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                    save_fold = 'full_scale/'
-                    dataset = "all_binary_scale"
-                else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
-                    save_fold = 'three_scale/'
-                    dataset = "binary_scale"
-            else:
-                if all_classes:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                    save_fold = 'all_bin/'
-                    dataset = "all_binary"
-                else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
-                    save_fold = 'binary/'
-                    dataset = "binary"
+        model_name = 'mobilenet'
 
-        path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
-        path_save = os.path.join(path_save, save_fold)
-        save_folder = os.path.join(path_save, model_name)
-        save_path_exp = os.path.join(save_path_model,save_fold)
-    else:
-        device = torch.device('cpu')
-        num_epoch = 1
-        path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
-        path_meta_data = r'samples/model_comparison.csv'
-        if binary:
-            if scale:
-                if all_classes:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                    save_fold = 'full_scale/'
-                    dataset = "all_binary_scale"
-                else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
-                    save_fold = 'three_scale/'
-                    dataset = "binary_scale"
-            else:
-                if all_classes:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                    save_fold = 'all_bin/'
-                    dataset = "all_binary"
-                else:
-                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
-                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
-                    save_fold = 'binary/'
-                    dataset = "binary"
-
-        path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
-        save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
+        path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+        path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+        save_fold = 'full_scale/'
+        dataset = "all_binary_scale"
+        path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,

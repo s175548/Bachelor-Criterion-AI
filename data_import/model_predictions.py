@@ -72,14 +72,6 @@ transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(
                                     et.ExtToTensor(),
                                     et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function = transform_function = et.ExtCompose([
-    et.ExtRandomCrop(scale=0.7),
-    et.ExtRandomHorizontalFlip(p=0.5),
-    et.ExtRandomCrop(size=512),
-    et.ExtRandomVerticalFlip(p=0.5),
-    et.ExtToTensor(),
-    et.ExtNormalize(mean=[0.485, 0.456, 0.406],
-                    std=[0.229, 0.224, 0.225])])
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
                      std=[0.229, 0.224, 0.225])

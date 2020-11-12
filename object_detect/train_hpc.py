@@ -206,7 +206,7 @@ if __name__ == '__main__':
             all_classes = True
         if setup == 'resize':
             scale = True
-            num_epoch = 80
+            num_epoch = 75
         else:
             scale = False
             num_epoch = 100
@@ -402,7 +402,7 @@ if __name__ == '__main__':
 
     loss_train = []
     loss_val = []
-    risk = False
+    risk = True
     best_score = 0
     best_scores = [0, 0, 0, 0, 0]
     overall_best = 0
@@ -468,12 +468,6 @@ if __name__ == '__main__':
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
-        cmatrix["num_defects"] = conf["total_num_defects"]
-        cmatrix["img_bad"] = conf["bad_leather"]
-        cmatrix["img_good"] = conf["good_leather"]
-        cmatrix2["num_defects"] = conf2["total_num_defects"]
-        cmatrix2["img_bad"] = conf2["bad_leather"]
-        cmatrix2["img_good"] = conf2["good_leather"]
         if mAP > best_map:
             best_map = mAP
             if HPC:
@@ -482,6 +476,14 @@ if __name__ == '__main__':
                 best_model.load_state_dict(model.state_dict())
                 best_model.to(device)
                 best_epoch = epoch
+
+            cmatrix["num_defects"] = conf["total_num_defects"]
+            cmatrix["img_bad"] = conf["bad_leather"]
+            cmatrix["img_good"] = conf["good_leather"]
+            cmatrix2["num_defects"] = conf2["total_num_defects"]
+            cmatrix2["img_bad"] = conf2["bad_leather"]
+            cmatrix2["img_good"] = conf2["good_leather"]
+            ################################################
             cmatrix["highest_tp"] = conf["true_positives"]
             cmatrix["lowest_fp"] = conf["false_positives"]
             cmatrix["lowest_fn"] = conf["false_negatives"]

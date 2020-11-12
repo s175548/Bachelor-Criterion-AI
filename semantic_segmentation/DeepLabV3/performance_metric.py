@@ -22,7 +22,7 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from data_import.data_loader import convert_to_image
 
 
-def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives, metric, resize=False,
+def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives,true_negatives, metric, resize=False,
                 size=None, scale=None,centercrop=False):
     pred = pred_color.copy()
     target = target_color.copy()
@@ -68,13 +68,17 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
     else:
         xdim_s = None
         ydim_s = None
+        true_negatives[0]+=1
+        if np.sum(pred == 1) == 0:
+            true_negatives[1]+=1
+
     if np.sum(pred == 1) > 0:
         false_positives += 1
     target[target == 2] = 0
     metric[2].update(target, pred)
     target_color[target_color == 2] = 0
     target_color, pred_color = color_target_pred(target_color, pred_color, pred, xdim_s, ydim_s)
-    return errors, false_positives, metric, target_color, pred_color
+    return errors, false_positives, metric, target_color, pred_color,true_negatives
 
 
 def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
@@ -220,6 +224,7 @@ labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area ape
 
 metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
+true_negatives = [0,0]
 errors = np.array([[0, 0], [0, 0]])
 for i in range(len(train_images)):
     image = train_images[i][0].unsqueeze(0)
@@ -232,9 +237,9 @@ for i in range(len(train_images)):
     pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
     target = target.squeeze().numpy()
 
-    errors, false_positives, metric, target_color, pred_color = error_count(int(file_names_val[i]), pred.copy(),
+    errors, false_positives, metric, target_color, pred_color,true_negatives = error_count(int(file_names_val[i]), pred.copy(),
                                                                             target.copy(), data_loader, labels, errors,
-                                                                            false_positives, metrics, resize, size=size,
+                                                                            false_positives,true_negatives, metrics, resize, size=size,
                                                                             scale=scale,centercrop=True)
 
     target = convert_to_image(target.squeeze(), color_dict, target_dict)
@@ -264,6 +269,6 @@ new_list = [
     label + '\n' + '\n'.join([f"{name}, {performance}" for name, performance in metric[i].get_results().items()]) for
     i, label in enumerate(labels)]
 string = '\n\n'.join(
-    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}'
+    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}/{len(train_images)} \nTrue negatives: {true_negatives[1]}/{true_negatives[0]}'
 f = open(os.path.join(save_path, 'performance'), 'w')
 f.write(string)
