@@ -54,6 +54,7 @@ elif HPC:
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
 image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
+#image=image[:500,:]
 split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          padding=50,with_pad=True)
 
@@ -88,10 +89,10 @@ else:
 
 
 target_tif=[]
-for i in range(split_x_y[1]):
+for i in range(split_x_y[0]):
     print(i)
     pred_stack=[]
-    for j in range(split_x_y[0]):
+    for j in range(split_x_y[1]):
         print(j)
         label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].size,dtype=np.uint8))
         image=split_imgs[i*split_x_y[1]+j]
