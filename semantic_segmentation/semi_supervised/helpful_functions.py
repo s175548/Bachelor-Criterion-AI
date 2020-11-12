@@ -156,7 +156,7 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     file_names_train = file_names_train[file_names_train != ".DS_S"]
 
     transform_function = et.ExtCompose(
-        [et.ExtRandomCrop(scale=0.7, size=None), et.ExtRandomCrop(size=size, pad_if_needed=True),
+        [et.ExtRandomCrop(size=size, pad_if_needed=True),
          et.ExtRandomHorizontalFlip(p=0.5),
          et.ExtRandomVerticalFlip(p=0.5),
          et.ExtEnhanceContrast(), et.ExtToTensor(),

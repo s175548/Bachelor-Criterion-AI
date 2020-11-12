@@ -58,3 +58,18 @@ def Loss_unlabel(pred):
 
 
 
+############# Own implementations:
+
+def Loss_unlabel_remade(pred):
+    '''
+    pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
+    '''
+    shape = pred.shape  # n c h w
+    # predict before softmax
+    output_before_softmax_unl = pred.transpose(1, 2).transpose(2, 3).reshape([-1, shape[1]])  # [n*h*w, c] [131072,4]
+
+    fake_confidence_map = output_before_softmax_unl[:,3] #[131072] pixels from both images in batch
+
+    loss_unl = torch.log(1-fake_confidence_map)
+
+    return loss_unl

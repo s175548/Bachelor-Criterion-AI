@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 20
+N_epochs= 150
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -113,11 +113,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model])
         else:
             grad_check(model_dict[model], model_layers='All')
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
     if model=="MobileNet":
-        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
+        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
         if default_scope:
             grad_check(model_dict[model],model_layers='All')
         else:
@@ -134,7 +134,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = gamma_two = .2  # Loss weights
+        gamma_one = gamma_two = .5 # Loss weights
 
         #Load model
         model_g = generator(1) #arg = number of gpu's
@@ -155,7 +155,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     random.seed(random_seed)
 
     # Set up metrics
-    metrics = StreamSegMetrics(n_classes+2)
+    metrics = StreamSegMetrics(n_classes+3)
 
     # Set up optimizer for discriminator
     print(optim)
@@ -205,7 +205,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
                         continue
                     #noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
-                    b_size = images[0].to(device).size(0)
+                    b_size = images.to(device).size(0)
                     noise = torch.randn(b_size, 100, 1, 1, device=device)
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
@@ -248,7 +248,6 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     loss_g = -Loss_fake(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
-                    gen_loss = + loss_g.item() * model_g(noise).size(0)
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
@@ -271,9 +270,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_classIoU = [x for _, x in sorted(zip(best_scores, best_classIoU),reverse=True)][:5]
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
-                        #save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
-                        #if semi_supervised:
-                            #torch.save(model_g.state_dict(), model_g_spath)
+                        save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
+                        if semi_supervised:
+                            torch.save(model_g.state_dict(), model_g_spath)
+                            save_noise_pred(cur_epoch=cur_epochs,model=model_g,b_size=b_size,device=device,save_path=save_path)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
                         print("[Val] Mean IoU", cur_itrs, val_score['Mean IoU'])
@@ -285,6 +285,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_scores.sort(reverse=True)
                         best_scores = best_scores[:5]
                     model_d.train()
+                    validation_loss_values.append(validation_loss / len(val_dst))
+                    train_loss_values.append(running_loss / len(train_dst))
                 # if cur_epochs%10 ==0:
                 #     scheduler_d.step()
                 #     scheduler_g.step()
@@ -292,8 +294,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if cur_itrs >= total_itrs:
                     break
 
-            #validation_loss_values.append(validation_loss /len(val_dst))
-            train_loss_values.append(running_loss / len(train_dst))
+
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
                 loss_unlabelled_d.append(loss_unlabel)
@@ -469,6 +470,13 @@ def grad_check(model,model_layers='Classifier'):
 #             data = torch.cat([data,img.unsqueeze(0)])
 #             masks = torch.cat([masks,mask.unsqueeze(0)])
 #     return data,masks
+def save_noise_pred(cur_epoch,model,b_size,device,save_path):
+    for i in range(3):
+        noise = torch.randn( 1,100, 1, 1, device=device)
+        fake_image = model(noise)
+        PIL.Image.fromarray(
+            np.transpose((fake_image.squeeze().detach().cpu().numpy() * 255).astype(np.uint8), (1, 2, 0))).save(
+            os.path.join(save_path, r'fake_img_epoch{}_{}.png'.format(cur_epoch, i)), format='PNG')
 
 if __name__ == "__main__":
 

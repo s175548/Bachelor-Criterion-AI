@@ -17,11 +17,11 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = False
+    HPC = True
     SIZE = 256
     semi_supervised = True
     Villads = False
-    DellXPS = True
+    DellXPS = False
     binary = True
     model_name = ''
     optimizer = ''
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
-    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
-    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
+    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
 
     # Load dataloader for unlabelled data:
     if semi_supervised:
