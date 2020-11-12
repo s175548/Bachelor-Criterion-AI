@@ -94,7 +94,7 @@ for i in range(split_x_y[0]):
     for j in range(split_x_y[1]):
         print(j)
         label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].shape,dtype=np.uint8))
-        image=Image.fromarray[split_imgs[i*split_x_y[1]+j]]
+        image=Image.fromarray(split_imgs[i*split_x_y[1]+j])
         image,_=transform_function(image,label)
         image = image.unsqueeze(0).to(device, dtype=torch.float32)
         if model_name == 'DeepLab':
