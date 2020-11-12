@@ -44,8 +44,8 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/data_binary_all_classes/tif_img'
-    tif_path= r'/zhome/db/f/128823/Bachelor/data_binary_all_classes/tif_img'
+    save_path = r'/zhome/db/f/128823/Bachelor/data_all_classes/tif_img'
+    tif_path= r'/zhome/db/f/128823/Bachelor/data_all_classes/tif_img'
     if model_resize:###
         model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
     else:
