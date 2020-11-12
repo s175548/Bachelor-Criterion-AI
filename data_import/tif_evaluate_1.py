@@ -88,10 +88,10 @@ else:
 
 
 target_tif=[]
-for i in range(split_x_y[0]):
+for i in range(split_x_y[1]):
     print(i)
     pred_stack=[]
-    for j in range(split_x_y[1]):
+    for j in range(split_x_y[0]):
         print(j)
         label=Image.fromarray(np.zeros(split_imgs[i*split_x_y[1]+j].size,dtype=np.uint8))
         image=split_imgs[i*split_x_y[1]+j]
