@@ -26,6 +26,9 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
         idx = np.intersect1d(idx_to_consider, idx)
 #    if (idx_to_consider != 'All') and (labels != "All"):
 #        idx=np.intersect1d(data_loader.get_index_for_label(labels),idx_to_consider)
+    if idx_to_consider != 'All' and visibility_scores!= "All":
+        idx = np.intersect1d(idx_to_consider,visibility_idx)
+
 
 
 
@@ -43,8 +46,8 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
                         k = int(k)
                         im_pil = Image.fromarray(img_crops[k])
                         im_pil.save( os.path.join(path,str(i)+"_"+str(k) + ".png") )
-                        index= (mask_crops[k] != 0) | (mask_crops[k]!= 58) | (mask_crops[k] != 193) | (mask_crops[k] != 230)
-                        mask_crops[k][index]=0
+#                        index= (mask_crops[k] != 0) | (mask_crops[k]!= 58) | (mask_crops[k] != 193) | (mask_crops[k] != 230)
+#                        mask_crops[k][index]=0
                         mask_pil = Image.fromarray(mask_crops[k])
                         mask_pil.save(os.path.join( path, str(i)+"_"+str(k) + '_mask.png'))
         else:
