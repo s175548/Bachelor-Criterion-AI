@@ -133,6 +133,7 @@ class DataLoader():
         """
         if tif_dict:
             label_dict=self.get_all_annotations(tif_dict=True)
+            label_dict['N/A']=1
         else:
             label_dict=self.annotations_dict.copy()
         seg = self.get_json_file_content(filepath)

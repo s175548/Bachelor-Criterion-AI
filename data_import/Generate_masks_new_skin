@@ -1,0 +1,29 @@
+from data_import.data_loader import DataLoader
+import os
+path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images//Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_tif_vda4_grain1/annotations_tif_vda4_grain1/VDA4/grain_01'
+data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
+                             metadata_path=r'samples/model_comparison.csv')
+
+target_tif=[]
+for i in range(3):
+    print(i)
+    mask_stack=[]
+    for j in range(26):
+        anno_path=path+f'{i*26+j}_grain_01.png'
+        if os.path.exists(path+anno_path):
+            file=os.list(anno_path)[0]
+            mask=data_loader.read_segmentation_file(path+f'{i*26+j}_grain_01.png',
+                                           labels=labels,tif_dict=True)
+        else:
+            mask=np.zeros((2048,2048))
+        if isinstance(mask_stack,list):
+            mask_stack=mask
+        else:
+            mask_stack=np.hstack((mask_stack,mask))
+
+    if isinstance(target_tif,list):
+        target_tif=mask_stack
+    else:
+        target_tif=np.vstack((target_tif,pred_stack))
+
+

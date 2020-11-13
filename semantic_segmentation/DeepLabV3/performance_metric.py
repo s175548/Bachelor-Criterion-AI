@@ -23,12 +23,16 @@ from data_import.data_loader import convert_to_image
 
 
 def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives,true_negatives, metric, resize=False,
-                size=None, scale=None,centercrop=False):
+                size=None, scale=None,centercrop=False,path=None,tif=True):
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
-        masks = data_loader.get_separate_segmentations(
-            os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels)
+        if path != None:
+            masks = data_loader.get_separate_segmentations(
+                path, labels=labels)
+        else:
+            masks = data_loader.get_separate_segmentations(
+                os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels,)
         buffer = 84
         xdim_s = []
         ydim_s = []
