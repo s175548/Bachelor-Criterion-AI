@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J predictions_good_skin
-#BSUB -o predictions_good_skin%J.out
+#BSUB -J predictions_tif
+#BSUB -o predictions_tif%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
