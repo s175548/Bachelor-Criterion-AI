@@ -139,8 +139,9 @@ class DataLoader():
         seg = self.get_json_file_content(filepath)
         if labels=='All':
             labels=list(label_dict.keys())
-        label_space = {kk["label"]: [label_dict[kk["label"]]] for kk in seg["annotations"] if
-                       (kk["label"] in labels)}
+        label_space = {kk['label'][1:-1]: [label_dict[kk["label"][1:-1]]] for kk in seg["annotations"] if
+                       (kk["label"][1:-1] in labels)}
+
         if not label_space:
             print('Image with provided idx does not contain any of the wanted labels')
             return

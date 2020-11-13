@@ -1,21 +1,23 @@
 from data_import.data_loader import DataLoader
 import os
 import numpy as np
-path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images//Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_tif_vda4_grain1/annotations_tif_vda4_grain1/VDA4/grain_01'
-
+import PIL
+path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_tif_vda4_grain1/annotations_tif_vda4_grain1/VDA4/grain_01'
 data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
 
 target_tif=[]
-for i in range(3):
-    print(i)
+for i in range(26):
     mask_stack=[]
-    for j in range(26):
-        anno_path=path+f'{i*26+j}_grain_01.png'
-        if os.path.exists(path+anno_path):
-            file=os.list(anno_path)[0]
-            mask=data_loader.read_segmentation_file(path+f'{i*26+j}_grain_01.png',
-                                           labels=labels,tif_dict=True)
+    for j in range(3):
+        print(i*3+j)
+        anno_path=path+f'/{i*3+j}_grain_01.png'
+        if os.path.exists(anno_path):
+            print('yes')
+            file=os.listdir(anno_path)[0]
+            mask=data_loader.read_segmentation_file(os.path.join(anno_path,file),
+                                           labels='All',tif_dict=True)
+            mask=np.squeeze(mask)
         else:
             mask=np.zeros((2048,2048))
         if isinstance(mask_stack,list):
@@ -26,6 +28,6 @@ for i in range(3):
     if isinstance(target_tif,list):
         target_tif=mask_stack
     else:
-        target_tif=np.vstack((target_tif,pred_stack))
-save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images//Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images'
-PIL.Image.fromarray(target_tif.astype(np.uint8)).save(save_path+'WALKNAPPA_VDA_04_grain_01_v_target.png',format='PNG')
+        target_tif=np.vstack((target_tif,mask_stack))
+save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images'
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(save_path+'/WALKNAPPA_VDA_04_grain_01_v_target.png',format='PNG')
