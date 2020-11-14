@@ -133,13 +133,15 @@ class DataLoader():
         """
         if tif_dict:
             label_dict=self.get_all_annotations(tif_dict=True)
+            label_dict['N/A']=1
         else:
             label_dict=self.annotations_dict.copy()
         seg = self.get_json_file_content(filepath)
         if labels=='All':
             labels=list(label_dict.keys())
-        label_space = {kk["label"]: [label_dict[kk["label"]]] for kk in seg["annotations"] if
-                       (kk["label"] in labels)}
+        label_space = {kk['label'][1:-1]: [label_dict[kk["label"][1:-1]]] for kk in seg["annotations"] if
+                       (kk["label"][1:-1] in labels)}
+
         if not label_space:
             print('Image with provided idx does not contain any of the wanted labels')
             return
@@ -386,6 +388,7 @@ class DataLoader():
                         large_img = F.pad(large_img, padding=(0, 50, 0, 0), padding_mode='reflect')
                     if i == crop_count_height - 1:
                         large_img = F.pad(large_img, padding=(0, 0, 0, 50), padding_mode='reflect')
+                    large_img=np.array(large_img,dtype=np.uint8)
                     pad_split_imgs.append(large_img)
 
         patch_dimensions=(patch_size_0,patch_size_1)

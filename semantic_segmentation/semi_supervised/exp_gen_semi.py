@@ -90,7 +90,7 @@ if __name__ == "__main__":
         path_val = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\data_binary_vis_2_and_3_recreate\val'
         dataset_path_ul = r'C:\Users\Mads-\OneDrive\Skrivebord\dataToNewXPS\trained_models'
         path2 = r'C:\Users\Mads-\Documents\Universitet\5. Semester\Bach\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
-        lr = 0.0002 #
+        lr = 0.002 #
         path_meta_data = r'samples/model_comparison.csv'
     else:
         save_path = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\slet'
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
-    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
-    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
+    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
+    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
 
     # Load dataloader for unlabelled data:
     if semi_supervised:
