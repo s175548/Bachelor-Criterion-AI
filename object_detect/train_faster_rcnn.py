@@ -355,7 +355,7 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     if HPC:
-        if loaded_model:
+        if load_model:
             model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
             PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'

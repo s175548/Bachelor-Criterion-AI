@@ -355,14 +355,14 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     if HPC:
-        if loaded_model:
+        if load_model:
             PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
             if all_classes:
                 PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
             else:
                 PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
             checkpoint = torch.load(PATH)
-            model.load_state_dict(loaded_model["model_state"])
+            model.load_state_dict(checkpoint["model_state"])
             model.to(device)
             model.eval()
             print("Model loaded and ready to be evaluated!")
