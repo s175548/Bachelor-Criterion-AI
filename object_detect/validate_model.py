@@ -19,11 +19,20 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
 
-transform_function = et.ExtCompose([et.ExtCenterCrop(size=1024),
+#transform_function = et.ExtCompose([et.ExtCenterCrop(size=1024),
+#                                    et.ExtEnhanceContrast(),
+#                                    et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                    et.ExtRandomCrop(scale=0.7, size=None),
                                     et.ExtEnhanceContrast(),
+                                    et.ExtRandomCrop(size=2048, pad_if_needed=True),
+                                    et.ExtResize(scale=0.5),
+                                    et.ExtRandomHorizontalFlip(p=0.5),
+                                    et.ExtRandomCrop(size=512),
+                                    et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC=True
+HPC=False
 splitted_data=True
 binary=True
 tif=False
@@ -42,13 +51,28 @@ if __name__ == '__main__':
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
-        model_name = 'mobilenet'
+        parser = argparse.ArgumentParser(description='Chooses model')
+        parser.add_argument('model folder', metavar='folder', type=float, nargs='+',
+                            help='model folder (three_scale, full_scale, all_bin, binary')
+        # Example: model_folder = all_bin\resnet50_full_empty_0.01_all_binarySGD.pt
+        model_folder = args['model folder'][0]
 
+        model_name = 'resnet50'
         path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
         path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
         save_fold = 'full_scale/'
         dataset = "all_binary_scale"
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
+    else:
+        device = torch.device('cpu')
+        model_name = 'resnet50'
+        path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
+        path_meta_data = r'samples/model_comparison.csv'
+        optim = "SGD"
+        if binary:
+            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
+            dataset = "binary_scale"
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
@@ -70,7 +94,7 @@ if __name__ == '__main__':
     train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                             bbox=True, multi=False,
                             transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-    val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
+    val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
                           bbox=True, multi=False,
                           transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
@@ -84,13 +108,18 @@ if __name__ == '__main__':
     model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)))
 
     if HPC:
-        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Models\binary\resnet50_full_empty_0.01_binarySGD.pt'
+        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
+        PATH = os.path.join(PATH, model_folder)
+
     else:
-        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Models\binary\resnet50_full_empty_0.01_binarySGD.pt'
+        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn\all_bin\resnet50_full_empty_0.01_all_binarySGD.pt'
+        #PATH = os.path.join(PATH, model_folder)
+
     loaded_model = torch.load(PATH)
     model.load_state_dict(loaded_model["model_state"])
     model.to(device)
     model.eval()
+    print("Model loaded and ready to be evaluated!")
     if HPC:
         save_path = path_save
     else:
@@ -102,13 +131,6 @@ if __name__ == '__main__':
                                                             path_save=save_path, bbox_type='empty',
                                                             val=True)
     print("Overall best with nms: ", val_mAP2)
-    print("Overall best without nms is: ", val_mAP)
-    print("Stats for no nms:")
-    print("Overall best tp: ", cmatrix_val2["true_positives"], " out of ", cmatrix_val2["total_num_defects"],
-          " with ",
-          cmatrix_val2["false_positives"], " false positives, ", cmatrix_val2["false_negatives"],
-          " false negatives and ",
-          cmatrix_val2["true_negatives"], "true negatives")
     print("Stats for nms:")
     print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"],
           " with ",
@@ -119,11 +141,11 @@ if __name__ == '__main__':
           cmatrix_val["bad_leather"],
           " with bad leather")
     
-    train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,
-                                                            data_loader=train_loader,
-                                                            device=device,
-                                                            path_save = save_path,bbox_type='empty',
-                                                            val=False)
+    #train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,
+    #                                                        data_loader=train_loader,
+    #                                                        device=device,
+    #                                                        path_save = save_path,bbox_type='empty',
+    #                                                        val=False)
 
 
 
