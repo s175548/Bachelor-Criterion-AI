@@ -16,7 +16,7 @@ from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.evaluator import do_nms
-from object_detect.get_bboxes import get_bbox_mask, create_mask_from_bbox
+from object_detect.get_bboxes import get_bbox_mask, create_mask_from_bbox, adjust_bbox_tif
 from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
@@ -76,7 +76,7 @@ if __name__ == '__main__':
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)))
+    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
 
     if HPC:
         PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
@@ -94,25 +94,34 @@ if __name__ == '__main__':
 
     target_tif = []
     print("Loop over: ", split_x_y[0])
+    pred_counter = 0
     for i in range(split_x_y[0]):
         print("i ", i)
         pred_stack = []
         for j in range(split_x_y[1]):
             print(j)
-            label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].shape, dtype=np.uint8))
-            image = Image.fromarray(split_imgs[i * split_x_y[1] + j].astype(np.uint8))
+            label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
+            image = split_imgs[i * split_x_y[1] + j]
             size = image.size
+            image2, _ = transform_function(image, label)
+            image2 = image2.unsqueeze(0).to(device, dtype=torch.float32)
 
-            image, _ = transform_function(image, label)
-            image = image.unsqueeze(0).to(device, dtype=torch.float32)
-            output = model(list(image))
+            output = model(list(image2))
             outputs = [{k: v.to(device) for k, v in t.items()} for t in output]
 
             boxes = outputs[0]['boxes'].cpu()
             scores = outputs[0]['scores'].cpu()
             preds = outputs[0]['labels'].cpu()
-            new_boxes, _, _ = do_nms(boxes, scores, preds, threshold=0.2)
+            new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size)
+            pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
+            if num_boxes > 0:
+                print("pred:", num_boxes)
+                print("score: ", new_scores.numpy())
+                Image.fromarray(np.array(image).astype(np.uint8)).save(save_path + '/image_{}_{}_img.png'.format(i,j))
+                Image.fromarray(pred.astype(np.uint8)).save(save_path + '/image_{}_{}_pred.png'.format(i,j))
+
+            pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             if isinstance(pred_stack, list):
                 pred_stack = pred
@@ -124,4 +133,4 @@ if __name__ == '__main__':
         else:
             target_tif = np.vstack((target_tif, pred_stack))
 
-    PIL.Image.fromarray(target_tif.astype(np.uint8) * 255).save(save_path + '/pred_vda_04.png')
+    Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/pred_vda_07.png')

@@ -206,10 +206,11 @@ if __name__ == '__main__':
             all_classes = True
         if setup == 'resize':
             scale = True
-            num_epoch = 75
+            num_epoch = 50
         else:
             scale = False
             num_epoch = 100
+
         if binary:
             if scale:
                 if all_classes:
@@ -354,17 +355,19 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     if HPC:
-        if tick_bite:
-            model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
-        else:
-            if multi:
-                model = define_model(num_classes=4, net=model_name,
-                                     data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+        if loaded_model:
+            PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
+            if all_classes:
+                PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
             else:
-                #model = define_model(num_classes=2, net=model_name,
-                #                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
-                model = define_model(num_classes=2, net=model_name,
+                PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+            checkpoint = torch.load(PATH)
+            model.load_state_dict(loaded_model["model_state"])
+            model.to(device)
+            model.eval()
+            print("Model loaded and ready to be evaluated!")
+        else:
+            model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
     else:
         model_names = ['mobilenet', 'resnet50']
@@ -427,8 +430,6 @@ if __name__ == '__main__':
     print("About to train")
     best_epoch = 0
     for epoch in range(num_epoch):
-        cmatrix["img_bad"] = 0
-        cmatrix["img_good"] = 0
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
