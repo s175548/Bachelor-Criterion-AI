@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
+N_epochs= 50
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
