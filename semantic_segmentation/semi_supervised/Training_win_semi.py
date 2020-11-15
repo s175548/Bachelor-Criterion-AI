@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 50
+N_epochs= 150
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -225,7 +225,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
-,                   loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                     loss_fake = Loss_fake_remade(pred_fake)
                     loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
                     print("loss_unlabel: ",loss_unlabel.detach().cpu().numpy(),"loss_fake: ",loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
