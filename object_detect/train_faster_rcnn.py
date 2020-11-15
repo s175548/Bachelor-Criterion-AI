@@ -364,7 +364,7 @@ if __name__ == '__main__':
                 print(PATH)
                 start_epoch = 50
             else:
-                PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+                PATH = os.path.join(PATH,'three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
                 start_epoch = 75
             checkpoint = torch.load(PATH)
             model.load_state_dict(checkpoint['model_state'])
