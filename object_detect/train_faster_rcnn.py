@@ -361,6 +361,7 @@ if __name__ == '__main__':
             PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             if all_classes:
                 PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
+                print(PATH)
                 start_epoch = 50
             else:
                 PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
