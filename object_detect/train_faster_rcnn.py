@@ -409,7 +409,7 @@ if __name__ == '__main__':
     loss_val = checkpoint['val_losses']
     best_map = checkpoint['best_map']
     best_map2 = 0
-    best_scores = checkpoint['best_scores']
+    best_scores = checkpoint['best_map_w_score']
     best_score = best_scores[0]
     best_ious = checkpoint['best_ious']
     best_iou = best_ious[0]
