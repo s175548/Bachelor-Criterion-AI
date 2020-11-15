@@ -361,8 +361,10 @@ if __name__ == '__main__':
             PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             if all_classes:
                 PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
+                start_epoch = 50
             else:
                 PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+                start_epoch = 75
             checkpoint = torch.load(PATH)
             model.load_state_dict(checkpoint['model_state'])
             model.to(device)
@@ -416,7 +418,7 @@ if __name__ == '__main__':
     val_targets = []
     print("About to train")
     best_epoch = 0
-    for epoch in range(75,100):
+    for epoch in range(start_epoch,100):
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
