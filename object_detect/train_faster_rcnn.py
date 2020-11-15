@@ -89,7 +89,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
                            box_roi_pool=roi_pooler, box_score_thresh=box_score)
     return model
 
-def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,scheduler=None,best_map=None,best_score=None,conf=None,losses=None,val_losses=None):
+def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/',HPC=True,model_name=None,optim_name=None,n_epochs=None, optimizer=None,best_map=None,best_score=None,best_ious=None,conf=None,losses=None,val_losses=None):
     """ save final model
     """
     if HPC:
@@ -97,9 +97,9 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "n_epochs": n_epochs,
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
-            "scheduler_state": scheduler.state_dict(),
             "best_map": best_map,
             "best_map_w_score": best_score,
+            "best_ious": best_ious,
             "conf_matrix": conf,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -110,7 +110,6 @@ def save_model(model,save_path='/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             "n_epochs": n_epochs,
             "model_state": model.state_dict(),
             "optimizer_state": optimizer.state_dict(),
-            "scheduler_state": scheduler.state_dict(),
             "best_score": best_score,
             "train_losses": losses,
             "val_losses": val_losses,
@@ -134,52 +133,45 @@ def plot_loss(N_epochs=None,train_loss=None,save_path=None,lr=None,optim_name=No
     plt.title('Train Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_train_loss.png'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + 'bin_train_loss.png'), format='png')
     plt.close()
     plt.plot(range(N_epochs), val_loss, '-o')
     plt.title('Validation Loss')
     plt.xlabel('N_epochs')
     plt.ylabel('Loss')
-    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + '_val_loss.png'), format='png')
+    plt.savefig(os.path.join(save_path, exp_description + optim_name + (str(lr)) + 'bin_val_loss.png'), format='png')
     plt.close()
 
-def get_transform_fun():
-    transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.33,size=None),
-                                    et.ExtRandomCrop(scale=0.7,size=None),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtRandomCrop(size=472,pad_if_needed=True),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+def get_transform_fun(resized=False):
+    if resized == True:
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
+                                            et.ExtRandomCrop(scale=0.7,size=None),
+                                            et.ExtEnhanceContrast(),
+                                            et.ExtRandomCrop(size=2048, pad_if_needed=True),
+                                            et.ExtResize(scale=0.5),
+                                            et.ExtRandomHorizontalFlip(p=0.5),
+                                            et.ExtRandomCrop(size=512),
+                                            et.ExtRandomVerticalFlip(p=0.5),
+                                            et.ExtToTensor()])
+    else:
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
+                                            et.ExtRandomHorizontalFlip(p=0.5),
+                                            et.ExtRandomVerticalFlip(p=0.5),
+                                            et.ExtEnhanceContrast(),
+                                            et.ExtToTensor()])
+    return transform_function
 
-    transform_function_val = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtResize(scale=0.33,size=None),
-                                    et.ExtRandomCrop(scale=0.7,size=None),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor()])
 #transform_function = et.ExtCompose([et.ExtScale(scale=0.7),et.ExtRandomCrop(scale=0.7),et.ExtRandomHorizontalFlip(p=0.5),et.ExtRandomVerticalFlip(p=0.5),et.ExtEnhanceContrast(),et.ExtToTensor()])
 #et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC=False
+HPC=True
 tick_bite=False
 if tick_bite:
     splitted_data = False
 else:
     splitted_data = True
 binary=True
-scale=False
 multi=False
-load_model=False
+load_model=True
 if __name__ == '__main__':
 
     random_seed = 1
@@ -194,17 +186,54 @@ if __name__ == '__main__':
         save_path_model = os.path.join(base_path,model_folder)
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
+
+        parser = argparse.ArgumentParser(description='Take learning rate parameter')
+        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
+        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
+        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
+        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
+        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either zero or empty')
+        parser.add_argument('scale', metavar='scale', type=str, nargs='+',help='choose either resize or crop')
+        parser.add_argument('dataset', metavar='dataset', type=str, nargs='+',help='choose either three or extended')
+        args = vars(parser.parse_args())
+
+        model_name = args['model name'][0]
+        setup = args['scale'][0]
+        classes = args['dataset'][0]
+        if classes == 'three':
+            all_classes = False
+        else:
+            all_classes = True
+        if setup == 'resize':
+            scale = True
+            num_epoch = 100
+        else:
+            scale = False
+            num_epoch = 100
+
         if binary:
             if scale:
-                path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-                path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-                save_fold = 'full_scale/'
-                dataset = "binary"
+                if all_classes:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                    save_fold = 'full_scale/'
+                    dataset = "all_binary_scale"
+                else:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
+                    save_fold = 'three_scale/'
+                    dataset = "binary_scale"
             else:
-                path_train = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/train'
-                path_val = r'/work3/s173934/Bachelorprojekt/cropped_data_multi_binary_vis_2_and_3/val'
-                save_fold = 'binary/'
-                dataset = "binary"
+                if all_classes:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
+                    save_fold = 'all_bin/'
+                    dataset = "all_binary"
+                else:
+                    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/train'
+                    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val'
+                    save_fold = 'binary/'
+                    dataset = "binary"
         elif tick_bite:
             path_mask = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
             path_img = r'/work3/s173934/Bachelorprojekt/cropped_data_tickbite_vis_2_and_3'
@@ -215,31 +244,19 @@ if __name__ == '__main__':
             path_val = r'/zhome/dd/4/128822/Bachelorprojekt/multi/val'
             save_fold = 'multi/'
             dataset = "multi"
-
-        parser = argparse.ArgumentParser(description='Take learning rate parameter')
-        parser.add_argument('parameter choice', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
-        parser.add_argument('model name', metavar='model', type=str, nargs='+',help='choose either mobilenet or resnet50')
-        parser.add_argument('optimizer name', metavar='optim', type=str, nargs='+',help='choose either SGD, Adam or RMS')
-        parser.add_argument('trained layers', metavar='layers', type=str, nargs='+',help='choose either full or classifier')
-        parser.add_argument('bbox', metavar='bbox', type=str, nargs='+',help='choose either empty or zero')
-        args = vars(parser.parse_args())
-
-        model_name = args['model name'][0]
         path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/'
         path_save = os.path.join(path_save, save_fold)
-        bbox_type = args['bbox'][0]
-        save_folder = os.path.join(path_save, model_name)
-        save_folder = os.path.join(save_folder,bbox_type)
+        save_folder = os.path.join(path_save, 'part2')
         save_path_exp = os.path.join(save_path_model,save_fold)
+        bbox_type = args['bbox'][0]
         lr = args['parameter choice'][0]
         optim = args['optimizer name'][0]
         layers_to_train = args['trained layers'][0]
-        num_epoch = 30
     else:
         device = torch.device('cpu')
         lr = 0.01
-        layers_to_train = 'full'
-        num_epoch = 4
+        layers_to_train = 'classifier'
+        num_epoch = 1
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
@@ -258,9 +275,7 @@ if __name__ == '__main__':
 
         path_save = '/Users/johan/iCloudDrive/DTU/KID/BA/Kode/FRCNN/'
         save_folder = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\Kode\Predictions_FRCNN'
-        bbox_type = 'zero'
 
-    print("bbox_type: ", bbox_type)
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
@@ -282,7 +297,10 @@ if __name__ == '__main__':
         val_batch_size = 4
     else:
         if HPC:
-            batch_size = 8
+            if scale:
+                batch_size = 8
+            else:
+                batch_size = 8
             val_batch_size = 4
         else:
             batch_size = 8
@@ -297,15 +315,20 @@ if __name__ == '__main__':
 
         file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
+        file_names_val = file_names_val[file_names_val != ".DS_S"]
+
+
+        transform_function = get_transform_fun(resized=scale)
+
         if bbox_type == 'empty':
-            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:100],
+            train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                                   bbox=True, multi=multi,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
         else:
-            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -332,27 +355,33 @@ if __name__ == '__main__':
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
 
     if HPC:
-        if tick_bite:
+        if load_model:
             model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((8,), (16,), (32,), (64,), (128,)))
-        else:
-            if multi:
-                model = define_model(num_classes=4, net=model_name,
-                                     data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                                 data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
+            PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
+            if all_classes:
+                PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
             else:
-                model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+            checkpoint = torch.load(PATH)
+            model.load_state_dict(checkpoint['model_state'])
+            model.to(device)
+            model.eval()
+            print("Model loaded and ready to be evaluated!")
+        else:
+            model = define_model(num_classes=2, net=model_name,
+                                 data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
     else:
         model_names = ['mobilenet', 'resnet50']
         model_name = model_names[0]
-        model = model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)
     print("Optimizer: ", optim)
     print("Number of epochs: ", num_epoch)
     print("Trained network: ", layers_to_train)
+    print("Bounding box: ", bbox_type)
 
     # construct an optimizer
     layers = ['Classifier', 'RPN', 'All']
@@ -371,41 +400,23 @@ if __name__ == '__main__':
     # Set up optimizer
     if optim == 'SGD':
         optimizer = torch.optim.SGD(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
-    elif optim == 'Adam':
-        optimizer = torch.optim.Adam(params=params2train, lr=lr, weight_decay=weight_decay)
-    else:
-        optimizer = torch.optim.RMSprop(params=params2train, lr=lr, momentum=0.9, weight_decay=weight_decay)
+        optimizer.load_state_dict(checkpoint['optimizer_state'])
 
-    # and a learning rate scheduler which decreases the learning rate by
-    # 10x every 50 epochs
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,
-                                                   step_size=500,
-                                                   gamma=0.5)
-    loss_train = []
-    loss_val = []
-    risk = False
-    overall_best = 0
-    best_map = 0
+    loss_train = checkpoint['train_losses']
+    loss_val = checkpoint['val_losses']
+    best_map = checkpoint['best_map']
     best_map2 = 0
+    best_scores = checkpoint['best_scores']
+    best_score = best_scores[0]
+    best_ious = checkpoint['best_ious']
+    best_iou = best_ious[0]
+    cmatrix = checkpoint['conf_matrix']
+
     val_boxes = []
     val_targets = []
-    cmatrix = {}
-    cmatrix["highest_tp"] = 0
-    cmatrix["lowest_fp"] = 10 ** 4
-    cmatrix["lowest_fn"] = 10 ** 4
-    cmatrix["highest_tn"] = 0
-    cmatrix["num_defects"] = 0
-    cmatrix2 = {}
-    cmatrix2["highest_tp"] = 0
-    cmatrix2["lowest_fp"] = 10 ** 4
-    cmatrix2["lowest_fn"] = 10 ** 4
-    cmatrix2["highest_tn"] = 0
-    cmatrix2["num_defects"] = 0
     print("About to train")
     best_epoch = 0
-    for epoch in range(num_epoch):
-        cmatrix["img_bad"] = 0
-        cmatrix["img_good"] = 0
+    for epoch in range(75,100):
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
@@ -414,66 +425,84 @@ if __name__ == '__main__':
                                             data_loader=train_loader, device=device, epoch=epoch+1,print_freq=20,
                                                     loss_list=curr_loss_train,save_folder=save_folder)
         loss_train.append(loss)
-        # update the learning rate
-        lr_scheduler.step()
+
         # evaluate on the test dataset
-        mAP, mAP2, val_loss, vbox_p, vbox, conf, conf2 = evaluate(model, model_name, optim_name=optim, lr=lr, layers=layers_to_train,
-                                                     data_loader=val_loader,
-                                                     device=device,N=epoch+1,
-                                                     loss_list=curr_loss_val,save_folder=save_folder,risk=risk,multi=multi)
+        mAP, mAP2, val_loss, vbox_p, vbox, conf, _, mIoU = evaluate(model, model_name, optim_name=optim, lr=lr,
+                                                                        layers=layers_to_train,
+                                                                        data_loader=val_loader,
+                                                                        device=device,N=epoch+1,
+                                                                        loss_list=curr_loss_val,
+                                                                        save_folder=save_folder,
+                                                                        risk=risk,multi=multi,scale=scale)
+        if mAP > best_score:  # save best model
+            best_score = mAP
+            best_scores.append(best_score)
+            best_scores.sort(reverse=True)
+            best_scores = best_scores[:5]
+        elif mAP > min(best_scores):
+            best_scores.append(mAP)
+            best_scores.sort(reverse=True)
+            best_scores = best_scores[:5]
+        if mIoU > best_iou:
+            best_iou = mIoU
+            best_ious.append(best_iou)
+            best_ious.sort(reverse=True)
+            best_ious = best_ious[:5]
+        elif mIoU > min(best_ious):
+            best_ious.append(mIoU)
+            best_ious.sort(reverse=True)
+            best_ious = best_ious[:5]
+
         loss_val.append(val_loss)
         val_boxes.append(vbox_p)
         val_targets.append(vbox)
-        cmatrix["num_defects"] = conf["total_num_defects"]
-        cmatrix["img_bad"] = conf["bad_leather"]
-        cmatrix["img_good"] = conf["good_leather"]
-        if conf["true_positives"] > cmatrix["highest_tp"]:
-            cmatrix["highest_tp"] = conf["true_positives"]
-        if conf["false_positives"] < cmatrix["lowest_fp"]:
-            cmatrix["lowest_fp"] = conf["false_positives"]
-        if conf["false_negatives"] < cmatrix["lowest_fn"]:
-            cmatrix["lowest_fn"] = conf["false_negatives"]
-        if conf["true_negatives"] > cmatrix["highest_tn"]:
-            cmatrix["highest_tn"] = conf["true_negatives"]
-        #################################################
-        if conf2["true_positives"] > cmatrix2["highest_tp"]:
-            cmatrix2["highest_tp"] = conf2["true_positives"]
-        if conf2["false_positives"] < cmatrix2["lowest_fp"]:
-            cmatrix2["lowest_fp"] = conf2["false_positives"]
-        if conf2["false_negatives"] < cmatrix2["lowest_fn"]:
-            cmatrix2["lowest_fn"] = conf2["false_negatives"]
-        if conf2["true_negatives"] > cmatrix2["highest_tn"]:
-            cmatrix2["highest_tn"] = conf2["true_negatives"]
         if mAP > best_map:
             best_map = mAP
             if HPC:
                 best_model = define_model(num_classes=2, net=model_name,
-                                 data=dataset, anchors=((32,), (64,), (128,), (256,), (512,)))
+                                 data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
                 best_model.load_state_dict(model.state_dict())
+                best_model.to(device)
                 best_epoch = epoch
+
+            cmatrix["num_defects"] = conf["total_num_defects"]
+            cmatrix["img_bad"] = conf["bad_leather"]
+            cmatrix["img_good"] = conf["good_leather"]
+            ################################################
+            cmatrix["highest_tp"] = conf["true_positives"]
+            cmatrix["lowest_fp"] = conf["false_positives"]
+            cmatrix["lowest_fn"] = conf["false_negatives"]
+            cmatrix["highest_tn"] = conf["true_negatives"]
         if mAP2 > best_map2:
             best_map2 = mAP2
-    print("Bounding box type: ", bbox_type)
     print("Average nr. of predicted boxes: ", val_boxes[-1], " model = ", model_name, "lr = ", lr)
     print("Actual average nr. of boxes: ", val_targets[-1])
-    print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train)
+    print("Overall best with nms: ", best_map, " for learning rate: ", lr, "model ", model_name, "layers ", layers_to_train, "epoch ", best_epoch)
     print("Overall best without nms is: ", best_map2, " for learning rate: ", lr, "model ", model_name)
+    print("Dataset: ", dataset)
+    print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
+    print("Bbox_type: ", bbox_type)
     print("Stats for nms")
     print("Overall best tp: ", cmatrix["highest_tp"], " out of ", cmatrix["num_defects"], " with ", cmatrix["lowest_fp"], " false positives, ", cmatrix["lowest_fn"], " false negatives and ", cmatrix["highest_tn"], "true negatives")
     print("Validation set contained ", cmatrix["img_good"]," images with good leather and ", cmatrix["img_bad"], " with bad leather")
-    print("Stats for no nms")
-    print("Overall best tp: ", cmatrix2["highest_tp"], " out of ", cmatrix2["num_defects"], " with ", cmatrix2["lowest_fp"], " false positives, ", cmatrix2["lowest_fn"], " false negatives and ", cmatrix2["highest_tn"], "true negatives")
-    print("Validation set contained ", cmatrix2["img_good"]," images with good leather and ", cmatrix2["img_bad"], " with bad leather")
+    print("Top 5 mAP with nms: ", best_scores)
+    print("Best mean IoU of defects with nms: ", best_iou)
+    print("Top 5 best mean IoU of defects with nms: ", best_ious)
+
 
     if HPC:
         save_model(model=best_model, save_path=os.path.join(save_path_model,save_fold),HPC=HPC,
-                   model_name="{}_{}_{}_{}".format(model_name, layers_to_train, lr, dataset), optim_name=optim,
+                   model_name="{}_{}_{}".format(model_name, dataset, 'part2'), optim_name=optim,
                    n_epochs=best_epoch, optimizer=optimizer,
-                   scheduler=lr_scheduler, best_map=best_map, best_score=best_map2, conf=conf, losses=loss_train, val_losses=loss_val)
+                   best_map=best_map, best_score=best_scores, best_ious=best_ious, conf=conf, losses=loss_train, val_losses=loss_val)
         best_model.eval()
         _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=val_loader, path_save=save_folder, device=device, val=True)
+                           data_loader=val_loader, device=device,
+                           path_save=save_folder,bbox_type=bbox_type,
+                           val=True,bbox=False)
         _,_,_,_ = validate(model=best_model, model_name=model_name,
-                                                                data_loader=train_loader, path_save=save_folder, device=device, val=False)
+                           data_loader=train_loader, device=device,
+                           path_save=save_folder,bbox_type=bbox_type,
+                           val=False,bbox=False)
         plot_loss(N_epochs=num_epoch,train_loss=loss_train,save_path=save_path_exp,lr=lr,optim_name=optim,
-                  val_loss=loss_val,exp_description=model_name)
+                  val_loss=loss_val,exp_description=model_name+'part2')

@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J predictions_good_skin
-#BSUB -o predictions_good_skin%J.out
+#BSUB -J predictions_tif
+#BSUB -o predictions_tif%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 data_import/tif_evaluate_1.py
+python3 semantic_segmentation/DeepLabV3/performance_metric_tif.py
 echo "Done"
