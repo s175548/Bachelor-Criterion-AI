@@ -419,6 +419,7 @@ if __name__ == '__main__':
     val_targets = []
     print("About to train")
     best_epoch = 0
+    risk = True
     for epoch in range(start_epoch,100):
         curr_loss_train = []
         curr_loss_val = []
