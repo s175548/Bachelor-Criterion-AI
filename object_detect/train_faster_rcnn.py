@@ -358,7 +358,7 @@ if __name__ == '__main__':
         if load_model:
             model = define_model(num_classes=2, net=model_name,
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
-            PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
+            PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn/'
             if all_classes:
                 PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
             else:
