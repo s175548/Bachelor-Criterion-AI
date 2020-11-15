@@ -360,9 +360,12 @@ if __name__ == '__main__':
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
             PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
             if all_classes:
-                PATH = os.path.join(PATH,'/full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
+                PATH = os.path.join(PATH,'full_scale/resnet50_full_empty_0.01_all_binary_scaleSGD.pt')
+                print(PATH)
+                start_epoch = 50
             else:
-                PATH = os.path.join(PATH,'/three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+                PATH = os.path.join(PATH,'three_scale/resnet50_full_empty_0.01_binary_scaleSGD.pt')
+                start_epoch = 75
             checkpoint = torch.load(PATH)
             model.load_state_dict(checkpoint['model_state'])
             model.to(device)
@@ -406,7 +409,7 @@ if __name__ == '__main__':
     loss_val = checkpoint['val_losses']
     best_map = checkpoint['best_map']
     best_map2 = 0
-    best_scores = checkpoint['best_scores']
+    best_scores = checkpoint['best_map_w_score']
     best_score = best_scores[0]
     best_ious = checkpoint['best_ious']
     best_iou = best_ious[0]
@@ -416,7 +419,8 @@ if __name__ == '__main__':
     val_targets = []
     print("About to train")
     best_epoch = 0
-    for epoch in range(75,100):
+    risk = True
+    for epoch in range(start_epoch,100):
         curr_loss_train = []
         curr_loss_val = []
         # train for one epoch, printing every 10 iterations
