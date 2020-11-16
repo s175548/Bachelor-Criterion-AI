@@ -17,7 +17,7 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = True
+    HPC = False
     SIZE = 256
     semi_supervised = True
     Villads = False
@@ -34,12 +34,14 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser(description='Take parameters')
         parser.add_argument('learning rate', metavar='lr', type=float, nargs='+',help='a parameter for the training loop')
         parser.add_argument('model name', metavar='optimizer', type=str, nargs='+',help='choose either MobileNet or DeepLab')
-        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either MobileNet or DeepLab')
+        parser.add_argument('optimizer name', metavar='model', type=str, nargs='+',help='choose either Adam or SGD')
         parser.add_argument('train scope', default=True, type=boolean_string, nargs='+', help='train whole model or only classifier')
         parser.add_argument('experiment description', metavar='description', type=str, nargs='+',help='enter description')
         parser.add_argument('folder name', metavar='folder', type=str, nargs='+',help='a save folder for the training loop')
         parser.add_argument('binary_setup', default=True, type=boolean_string, nargs='+', help='binary or multiclass')
         parser.add_argument('semi_supervised', default=True, type=boolean_string, nargs='+', help='semi_supervised')
+        parser.add_argument('regular GAN setup', default=False, type=boolean_string, nargs='+', help='binary or multiclass')
+
         args = vars(parser.parse_args())
 
         lr = args['learning rate'][0]
@@ -50,6 +52,7 @@ if __name__ == "__main__":
         save_folder = args['folder name'][0]
         binary = args['binary_setup'][0]
         semi_supervised = args['semi_supervised'][0]
+        reg_GAN_setup = args['regular GAN setup'][0]
 
         print("train_scope: ", train_scope)
         print("save folder: ",save_folder)
@@ -194,7 +197,7 @@ if __name__ == "__main__":
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
     if semi_supervised:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model, train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst, save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict, annotations_dict=annotations_dict, exp_description = exp_descrip, optim=optimizer, default_scope = train_scope, semi_supervised=semi_supervised,
-                 trainloader_nl=trainloader_nl)
+                 trainloader_nl=trainloader_nl,reg_GAN_setup)
 
     else:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)
