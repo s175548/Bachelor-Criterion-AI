@@ -24,7 +24,7 @@ from object_detect.train_hpc import define_model
 from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
-resize = True
+resize = False
 if resize:
     transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
                                         et.ExtEnhanceContrast(),
