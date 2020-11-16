@@ -24,10 +24,10 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.05
+lr_g = 0.01
 lr_policy='step'
 step_size=1
-batch_size= 8# 16
+batch_size= 16# 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -35,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
+N_epochs= 150
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -349,7 +349,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.legend()
             plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
             plt.show()
-
+            torch.save(model_g.state_dict(), model_g_spath+"last_epoch_generator")
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
