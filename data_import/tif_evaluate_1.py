@@ -62,11 +62,11 @@ elif HPC:
 
 
 
-#WALKNAPPA_VDA_04_grain_01_v.tif
+#'/WALKNAPPA_VDA_04_grain_01_v.tif'
 #'/RED_HALF02_grain_01_v.tif'
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/9.png')
+image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
