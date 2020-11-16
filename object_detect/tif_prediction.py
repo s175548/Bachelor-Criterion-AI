@@ -56,6 +56,7 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(description='Chooses model')
         parser.add_argument('model folder', metavar='folder', type=float, nargs='+',
                             help='model folder (three_scale, full_scale, all_bin, binary')
+        args = vars(parser.parse_args())
 
         model_folder = args['model folder'][0]
         if brevetti:
