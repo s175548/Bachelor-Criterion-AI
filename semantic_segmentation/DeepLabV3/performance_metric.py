@@ -229,7 +229,7 @@ metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
 true_negatives = [0,0]
 errors = np.array([[0, 0], [0, 0]])
-crop_values=transform_function.transforms[0].params_list
+crop_values=transform_function.transforms[1].params_list
 for i in range(len(train_images)):
     image = train_images[i][0].unsqueeze(0)
     target = train_images[i][1]
