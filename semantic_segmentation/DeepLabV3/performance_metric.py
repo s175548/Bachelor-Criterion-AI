@@ -126,8 +126,8 @@ HPC = True
 model_name = 'DeepLab'
 model_resize=False
 n_classes = 1
-resize = False
-size = 256
+resize = True
+size = 512
 scale = 0.5
 binary = True
 device = torch.device('cuda')
@@ -145,8 +145,8 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'    ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/random_crop'
-    model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_false0.01.pt"
+    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/resize'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -185,8 +185,8 @@ if not resize:
 
 else:
     transform_function = et.ExtCompose([
-                                               et.ExtResize(scale=scale),
-                                               et.ExtRandomCrop(size=size),
+                                               et.ExtResize(scale=0.5),
+                                               et.ExtRandomCrop(size=size,semantic_evaluation_resize=True,scale=0.7),
                                                et.ExtEnhanceContrast(),
                                                et.ExtToTensor(),
                                                et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
