@@ -15,5 +15,5 @@ echo "Running script..."
 cd /zhome/87/9/127623/BachelorProject
 source test-env/bin/activate
 cd /zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI
-python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.05 DeepLab SGD False semi_lr05 semi_super/semi_super/lr/05 True True
+python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.05 DeepLab SGD False semi_lr05 semi_super/lr/05 True True
 echo "Done"

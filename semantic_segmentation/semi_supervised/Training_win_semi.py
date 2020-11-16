@@ -9,6 +9,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 from tqdm import tqdm
 from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from semantic_segmentation.semi_supervised.helpful_functions import add_spectral
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel, Loss_fake_remade, Loss_unlabel_remade
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
@@ -24,10 +25,10 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.05
+lr_g = 0.002
 lr_policy='step'
 step_size=1
-batch_size= 8# 16
+batch_size= 16# 16
 val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
@@ -35,7 +36,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 100
+N_epochs= 150
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -115,6 +116,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        if False:
+            add_spectral(model_dict[model])
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
@@ -134,7 +137,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = gamma_two = .3 # Loss weights
+        gamma_one = .2 #Loss weigth for fake
+        gamma_two = .8 # Loss weight for unlabel
 
         #Load model
         model_g = generator(1) #arg = number of gpu's
@@ -228,7 +232,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                     loss_fake = Loss_fake_remade(pred_fake)
                     loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
-                    print("loss_unlabel: ",loss_unlabel.detach().cpu().numpy(),"loss_fake: ",loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
+                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 if loss_d < 0.001:
@@ -302,8 +306,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
-                loss_unlabelled_d.append(loss_unlabel)
-                loss_fake_d.append(loss_fake)
+                loss_unlabelled_d.append(loss_unlabel*gamma_two)
+                loss_fake_d.append(loss_fake*gamma_one)
                 loss_fake_g.append(loss_g)
 
                 D_loss.append(loss_d.item())
@@ -349,7 +353,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.legend()
             plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
             plt.show()
-
+            torch.save(model_g.state_dict(), model_g_spath+"last_epoch_generator")
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,

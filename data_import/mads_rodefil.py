@@ -3,16 +3,24 @@ from semantic_segmentation.semi_supervised.generator import generator
 import PIL,numpy as np
 from PIL import Image
 model = generator(3)
-model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_super\new_setup\semi\model_g.pt'))
+model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_supervised_correct_loss\0001\model_g.pt'))
 model.eval()
-for i in range(4):
-    noise = torch.rand([3,50*50]).uniform_()
+
+for i in range(5):
+    noise = torch.randn(3, 100, 1, 1)
     output = model(noise)
-    test_noise = Image.fromarray( (noise[0].reshape(50,50).numpy()*255).astype(np.uint8) )
+    test_noise = Image.fromarray( (noise[0].reshape(10,10).numpy()*255).astype(np.uint8) )
     Image._show(test_noise)
     test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
     Image._show(test)
-    print(torch.sum(output))
+# for i in range(4):
+#     noise = torch.rand([3,50*50]).uniform_()
+#     output = model(noise)
+#     test_noise = Image.fromarray( (noise[0].reshape(50,50).numpy()*255).astype(np.uint8) )
+#     Image._show(test_noise)
+#     test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
+#     Image._show(test)
+#     print(torch.sum(output))
 
 ### LINE 220 Training_win_semi
 # loss_labeled_test1 = criterion_d_test1(pred_labeled, labels)

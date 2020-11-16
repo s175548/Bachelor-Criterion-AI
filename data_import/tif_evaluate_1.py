@@ -62,11 +62,11 @@ elif HPC:
 
 
 
-#WALKNAPPA_VDA_04_grain_01_v.tif
+#'/WALKNAPPA_VDA_04_grain_01_v.tif'
 #'/RED_HALF02_grain_01_v.tif'
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/WALKNAPPA_VDA_04_grain_01_v.tif')
+image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
@@ -122,7 +122,7 @@ for i in range(split_x_y[0]):
         if i != split_x_y[0]-1:
             output_b = output_model(img_array=split_imgs[(i+1) * split_x_y[1] + j])[t_slice]
             output[b_slice] = (output[b_slice] + output_b) / 2
-        pred = np.argmax(output,dim=0)
+        pred = np.argmax(output,axis=0)
 
         if isinstance(pred_stack,list):
             pred_stack=pred
@@ -135,4 +135,4 @@ for i in range(split_x_y[0]):
         target_tif=np.vstack((target_tif,pred_stack))
 
 PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/vda_04_01_all_classes.png')
-
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).crop(0,0,(split_x_y[1]+1)*128,(split_x_y[0]+1)*128).resize((int((split_x_y[0]+1)*128*0.1),int((split_x_y[1]+1)*128*0.1))).save(tif_path+'/vda_04_01_all_classes_resized.png')
