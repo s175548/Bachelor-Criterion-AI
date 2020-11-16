@@ -10,7 +10,7 @@ from tqdm import tqdm
 from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
-from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel
+from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel, Loss_fake_remade, Loss_unlabel_remade
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
 import torch,os,PIL,pickle,matplotlib.pyplot as plt,numpy as np,torch.nn as nn, random
@@ -24,18 +24,18 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.0002
+lr_g = 0.05
 lr_policy='step'
 step_size=1
-batch_size= 2# 16
-val_batch_size= 2 #4
+batch_size= 8# 16
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 200
+N_epochs= 100
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -225,11 +225,14 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
-                    loss_unlabel = Loss_unlabel(pred_unlabel)
-                    loss_fake = Loss_fake(pred_fake)
+                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    loss_fake = Loss_fake_remade(pred_fake)
                     loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
+                    print("loss_unlabel: ",loss_unlabel.detach().cpu().numpy(),"loss_fake: ",loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
+                if loss_d < 0.001:
+                    a = 2
                 loss_d.backward()
                 optimizer_d.step()
                 np_loss = loss_d.detach().cpu().numpy()
@@ -245,7 +248,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         pred_fake = model_d(model_g(noise))['out']
                     else:
                         pred_fake = model_d(model_g(noise))
-                    loss_g = -Loss_fake(pred_fake)
+                    loss_g = -Loss_fake_remade(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
 
@@ -291,8 +294,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 #     scheduler_d.step()
                 #     scheduler_g.step()
 
-                if cur_itrs >= total_itrs:
-                    break
+                if cur_epochs%10==0:
+                    save_noise_pred(cur_epoch=cur_epochs, model=model_g, b_size=b_size, device=device,
+                                    save_path=save_path)
+
 
 
             if semi_supervised:
