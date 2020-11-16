@@ -1,7 +1,7 @@
 
 import torch
 import torchvision.transforms.functional as F
-import random 
+import random
 import numbers
 import numpy as np
 from PIL import Image
@@ -343,7 +343,7 @@ class ExtRandomVerticalFlip(object):
 class ExtPad(object):
     def __init__(self, diviser=32):
         self.diviser = diviser
-    
+
     def __call__(self, img, lbl):
         h, w = img.size
         ph = (h//32+1)*32 - h if h%32!=0 else 0
@@ -365,7 +365,7 @@ class ExtToTensor(object):
         Note that labels will not be normalized to [0, 1].
         Args:
             pic (PIL Image or numpy.ndarray): Image to be converted to tensor.
-            lbl (PIL Image or numpy.ndarray): Label to be converted to tensor. 
+            lbl (PIL Image or numpy.ndarray): Label to be converted to tensor.
         Returns:
             Tensor: Converted image and label
         """
@@ -425,6 +425,7 @@ class ExtRandomCrop(object):
         self.padding = padding
         self.pad_if_needed = pad_if_needed
         self.size = size
+        self.params_list=[]
 
     @staticmethod
     def get_params(img, output_size):
@@ -469,13 +470,16 @@ class ExtRandomCrop(object):
             lbl = F.pad(lbl,padding=(int(abs((size[0]-lbl.size[0])/2)),abs(int((size[1]-lbl.size[1])/2))),padding_mode='reflect')
 
         if np.min(size)>np.min(img.size):
+            self.params_list.append((0,0,img.size[0],img.size[1]))
             return img, lbl
         else:
             i, j, h, w = self.get_params(img, size)
+            self.params_list.append((i, j, h, w))
             return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)
 
     def __repr__(self):
         return self.__class__.__name__ + '(size={0}, padding={1})'.format(self.size, self.padding)
+
 
 
 class ExtResize(object):
@@ -513,8 +517,8 @@ class ExtResize(object):
 
     def __repr__(self):
         interpolate_str = _pil_interpolation_to_str[self.interpolation]
-        return self.__class__.__name__ + '(size={0}, interpolation={1})'.format(self.size, interpolate_str) 
-    
+        return self.__class__.__name__ + '(size={0}, interpolation={1})'.format(self.size, interpolate_str)
+
 class ExtColorJitter(object):
     """Randomly change the brightness, contrast and saturation of an image.
 

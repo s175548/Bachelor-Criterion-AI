@@ -22,8 +22,8 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 from data_import.data_loader import convert_to_image
 
 
-def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives,true_negatives, metric, resize=False,
-                size=None, scale=None,centercrop=False,path=None,tif=True):
+def error_count(idx, pred_color, target_color, data_loader, labels, errors, false_positives,true_negatives, metric,resize=False,crop_values=None,
+                size=None, scale=None,randomcrop=False,path=None,tif=True):
     pred = pred_color.copy()
     target = target_color.copy()
     if np.sum(target == 1) != 0:
@@ -38,11 +38,11 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            if centercrop:
+            if randomcrop:
                 if size > np.min(mask.shape):
                     pass
                 else:
-                    mask = F.center_crop(PIL.Image.fromarray(mask), output_size=size)
+                    mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
             mask = np.array(mask)
             if resize:
                 resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
@@ -120,16 +120,16 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 #model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
 """Arguments"""
 
-Villads = False
-HPC = True
+Villads = True
+HPC = False
 model_name = 'DeepLab'
 model_resize=False
 n_classes = 1
 resize = False
-size = 1048
+size = 256
 scale = 0.5
 binary = True
-device = torch.device('cuda')
+device = torch.device('cpu')
 data_set = 'val'
 
 if Villads:
@@ -180,14 +180,15 @@ file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val
 file_names_val = file_names_val[file_names_val != ".DS_S"]
 
 if not resize:
-    transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
+    transform_function = et.ExtCompose([et.ExtRandomCrop(size=size),
                                         et.ExtEnhanceContrast(),
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 else:
-    transform_function = et.ExtCompose([et.ExtCenterCrop(size=size),
+    transform_function = et.ExtCompose([
                                                et.ExtResize(scale=scale),
+                                               et.ExtRandomCrop(size=size),
                                                et.ExtEnhanceContrast(),
                                                et.ExtToTensor(),
                                                et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
@@ -230,6 +231,7 @@ metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
 true_negatives = [0,0]
 errors = np.array([[0, 0], [0, 0]])
+crop_values=transform_function.transforms[0].params_list
 for i in range(len(train_images)):
     image = train_images[i][0].unsqueeze(0)
     target = train_images[i][1]
@@ -243,11 +245,11 @@ for i in range(len(train_images)):
 
     errors, false_positives, metric, target_color, pred_color,true_negatives = error_count(int(file_names_val[i]), pred.copy(),
                                                                             target.copy(), data_loader, labels, errors,
-                                                                            false_positives,true_negatives, metrics, resize, size=size,
-                                                                            scale=scale,centercrop=True)
+                                                                            false_positives,true_negatives, metrics, resize,crop_values=crop_values[i], size=size,
+                                                                            scale=scale,randomcrop=True)
 
-    target = convert_to_image(target.squeeze(), color_dict, target_dict)
-    pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
+#    target = convert_to_image(target.squeeze(), color_dict, target_dict)
+#    pred = convert_to_image(pred.squeeze(), color_dict, target_dict)
     image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
     PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path + r'/{}_img.png'.format(file_names_val[i])),format='PNG')
     PIL.Image.fromarray(pred_color.astype(np.uint8)).save(os.path.join(save_path + r'/{}_pred_color.png'.format(file_names_val[i])),format='PNG')
