@@ -48,6 +48,7 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
+    print("So far")
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
@@ -95,12 +96,13 @@ if __name__ == '__main__':
         optim = "SGD"
         tif_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\TIF\good_area1.png'
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
-
+    
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 
     array = load_tif_as_numpy_array(tif_path)
+    print("Shape array: ", np.shape(array))
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
