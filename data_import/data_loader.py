@@ -371,11 +371,11 @@ class DataLoader():
         pad_split_imgs = []
 
         for i in range(crop_count_height):
-            for j in range(crop_count_width):
-                    xdim=[j * sliding_window,j * sliding_window+patch_size_0]
-                    ydim=[i * sliding_window,i * sliding_window + patch_size_1]
-                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
-                    pad_split_imgs.append(large_img.astype(np.uint8))
+                for j in range(crop_count_width):
+                        ydim=[j * sliding_window,j * sliding_window+patch_size_0]
+                        xdim=[i * sliding_window,i * sliding_window + patch_size_1]
+                        large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
+                        pad_split_imgs.append(large_img.astype(np.uint8))
 
         patch_dimensions=(patch_size_0,patch_size_1)
 

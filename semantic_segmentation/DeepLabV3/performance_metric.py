@@ -118,6 +118,7 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
     return target_rgb, pred_rgb
 
 #model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
+#model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
 """Arguments"""
 
 Villads = False
