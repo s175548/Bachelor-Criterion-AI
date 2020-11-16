@@ -59,7 +59,6 @@ def Loss_unlabel(pred):
 
 
 ############# Own implementations:
-
 def Loss_unlabel_remade(pred):
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
