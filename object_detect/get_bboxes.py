@@ -202,7 +202,7 @@ def new_convert(mask):
 def get_bbox_mask(mask,bbox):
     new_mask = np.copy(mask)
     for i in range(np.shape(new_mask)[0]):
-        for j in range(np.shape(new_mask)[0]):
+        for j in range(np.shape(new_mask)[1]):
             if mask[i,j] > 0:
                new_mask[i,j] = 255
     bounding_box_mask = np.copy(new_mask)

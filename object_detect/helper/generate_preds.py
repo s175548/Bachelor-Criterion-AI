@@ -32,19 +32,15 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
             if val == True:
                 Image.fromarray(image.astype(np.uint8)).save(
                     path_save + '/{}_val_{}_img.png'.format(model_name,ids[i].numpy()[0]),format='PNG')
-                Image.fromarray(bmask.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_prediction.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
                 Image.fromarray(bmask3.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_prediction_nms.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
+                    path_save + '/{}_val_{}_prediction.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
                     path_save + '/{}_val_{}_target.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
             else:
                 Image.fromarray(image.astype(np.uint8)).save(
                     path_save + '/{}_train_{}_img.png'.format(model_name,ids[i].numpy()[0]),format='PNG')
-                Image.fromarray(bmask.astype(np.uint8)).save(
-                    path_save + '/{}_train_{}_prediction.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
                 Image.fromarray(bmask3.astype(np.uint8)).save(
-                    path_save + '/{}_train_{}_prediction_nms.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
+                    path_save + '/{}_train_{}_prediction.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
                     path_save + '/{}_train_{}_target.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
 
