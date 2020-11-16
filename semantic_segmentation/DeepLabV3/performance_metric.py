@@ -38,15 +38,12 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            if randomcrop:
-                if size > np.min(mask.shape):
-                    pass
-                else:
-                    mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
-            mask = np.array(mask)
             if resize:
                 resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+            mask = np.array(mask).astype(np.uint8)
+            if randomcrop:
+                    mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
             mask=np.array(mask).astype(np.uint8)
             if np.sum(mask == 1) != 0:
                 row, col = np.where(mask != 0)
