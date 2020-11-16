@@ -24,16 +24,23 @@ from object_detect.train_hpc import define_model
 from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
+resize = True
+if resize:
+    transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
+                                        et.ExtEnhanceContrast(),
+                                        et.ExtToTensor()])
+    patch_size = 512
+else:
+    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
+                                        et.ExtToTensor()])
+    patch_size = 256
 
-
-transform_function = et.ExtCompose([et.ExtCenterCrop(size=1024),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC = False
+HPC = True
 splitted_data = True
 binary = True
-tif = False
+tif = True
+brevetti = False
 
 if __name__ == '__main__':
 
@@ -43,20 +50,42 @@ if __name__ == '__main__':
     random.seed(random_seed)
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        base_path = '/zhome/dd/4/128822/Bachelorprojekt/'
-        model_folder = 'faster_rcnn/'
-        save_path_model = os.path.join(base_path, model_folder)
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
         parser = argparse.ArgumentParser(description='Chooses model')
         parser.add_argument('model folder', metavar='folder', type=float, nargs='+',
                             help='model folder (three_scale, full_scale, all_bin, binary')
-        # Example: model_folder = all_bin\resnet50_full_empty_0.01_all_binarySGD.pt
-        model_folder = args['model folder'][0]
 
+        model_folder = args['model folder'][0]
+        if brevetti:
+            save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti'
+        else:
+            save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4'
         model_name = 'resnet50'
-        tif_path = '/zhome/db/f/128823/Bachelor/data_all_classes/tif_image'
+        tif_path = '/work3/s173934/Bachelorprojekt/tif_img'
+        if brevetti:
+            tif_path = os.path.join(tif_path,'RED_HALF02_grain_01_v.tif')
+        else:
+            tif_path = os.path.join(tif_path,'WALKNAPPA_VDA_04_grain_01_v.tif')
+
+        if model_folder == 'all_bin':
+            pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
+            exp = 'crop_all_classes'
+
+        if model_folder == 'binary':
+            pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
+            exp = 'crop_3_classes'
+
+        if model_folder == 'three_scale':
+            pt_name =
+            exp = 'resize_3_classes'
+
+        if model_folder == 'full_scale':
+            pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
+            exp = 'resize_all_classes'
+
+
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
@@ -69,19 +98,17 @@ if __name__ == '__main__':
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
-    patch_size = 128
 
     array = load_tif_as_numpy_array(tif_path)
-    #image, mask, _ = data_loader.get_tif_mask()
-    split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches(array, patch_size=patch_size,
+    split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
     model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
 
     if HPC:
-        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
-        PATH = os.path.join(PATH, model_folder)
-
+        base_path = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
+        PATH = os.path.join(base_path, model_folder)
+        PATH = os.path.join(PATH, pt_name)
     else:
         PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn\all_bin\resnet50_full_empty_0.01_all_binarySGD.pt'
         # PATH = os.path.join(PATH, model_folder)
@@ -99,7 +126,6 @@ if __name__ == '__main__':
         print("i ", i)
         pred_stack = []
         for j in range(split_x_y[1]):
-            print(j)
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
             image = split_imgs[i * split_x_y[1] + j]
             size = image.size
@@ -132,5 +158,5 @@ if __name__ == '__main__':
             target_tif = pred_stack
         else:
             target_tif = np.vstack((target_tif, pred_stack))
-
+    print("Model: ", exp)
     Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/pred_vda_07.png')

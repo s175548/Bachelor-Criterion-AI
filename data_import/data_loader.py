@@ -355,6 +355,47 @@ class DataLoader():
         img=img.enhance(2.0)
         return np.array(img)
 
+    def pad_tif2(self,image,extra_shape = 50):
+        h,w,c = image.shape[0]+extra_shape,image.shape[1]+extra_shape,3
+        extra_h= h - image.shape[0] % h
+        extra_w = w- image.shape[1] % w
+        padded_img = np.pad(image, (extra_h, extra_w), 'reflect')
+        return padded_img
+
+    def generate_tif_patches2(self, img, patch_size=512,padding = 50,with_pad = True):
+        crop_count_height = img.shape[0] // patch_size
+        crop_count_width = img.shape[1] // patch_size
+        n_imgs = crop_count_height * crop_count_width
+        patch_size_0=img.shape[0] // crop_count_height
+        patch_size_1=img.shape[1] // crop_count_width
+
+        split_dimensions = (patch_size_0+2*padding, patch_size_1+2*padding, 3)
+        if with_pad:
+            pad_split_imgs = []
+            padded_img = self.pad_tif2(img, padding//2)
+
+        for i in range(crop_count_height):
+            for j in range(crop_count_width):
+                    xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
+                    ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
+                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1],:]
+                    large_img=PIL.Image.fromarray(large_img.astype(np.uint8))
+                    if j == 0:
+                        large_img=F.pad(large_img, padding=(0, 0, 50, 0), padding_mode='reflect')
+                    if j == crop_count_width - 1:
+                        large_img = F.pad(large_img, padding=(50, 0, 0, 0), padding_mode='reflect')
+                    if i == 0:
+                        large_img = F.pad(large_img, padding=(0, 50, 0, 0), padding_mode='reflect')
+                    if i == crop_count_height - 1:
+                        large_img = F.pad(large_img, padding=(0, 0, 0, 50), padding_mode='reflect')
+                    large_img=np.array(large_img,dtype=np.uint8)
+                    pad_split_imgs.append(large_img)
+
+        patch_dimensions=(patch_size_0,patch_size_1)
+
+
+        return pad_split_imgs, (crop_count_height,crop_count_width),patch_dimensions
+
     def pad_tif(self,image,extra_shape = 50):
         h,w,c = image.shape[0]+extra_shape,image.shape[1]+extra_shape,3
         extra_h= h - image.shape[0] % h
@@ -371,11 +412,11 @@ class DataLoader():
         pad_split_imgs = []
 
         for i in range(crop_count_height):
-            for j in range(crop_count_width):
-                    xdim=[j * sliding_window,j * sliding_window+patch_size_0]
-                    ydim=[i * sliding_window,i * sliding_window + patch_size_1]
-                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
-                    pad_split_imgs.append(large_img.astype(np.uint8))
+                for j in range(crop_count_width):
+                        ydim=[j * sliding_window,j * sliding_window+patch_size_0]
+                        xdim=[i * sliding_window,i * sliding_window + patch_size_1]
+                        large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
+                        pad_split_imgs.append(large_img.astype(np.uint8))
 
         patch_dimensions=(patch_size_0,patch_size_1)
 

@@ -135,4 +135,4 @@ for i in range(split_x_y[0]):
         target_tif=np.vstack((target_tif,pred_stack))
 
 PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/vda_04_01_all_classes.png')
-
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).crop(0,0,(split_x_y[1]+1)*128,(split_x_y[0]+1)*128).resize((int((split_x_y[0]+1)*128*0.1),int((split_x_y[1]+1)*128*0.1))).save(tif_path+'/vda_04_01_all_classes_resized.png')

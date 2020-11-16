@@ -19,19 +19,16 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
 
-#transform_function = et.ExtCompose([et.ExtCenterCrop(size=1024),
-#                                    et.ExtEnhanceContrast(),
-#                                    et.ExtToTensor()])
-transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtRandomCrop(scale=0.7, size=None),
+transform_function_C = et.ExtCompose([et.ExtRandomCrop(size=256),
                                     et.ExtEnhanceContrast(),
-                                    et.ExtRandomCrop(size=2048, pad_if_needed=True),
-                                    et.ExtResize(scale=0.5),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomCrop(size=512),
-                                    et.ExtRandomVerticalFlip(p=0.5),
                                     et.ExtToTensor()])
-#et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
+
+transform_function_R = et.ExtCompose([et.ExtRandomCrop(scale=0.7,size=None),
+                                      et.ExtResize(scale=0.5),
+                                      et.ExtRandomCrop(size=512),
+                                      et.ExtEnhanceContrast(),
+                                      et.ExtToTensor()])
+
 HPC=False
 splitted_data=True
 binary=True
@@ -69,10 +66,36 @@ if __name__ == '__main__':
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
+        exp_name = 'full_scale'
         if binary:
-            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
-            dataset = "binary_scale"
+            if exp_name == 'all_bin' or exp_name == 'full_scale':
+                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\extended\val'
+            else:
+                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\three\val'
+
+        if exp_name == 'all_bin':
+            pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
+            exp = 'crop_all_classes'
+            transform_function = transform_function_C
+            save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\all_bin'
+
+        if exp_name == 'binary':
+            pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
+            exp = 'crop_3_classes'
+            transform_function = transform_function_C
+            save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
+
+        if exp_name == 'three_scale':
+            pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
+            exp = 'resize_3_classes'
+            transform_function = transform_function_R
+            save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\three_scale'
+
+        if exp_name == 'full_scale':
+            pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
+            exp = 'resize_all_classes'
+            transform_function = transform_function_R
+            save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\full_scale'
 
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
@@ -82,37 +105,30 @@ if __name__ == '__main__':
     target_dict = data_loader.get_target_dict()
     annotations_dict = data_loader.annotations_dict
 
-    batch_size = 4
-
-    file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
-    N_files = len(file_names_train)
-    file_names_train = file_names_train[file_names_train != ".DS_S"]
+    batch_size = 8
 
     file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
     N_files = len(file_names_val)
 
-    train_dst = LeatherDataZ(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train,
-                            bbox=True, multi=False,
-                            transform=transform_function, color_dict=color_dict, target_dict=target_dict)
-    val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val[:10],
+    val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
                           bbox=True, multi=False,
                           transform=transform_function, color_dict=color_dict, target_dict=target_dict)
 
-    train_loader = data.DataLoader(
-        train_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
     val_loader = data.DataLoader(
         val_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
 
-    print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
+    print("Val set: %d" %(len(val_dst)))
 
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)))
+    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.5)
 
     if HPC:
         PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
         PATH = os.path.join(PATH, model_folder)
 
     else:
-        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn\all_bin\resnet50_full_empty_0.01_all_binarySGD.pt'
+        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
+        PATH = os.path.join(PATH, exp_name)
+        PATH = os.path.join(PATH, pt_name)
         #PATH = os.path.join(PATH, model_folder)
 
     loaded_model = torch.load(PATH)
@@ -122,14 +138,13 @@ if __name__ == '__main__':
     print("Model loaded and ready to be evaluated!")
     if HPC:
         save_path = path_save
-    else:
-        save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
 
     val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model, model_name=model_name,
                                                             data_loader=val_loader,
                                                             device=device,
                                                             path_save=save_path, bbox_type='empty',
                                                             val=True)
+    print("Experiment: ", exp)
     print("Overall best with nms: ", val_mAP2)
     print("Stats for nms:")
     print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"],
@@ -140,12 +155,6 @@ if __name__ == '__main__':
     print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ",
           cmatrix_val["bad_leather"],
           " with bad leather")
-    
-    #train_mAP, train_mAP2, cmatrix_train, cmatrix_train2 = validate(model=model,model_name=model_name,
-    #                                                        data_loader=train_loader,
-    #                                                        device=device,
-    #                                                        path_save = save_path,bbox_type='empty',
-    #                                                        val=False)
 
 
 
