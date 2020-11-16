@@ -102,10 +102,10 @@ else:
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(split_x_y[0]):
+for i in range(0,split_x_y[0],2):
     print(i)
     pred_stack=[]
-    for j in range(split_x_y[1]):
+    for j in range(0,split_x_y[1],2):
         print(j)
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
@@ -135,4 +135,4 @@ for i in range(split_x_y[0]):
         target_tif=np.vstack((target_tif,pred_stack))
 
 PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/vda_04_01_all_classes.png')
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).crop(0,0,(split_x_y[1]+1)*128,(split_x_y[0]+1)*128).resize((int((split_x_y[0]+1)*128*0.1),int((split_x_y[1]+1)*128*0.1))).save(tif_path+'/vda_04_01_all_classes_resized.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).crop((0,0,(split_x_y[1])*128,(split_x_y[0])*128)).resize((int((split_x_y[0]+1)*128*0.1),int((split_x_y[1]+1)*128*0.1))).save(tif_path+'/vda_04_01_all_classes_resized.png')

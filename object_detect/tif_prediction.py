@@ -24,7 +24,7 @@ from object_detect.train_hpc import define_model
 from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
-resize = True
+resize = False
 if resize:
     transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
                                         et.ExtEnhanceContrast(),
@@ -48,14 +48,16 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
+    print("So far")
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
         parser = argparse.ArgumentParser(description='Chooses model')
-        parser.add_argument('model folder', metavar='folder', type=float, nargs='+',
+        parser.add_argument('model folder', metavar='folder', type=str, nargs='+',
                             help='model folder (three_scale, full_scale, all_bin, binary')
+        args = vars(parser.parse_args())
 
         model_folder = args['model folder'][0]
         if brevetti:
@@ -78,7 +80,7 @@ if __name__ == '__main__':
             exp = 'crop_3_classes'
 
         if model_folder == 'three_scale':
-            pt_name =
+            pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
             exp = 'resize_3_classes'
 
         if model_folder == 'full_scale':
@@ -94,16 +96,17 @@ if __name__ == '__main__':
         optim = "SGD"
         tif_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\TIF\good_area1.png'
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
-
+    
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 
     array = load_tif_as_numpy_array(tif_path)
+    print("Shape array: ", np.shape(array))
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
+    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.5)
 
     if HPC:
         base_path = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
