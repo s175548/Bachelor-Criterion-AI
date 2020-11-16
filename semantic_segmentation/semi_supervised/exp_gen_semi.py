@@ -17,15 +17,13 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = False
+    HPC = True
     SIZE = 256
     semi_supervised = True
     Villads = False
     DellXPS = False
     binary = True
-    model_name = ''
-    optimizer = ''
-    exp_descrip = ''
+    exp_descrip = optimizer = model_name= reg_GAN_setup = ''
     train_scope = ''
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
@@ -194,10 +192,12 @@ if __name__ == "__main__":
         exp_descrip = 'no_decrip'
     if train_scope == '':
         train_scope = True
+    if reg_GAN_setup == '':
+        reg_GAN_setup = False
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
     if semi_supervised:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model, train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst, save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict, annotations_dict=annotations_dict, exp_description = exp_descrip, optim=optimizer, default_scope = train_scope, semi_supervised=semi_supervised,
-                 trainloader_nl=trainloader_nl,reg_GAN_setup)
+                 trainloader_nl=trainloader_nl,reg_GAN_setup=reg_GAN_setup)
 
     else:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)
