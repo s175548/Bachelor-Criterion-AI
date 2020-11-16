@@ -362,34 +362,21 @@ class DataLoader():
         padded_img = np.pad(image, (extra_h, extra_w), 'reflect')
         return padded_img
 
-    def generate_tif_patches(self, img, patch_size=512,padding = 50,with_pad = True):
-        crop_count_height = img.shape[0] // patch_size
-        crop_count_width = img.shape[1] // patch_size
-        n_imgs = crop_count_height * crop_count_width
-        patch_size_0=img.shape[0] // crop_count_height
-        patch_size_1=img.shape[1] // crop_count_width
+    def generate_tif_patches(self, img, patch_size=512,sliding_window=256):
+        crop_count_height = img.shape[0] // sliding_window-1
+        crop_count_width = img.shape[1] // sliding_window-1
+        patch_size_0=patch_size
+        patch_size_1=patch_size
 
-        split_dimensions = (patch_size_0+2*padding, patch_size_1+2*padding, 3)
         if with_pad:
             pad_split_imgs = []
-            padded_img = self.pad_tif(img, padding//2)
 
         for i in range(crop_count_height):
             for j in range(crop_count_width):
-                    xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
-                    ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
-                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1],:]
-                    large_img=PIL.Image.fromarray(large_img.astype(np.uint8))
-                    if j == 0:
-                        large_img=F.pad(large_img, padding=(0, 0, 50, 0), padding_mode='reflect')
-                    if j == crop_count_width - 1:
-                        large_img = F.pad(large_img, padding=(50, 0, 0, 0), padding_mode='reflect')
-                    if i == 0:
-                        large_img = F.pad(large_img, padding=(0, 50, 0, 0), padding_mode='reflect')
-                    if i == crop_count_height - 1:
-                        large_img = F.pad(large_img, padding=(0, 0, 0, 50), padding_mode='reflect')
-                    large_img=np.array(large_img,dtype=np.uint8)
-                    pad_split_imgs.append(large_img)
+                    xdim=[i * sliding_window,(i + 1) * patch_size_0]
+                    ydim=[j * sliding_window,(i + 1) * patch_size_1]
+                    large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1]]
+                    pad_split_imgs.append(large_img.astype(np.uint8))
 
         patch_dimensions=(patch_size_0,patch_size_1)
 
