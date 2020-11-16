@@ -183,7 +183,7 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     if model_name == '':
-        model_name = 'DeepLab'
+        model_name = 'MobileNet'
         #model_name =
     if optimizer == '':
         optimizer = 'Adam'

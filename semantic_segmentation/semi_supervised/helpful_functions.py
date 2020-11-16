@@ -175,3 +175,23 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     trainloader_nl_dst = LeatherData(path_mask=dataset_path_unlabelled, path_img=dataset_path_unlabelled,list_of_filenames=file_names_train,transform=transform_function, color_dict=color_dict, target_dict=target_dict,unlabelled=True)
     trainloader_nl = data.DataLoader(trainloader_nl_dst, batch_size=batch_size, shuffle=True, num_workers=4)
     return trainloader_nl, trainloader_nl_dst
+
+def add_spectral(model):
+    print(model)
+    for layer in model.backbone.items():
+        if (isinstance(layer[1] ,nn.Conv2d)):
+            kernel_size = layer[1].kernel_size[0]
+            stride = layer[1].stride[0]
+            padding = layer[1].padding[0]
+            weight = layer[1].weight.unsqueeze(2) / kernel_size
+            weight = torch.cat([weight for _ in range(0, kernel_size)], dim=2)
+            bias = layer[1].bias
+            model.backbone[layer[0]] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=layer[1].weight.shape[1],out_channels=layer[1].weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+        elif (isinstance(layer[1],nn.Sequential)):
+            for module in layer[1]:
+                for j in module.children():
+
+                    a = 3
+    for name, module in model.classifier.named_modules():
+        if (isinstance(module, nn.Conv2d)):
+            ase = 3
