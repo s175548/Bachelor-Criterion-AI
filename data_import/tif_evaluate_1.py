@@ -102,10 +102,10 @@ else:
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(split_x_y[0]):
+for i in range(0,split_x_y[0],2):
     print(i)
     pred_stack=[]
-    for j in range(split_x_y[1]):
+    for j in range(0,split_x_y[1],2):
         print(j)
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
