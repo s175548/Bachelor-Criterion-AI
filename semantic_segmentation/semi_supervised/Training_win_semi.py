@@ -9,6 +9,7 @@ sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semant
 from tqdm import tqdm
 from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
+from semantic_segmentation.semi_supervised.helpful_functions import add_spectral
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.losses import Loss_label, Loss_fake, Loss_unlabel, Loss_fake_remade, Loss_unlabel_remade
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
@@ -24,7 +25,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.01
+lr_g = 0.002
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -115,6 +116,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        if False:
+            add_spectral(model_dict[model])
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
@@ -134,7 +137,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = gamma_two = .3 # Loss weights
+        gamma_one = .2 #Loss weigth for fake
+        gamma_two = .8 # Loss weight for unlabel
 
         #Load model
         model_g = generator(1) #arg = number of gpu's
@@ -228,7 +232,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                     loss_fake = Loss_fake_remade(pred_fake)
                     loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
-                    print("loss_unlabel: ",loss_unlabel.detach().cpu().numpy(),"loss_fake: ",loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
+                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 if loss_d < 0.001:
@@ -302,8 +306,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
-                loss_unlabelled_d.append(loss_unlabel)
-                loss_fake_d.append(loss_fake)
+                loss_unlabelled_d.append(loss_unlabel*gamma_two)
+                loss_fake_d.append(loss_fake*gamma_one)
                 loss_fake_g.append(loss_g)
 
                 D_loss.append(loss_d.item())
