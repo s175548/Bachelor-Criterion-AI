@@ -120,8 +120,8 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
 #model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
 """Arguments"""
 
-Villads = True
-HPC = False
+Villads = False
+HPC = True
 model_name = 'DeepLab'
 model_resize=False
 n_classes = 1
@@ -129,7 +129,7 @@ resize = False
 size = 256
 scale = 0.5
 binary = True
-device = torch.device('cpu')
+device = torch.device('cuda')
 data_set = 'val'
 
 if Villads:
