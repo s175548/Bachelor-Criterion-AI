@@ -142,14 +142,11 @@ if Villads:
     model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
-    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train' ###
-    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val_new'    ###
+    path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val' ###
+    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'    ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/3_classes/random_crop'
-    if model_resize:###
-        model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
-    else:
-        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/randomcrop/DeepLab_ThreeClass_resize_false0.01.pt"
+    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/random_crop'
+    model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_false0.01.pt"
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
