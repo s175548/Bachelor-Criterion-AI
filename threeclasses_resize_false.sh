@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionThreeClass_resize_false
-#BSUB -o versionThreeClass_resize_false%J.out
+#BSUB -J versionSemiSupervised01_true
+#BSUB -o versionSemiSupervised01_true%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd /zhome/87/9/127623/BachelorProject
 source test-env/bin/activate
 cd /zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI
-python3 semantic_segmentation/DeepLabV3/experiment_generator.py 0.01 DeepLab SGD False ThreeClass_resize_false resize_vs_randomcrop/3_class_dataset/randomcrop True False
+python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.05 DeepLab SGD False semi_lr05 semi_super/semi_super/lr/05 True True
 echo "Done"
