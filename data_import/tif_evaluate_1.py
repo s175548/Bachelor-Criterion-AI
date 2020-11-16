@@ -66,7 +66,7 @@ elif HPC:
 #'/RED_HALF02_grain_01_v.tif'
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/WALKNAPPA_VDA_04_grain_01_v.tif')
+image=load_tif_as_numpy_array(tif_path+'/9.png')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
@@ -122,7 +122,7 @@ for i in range(split_x_y[0]):
         if i != split_x_y[0]-1:
             output_b = output_model(img_array=split_imgs[(i+1) * split_x_y[1] + j])[t_slice]
             output[b_slice] = (output[b_slice] + output_b) / 2
-        pred = np.argmax(output,dim=0)
+        pred = np.argmax(output,axis=0)
 
         if isinstance(pred_stack,list):
             pred_stack=pred
