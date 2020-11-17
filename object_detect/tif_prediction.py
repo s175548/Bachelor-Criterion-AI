@@ -96,7 +96,7 @@ if __name__ == '__main__':
         optim = "SGD"
         tif_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\TIF\good_area1.png'
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
-    
+
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
