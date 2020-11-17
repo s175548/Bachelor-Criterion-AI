@@ -25,7 +25,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.0002
+lr_g = 0.002
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -106,7 +106,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
-    reg_GAN_setup = False
+    reg_GAN_setup = True
     print("GAN Setup",reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
@@ -139,7 +139,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_fake_d = []
         loss_fake_g = []
         gamma_one = .2 #Loss weigth for fake
-        gamma_two = .8 # Loss weight for unlabel
+        gamma_two = 1 # Loss weight for unlabel
 
         #Load model
         model_g = generator(1) #arg = number of gpu's
