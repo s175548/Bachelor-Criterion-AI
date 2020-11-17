@@ -43,12 +43,12 @@ tif = True
 brevetti = False
 
 def output(model,array):
-    image = array
+    image = Image.fromarray(array)
     size = image.size
     image2, _ = transform_function(image, label)
-    image2 = image2.unsqueeze(0).to(torch.device('cpu'), dtype=torch.float32)
+    image2 = image2.unsqueeze(0).to(torch.device('cuda'), dtype=torch.float32)
     output = model(list(image2))
-    return [{k: v.to(torch.device('cpu')) for k, v in t.items()} for t in output], size
+    return [{k: v.to(torch.device('cuda')) for k, v in t.items()} for t in output], size
 
 if __name__ == '__main__':
 
