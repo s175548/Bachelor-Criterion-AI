@@ -177,12 +177,13 @@ def get_data_loaders_unlabelled(binary,path_original_data,path_meta_data,dataset
     return trainloader_nl, trainloader_nl_dst
 
 def add_spectral(model):
+    model_old = model
     count = 0
     for name_layer, layer in enumerate(model.backbone):
         if (isinstance(model.backbone[layer], nn.Conv2d)):
             cur_lay = model.backbone[layer]
             kernel_size, stride, padding ,weight, bias = extract_hyperparams(cur_lay)
-            model.backbone[layer] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1], out_channels=cur_lay.weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+            model.backbone[layer] = torch.nn.utils.spectral_norm(model.backbone[layer])
             count += 1
         elif (isinstance(model.backbone[layer],nn.Sequential)):
             for name_seq, layer_seq in enumerate(model.backbone[layer]):
@@ -190,21 +191,22 @@ def add_spectral(model):
                     if (isinstance(model.backbone[layer][name_seq]._modules[key], nn.Conv2d)):
                         cur_lay = model.backbone[layer][name_seq]._modules[key]
                         kernel_size, stride, padding, weight, bias = extract_hyperparams(cur_lay)
-                        model.backbone[layer][name_seq]._modules[key] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1],out_channels=cur_lay.weight.shape[0], kernel_size=kernel_size,padding=padding, stride=stride, bias=False))
+                        weight = weight.squeeze(4).shape
+                        model.backbone[layer][name_seq]._modules[key] = torch.nn.utils.spectral_norm(model.backbone[layer][name_seq]._modules[key])
                         count += 1
                     elif (isinstance(model.backbone[layer][name_seq]._modules[key], nn.Sequential)):
                         for name_bot_seq,layer_bot_seq in enumerate(model.backbone[layer][name_seq]._modules[key]):
                             if (isinstance(model.backbone[layer][name_seq]._modules[key][name_bot_seq], nn.Conv2d)):
                                 cur_lay = model.backbone[layer][name_seq]._modules[key][name_bot_seq]
                                 kernel_size, stride, padding, weight, bias = extract_hyperparams(cur_lay)
-                                model.backbone[layer][name_seq]._modules[key][name_bot_seq] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1], out_channels=cur_lay.weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+                                model.backbone[layer][name_seq]._modules[key][name_bot_seq] = torch.nn.utils.spectral_norm(model.backbone[layer][name_seq]._modules[key][name_bot_seq])
                                 count += 1
     count_clas = 0
     for name_layer, layer in enumerate(model.classifier):
         if (isinstance(model.classifier[name_layer], nn.Conv2d)):
             cur_lay = model.classifier[name_layer]
             kernel_size, stride, padding ,weight, bias = extract_hyperparams(cur_lay)
-            model.classifier[name_layer] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1], out_channels=cur_lay.weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+            model.classifier[name_layer] = torch.nn.utils.spectral_norm(model.classifier[name_layer])
             count_clas += 1
         elif (isinstance(model.classifier[name_layer], nn.BatchNorm2d)):
             continue
@@ -218,14 +220,14 @@ def add_spectral(model):
                             if (isinstance(model.classifier[name_layer]._modules[key][idx]._modules[layer_seq],nn.Conv2d)):
                                 cur_lay = model.classifier[name_layer]._modules[key][idx]._modules[layer_seq]
                                 kernel_size, stride, padding, weight, bias = extract_hyperparams(cur_lay)
-                                model.classifier[name_layer]._modules[key][idx]._modules[layer_seq] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1], out_channels=cur_lay.weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+                                model.classifier[name_layer]._modules[key][idx]._modules[layer_seq] = torch.nn.utils.spectral_norm(model.classifier[name_layer]._modules[key][idx]._modules[layer_seq])
                                 count_clas += 1
                             else:
                                 continue
                     elif (isinstance(model.classifier[name_layer]._modules[key][idx], nn.Conv2d)):
                         cur_lay = model.classifier[name_layer]._modules[key][idx]
                         kernel_size, stride, padding, weight, bias = extract_hyperparams(cur_lay)
-                        model.classifier[name_layer]._modules[key][idx] = torch.nn.utils.spectral_norm(nn.Conv2d(in_channels=cur_lay.weight.shape[1], out_channels=cur_lay.weight.shape[0],kernel_size=kernel_size, padding=padding, stride=stride, bias=False))
+                        model.classifier[name_layer]._modules[key][idx] = torch.nn.utils.spectral_norm(model.classifier[name_layer]._modules[key][idx])
                         count_clas += 1
     return model
 

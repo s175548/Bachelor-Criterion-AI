@@ -70,7 +70,7 @@ if __name__ == '__main__':
     ndf = 64
 
     # Number of training epochs
-    num_epochs = 150
+    num_epochs = 100
 
     # Learning rate for optimizers
     lr = 0.0005 #0.0002
@@ -453,8 +453,8 @@ if __name__ == '__main__':
         fig = plt.figure(figsize=(8, 8))
         plt.axis("off")
         plt.imshow(np.transpose(i, (1, 2, 0)))
-        plt.savefig('generated_img{}.png'.format(idx))
-
+        plt.savefig(r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/generated_img{}.png'.format(idx))
+        plt.close()
     fig = plt.figure(figsize=(8,8))
     plt.axis("off")
     ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
@@ -462,7 +462,7 @@ if __name__ == '__main__':
 
     if HPC:
         torch.save(netD.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/modelD.pt')
-        torch.save(netG.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorialt/modelG.pt')
+        torch.save(netG.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/modelG.pt')
     else:
         torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
         torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')

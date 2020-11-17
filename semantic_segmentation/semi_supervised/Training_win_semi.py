@@ -28,15 +28,15 @@ total_itrs=1000
 lr_g = 0.002
 lr_policy='step'
 step_size=1
-batch_size= 16# 16
-val_batch_size= 4 #4
+batch_size= 2# 16
+val_batch_size= 2 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 250
+N_epochs= 150
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -117,7 +117,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        spectral = False
+        spectral = True
         print("Spectral:",spectral)
         if spectral:
             model_dict[model] = add_spectral(model_dict[model])
