@@ -198,7 +198,7 @@ if __name__ == "__main__":
     if semi_supervised:
         print('GAN_setup (no loss label):',reg_GAN_setup)
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model, train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst, save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict, annotations_dict=annotations_dict, exp_description = exp_descrip, optim=optimizer, default_scope = train_scope, semi_supervised=semi_supervised,
-                 trainloader_nl=trainloader_nl,GAN_setup=reg_GAN_setup)
+                 trainloader_nl=trainloader_nl)
 
     else:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)
