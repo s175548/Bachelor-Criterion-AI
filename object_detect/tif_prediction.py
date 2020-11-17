@@ -135,11 +135,12 @@ if __name__ == '__main__':
     print("Model loaded and ready to be evaluated!")
 
     target_tif = []
-    print("Loop over: ", split_x_y[0])
+    print("Loop over: ", split_x_y[0], "and ", split_x_y[1])
     pred_counter = 0
     for i in range(split_x_y[0]):
         print("i ", i)
         pred_stack = []
+
         for j in range(split_x_y[1]):
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
             outputs, size = output(model,array=split_imgs[i * split_x_y[1] + j])
@@ -150,17 +151,13 @@ if __name__ == '__main__':
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size)
             pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
-            if num_boxes > 0:
-                print("pred:", num_boxes)
-                print("score: ", new_scores.numpy())
-                #Image.fromarray(np.array(image).astype(np.uint8)).save(save_path + '/image_{}_{}_img.png'.format(i,j))
-                #Image.fromarray(pred.astype(np.uint8)).save(save_path + '/image_{}_{}_pred.png'.format(i,j))
 
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             if isinstance(pred_stack, list):
                 pred_stack = pred
             else:
+                print(np.shape(pred))
                 pred_stack = np.hstack((pred_stack, pred))
 
         if isinstance(target_tif, list):
