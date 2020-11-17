@@ -453,7 +453,7 @@ if __name__ == '__main__':
         fig = plt.figure(figsize=(8, 8))
         plt.axis("off")
         plt.imshow(np.transpose(i, (1, 2, 0)))
-        plt.savefig('generated_img{}.png'.format(i))
+        plt.savefig('generated_img{}.png'.format(idx))
 
     fig = plt.figure(figsize=(8,8))
     plt.axis("off")
