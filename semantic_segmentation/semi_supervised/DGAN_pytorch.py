@@ -449,7 +449,7 @@ if __name__ == '__main__':
     plt.show()
 
     #%%capture
-    for i in img_list:
+    for idx,i in enumerate(img_list):
         fig = plt.figure(figsize=(8, 8))
         plt.axis("off")
         plt.imshow(np.transpose(i, (1, 2, 0)))
