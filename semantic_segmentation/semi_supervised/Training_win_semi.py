@@ -28,8 +28,8 @@ total_itrs=1000
 lr_g = 0.002
 lr_policy='step'
 step_size=1
-batch_size= 32# 16
-val_batch_size= 8 #4
+batch_size= 16# 16
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
@@ -117,8 +117,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        if False:
-            add_spectral(model_dict[model])
+        spectral = False
+        print("Spectral:",spectral)
+        if spectral:
+            model_dict[model] = add_spectral(model_dict[model])
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
@@ -142,7 +144,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         gamma_two = 1 # Loss weight for unlabel
 
         #Load model
-        model_g = generator(1) #arg = number of gpu's
+        model_g = generator(1,spectral) #arg = number of gpu's
         model_g.apply(weights_init)
         model_g.train()
         model_g.cuda()
