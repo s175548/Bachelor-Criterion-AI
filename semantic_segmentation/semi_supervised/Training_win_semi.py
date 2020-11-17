@@ -28,15 +28,15 @@ total_itrs=1000
 lr_g = 0.002
 lr_policy='step'
 step_size=1
-batch_size= 16# 16
-val_batch_size= 4 #4
+batch_size= 32# 16
+val_batch_size= 8 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
+N_epochs= 300
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -106,7 +106,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
-    reg_GAN_setup = True
+    reg_GAN_setup = False
     print("GAN Setup",reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
