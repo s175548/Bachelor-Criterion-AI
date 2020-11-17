@@ -239,7 +239,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                         loss_fake = Loss_fake_remade(pred_fake)
                         loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d,"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d,"loss_label: ",loss_labeled.detach().cpu().numpy()/ loss_d)
+                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
