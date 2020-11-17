@@ -42,6 +42,14 @@ binary = True
 tif = True
 brevetti = False
 
+def output(model,array):
+    image = array
+    size = image.size
+    image2, _ = transform_function(image, label)
+    image2 = image2.unsqueeze(0).to(torch.device('cpu'), dtype=torch.float32)
+    output = model(list(image2))
+    return [{k: v.to(torch.device('cpu')) for k, v in t.items()} for t in output], size
+
 if __name__ == '__main__':
 
     random_seed = 1
@@ -51,6 +59,8 @@ if __name__ == '__main__':
     print("So far")
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+        cpu_device = torch.device('cpu')
+
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
 
@@ -90,6 +100,8 @@ if __name__ == '__main__':
 
     else:
         device = torch.device('cpu')
+        cpu_device = torch.device('cpu')
+
         model_name = 'resnet50'
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
@@ -130,13 +142,7 @@ if __name__ == '__main__':
         pred_stack = []
         for j in range(split_x_y[1]):
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
-            image = split_imgs[i * split_x_y[1] + j]
-            size = image.size
-            image2, _ = transform_function(image, label)
-            image2 = image2.unsqueeze(0).to(device, dtype=torch.float32)
-
-            output = model(list(image2))
-            outputs = [{k: v.to(device) for k, v in t.items()} for t in output]
+            outputs, size = output(model,array=split_imgs[i * split_x_y[1] + j])
 
             boxes = outputs[0]['boxes'].cpu()
             scores = outputs[0]['scores'].cpu()
@@ -147,8 +153,8 @@ if __name__ == '__main__':
             if num_boxes > 0:
                 print("pred:", num_boxes)
                 print("score: ", new_scores.numpy())
-                Image.fromarray(np.array(image).astype(np.uint8)).save(save_path + '/image_{}_{}_img.png'.format(i,j))
-                Image.fromarray(pred.astype(np.uint8)).save(save_path + '/image_{}_{}_pred.png'.format(i,j))
+                #Image.fromarray(np.array(image).astype(np.uint8)).save(save_path + '/image_{}_{}_img.png'.format(i,j))
+                #Image.fromarray(pred.astype(np.uint8)).save(save_path + '/image_{}_{}_pred.png'.format(i,j))
 
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
