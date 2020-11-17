@@ -33,20 +33,17 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         else:
             masks = data_loader.get_separate_segmentations(
                 os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels,)
-        buffer = 84
+        buffer = 42
         xdim_s = []
         ydim_s = []
         for mask in masks:
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
-            if randomcrop:
-                if size > np.min(mask.shape):
-                    pass
-                else:
-                    mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
-            mask = np.array(mask)
             if resize:
                 resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
+            mask = np.array(mask).astype(np.uint8)
+            if randomcrop:
+                    mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
             mask=np.array(mask).astype(np.uint8)
             if np.sum(mask == 1) != 0:
                 row, col = np.where(mask != 0)
@@ -126,8 +123,8 @@ HPC = True
 model_name = 'DeepLab'
 model_resize=False
 n_classes = 1
-resize = False
-size = 256
+resize = True
+size = 512
 scale = 0.5
 binary = True
 device = torch.device('cuda')
@@ -145,8 +142,8 @@ elif HPC:
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val' ###
     path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'    ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/random_crop'
-    model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_false0.01.pt"
+    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/resize'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"
@@ -185,8 +182,8 @@ if not resize:
 
 else:
     transform_function = et.ExtCompose([
-                                               et.ExtResize(scale=scale),
-                                               et.ExtRandomCrop(size=size),
+                                               et.ExtResize(scale=0.5),
+                                               et.ExtRandomCrop(size=size,semantic_evaluation_resize=True,scale=0.7),
                                                et.ExtEnhanceContrast(),
                                                et.ExtToTensor(),
                                                et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
@@ -229,7 +226,7 @@ metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
 false_positives = 0
 true_negatives = [0,0]
 errors = np.array([[0, 0], [0, 0]])
-crop_values=transform_function.transforms[0].params_list
+crop_values=transform_function.transforms[1].params_list
 for i in range(len(train_images)):
     image = train_images[i][0].unsqueeze(0)
     target = train_images[i][1]

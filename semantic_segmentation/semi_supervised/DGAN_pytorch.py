@@ -16,9 +16,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from PIL import ImageFile
+from torchvision.models.segmentation import deeplabv3_resnet101
+
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+def grad_check(model, model_layers='Classifier'):
+    if model_layers == 'Classifier':
+        print('Classifier only')
+        for parameter in model.classifier.parameters():
+            parameter.requires_grad_(requires_grad=True)
+    else:
+        print('Whole model')
+        for parameter in model.parameters():
+            parameter.requires_grad_(requires_grad=True)
+
 if __name__ == '__main__':
+    HPC = True
     # Set random seed for reproducibility
     manualSeed = 999
     #manualSeed = random.randint(1, 10000) # use if you want new results
@@ -27,12 +40,18 @@ if __name__ == '__main__':
     torch.manual_seed(manualSeed)
 
     dataroot = r'C:\Users\Mads-_uop20qq\Desktop\GanDataPytorchTutorial'
+    if HPC:
+        dataroot = '/work3/s173934/Bachelorprojekt/GanDataPytorchTutorial'
 
     # Number of workers for dataloader
     workers = 4
-
+    random_seed = 1
+    # Setup random seedc
+    torch.manual_seed(random_seed)
+    np.random.seed(random_seed)
+    random.seed(random_seed)
     # Batch size during training
-    batch_size = 32 #128
+    batch_size = 8 #128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
@@ -51,10 +70,10 @@ if __name__ == '__main__':
     ndf = 64
 
     # Number of training epochs
-    num_epochs = 150
+    num_epochs = 100
 
     # Learning rate for optimizers
-    lr = 0.0002
+    lr = 0.0005 #0.0002
 
     # Beta1 hyperparam for Adam optimizers
     beta1 = 0.5
@@ -280,7 +299,35 @@ if __name__ == '__main__':
             # return self.main(input)
 
     # Create the Discriminator
-    netD = Discriminator(ngpu).to(device)
+    n_classes = 1
+    ResNet = True
+    my_pretrained_model = deeplabv3_resnet101(pretrained=True, progress=True, num_classes=21, aux_loss=None)
+    grad_check(my_pretrained_model, model_layers='All')
+    my_pretrained_model.classifier[-1] = torch.nn.Conv2d(256, n_classes , kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    class MyResNet(nn.Module):
+        def __init__(self, my_pretrained_model):
+            super(MyResNet, self).__init__()
+            self.pretrained = my_pretrained_model
+            self.my_new_layers = nn.Sequential(torch.nn.Conv2d(n_classes, n_classes , kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
+                                               torch.nn.LeakyReLU(),
+                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
+                                               torch.nn.LeakyReLU(),
+                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
+                                               torch.nn.LeakyReLU(),
+                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(4, 4),stride=(2, 2)).requires_grad_(),
+                                               torch.nn.LeakyReLU(),
+                                               torch.nn.Conv2d(n_classes, n_classes, kernel_size=(3, 3),stride=(1, 1)).requires_grad_(),
+                                                torch.nn.LeakyReLU() )
+
+        def forward(self, x):
+            x = self.pretrained(x)['out']
+            x = self.my_new_layers(x)
+            return x
+    netD = MyResNet(my_pretrained_model)
+    netD.to(device)
+    #netD = Discriminator(ngpu).to(device)
 
     # Handle multi-gpu if desired
     if (device.type == 'cuda') and (ngpu > 1):
@@ -288,14 +335,15 @@ if __name__ == '__main__':
 
     # Apply the weights_init function to randomly initialize all weights
     #  to mean=0, stdev=0.2.
-    netD.apply(weights_init)
-
+#    netD.apply(weights_init)
+    print('weight init')
     # Print the model
     print(netD)
 
 
     # Initialize BCELoss function
-    criterion = nn.BCELoss()
+    criterion = nn.BCEWithLogitsLoss()
+    #criterion = nn.BCELoss()
 
     # Create batch of latent vectors that we will use to visualize
     #  the progression of the generator
@@ -401,13 +449,23 @@ if __name__ == '__main__':
     plt.show()
 
     #%%capture
+    for idx,i in enumerate(img_list):
+        fig = plt.figure(figsize=(8, 8))
+        plt.axis("off")
+        plt.imshow(np.transpose(i, (1, 2, 0)))
+        plt.savefig(r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/generated_img{}.png'.format(idx))
+        plt.close()
     fig = plt.figure(figsize=(8,8))
     plt.axis("off")
     ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
     ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-    torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
-    torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')
+    if HPC:
+        torch.save(netD.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/modelD.pt')
+        torch.save(netG.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/modelG.pt')
+    else:
+        torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
+        torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')
 
     # Grab a batch of real images from the dataloader
     real_batch = next(iter(dataloader))
@@ -422,6 +480,8 @@ if __name__ == '__main__':
     # Plot the fake images from the last epoch
     plt.subplot(1,2,2)
     plt.axis("off")
-    plt.title("Fake Images")
+    plt.title("Fake Images_last epoch")
     plt.imshow(np.transpose(img_list[-1],(1,2,0)))
     plt.show()
+
+

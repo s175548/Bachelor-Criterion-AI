@@ -25,18 +25,18 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.0002
+lr_g = 0.002
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
-val_batch_size= 4 #4
+val_batch_size= 8 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 150
+N_epochs= 200
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -105,8 +105,9 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
-             save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None,reg_GAN_setup=False):
-
+             save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
+    reg_GAN_setup = False
+    print("GAN Setup",reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
@@ -116,8 +117,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        if False:
-            add_spectral(model_dict[model])
+        spectral = True
+        print("Spectral:",spectral)
+        if spectral:
+            model_dict[model] = add_spectral(model_dict[model])
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
@@ -138,10 +141,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_fake_d = []
         loss_fake_g = []
         gamma_one = .2 #Loss weigth for fake
-        gamma_two = .8 # Loss weight for unlabel
+        gamma_two = 1 # Loss weight for unlabel
 
         #Load model
-        model_g = generator(1) #arg = number of gpu's
+        model_g = generator(1,spectral) #arg = number of gpu's
         model_g.apply(weights_init)
         model_g.train()
         model_g.cuda()
@@ -236,7 +239,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                         loss_fake = Loss_fake_remade(pred_fake)
                         loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy())
+                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()

@@ -420,11 +420,12 @@ class ExtRandomCrop(object):
             desired size to avoid raising an exception.
     """
 
-    def __init__(self, scale=None, padding=0, size=None, pad_if_needed=False):
+    def __init__(self, scale=None, padding=0, size=None, pad_if_needed=False,semantic_evaluation_resize=False):
         self.scale = scale
         self.padding = padding
         self.pad_if_needed = pad_if_needed
         self.size = size
+        self.semantic_evaluation_resize=semantic_evaluation_resize
         self.params_list=[]
 
     @staticmethod
@@ -470,8 +471,14 @@ class ExtRandomCrop(object):
             lbl = F.pad(lbl,padding=(int(abs((size[0]-lbl.size[0])/2)),abs(int((size[1]-lbl.size[1])/2))),padding_mode='reflect')
 
         if np.min(size)>np.min(img.size):
-            self.params_list.append((0,0,img.size[0],img.size[1]))
-            return img, lbl
+            if self.semantic_evaluation_resize:
+                size = (int(img.size[0] * self.scale), int(img.size[1] * self.scale))
+                i, j, h, w = self.get_params(img, size)
+                self.params_list.append((i, j, h, w))
+                return F.crop(img, i, j, h, w), F.crop(lbl, i, j, h, w)
+            else:
+                self.params_list.append((0,0,img.size[0],img.size[1]))
+                return img, lbl
         else:
             i, j, h, w = self.get_params(img, size)
             self.params_list.append((i, j, h, w))
