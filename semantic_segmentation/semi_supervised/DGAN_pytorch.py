@@ -31,6 +31,7 @@ def grad_check(model, model_layers='Classifier'):
             parameter.requires_grad_(requires_grad=True)
 
 if __name__ == '__main__':
+    HPC = True
     # Set random seed for reproducibility
     manualSeed = 999
     #manualSeed = random.randint(1, 10000) # use if you want new results
@@ -39,6 +40,8 @@ if __name__ == '__main__':
     torch.manual_seed(manualSeed)
 
     dataroot = r'C:\Users\Mads-_uop20qq\Desktop\GanDataPytorchTutorial'
+    if HPC:
+        dataroot = '/work3/s173934/Bachelorprojekt/GanDataPytorchTutorial'
 
     # Number of workers for dataloader
     workers = 4
@@ -48,7 +51,7 @@ if __name__ == '__main__':
     np.random.seed(random_seed)
     random.seed(random_seed)
     # Batch size during training
-    batch_size = 2 #128
+    batch_size = 8 #128
 
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
@@ -67,7 +70,7 @@ if __name__ == '__main__':
     ndf = 64
 
     # Number of training epochs
-    num_epochs = 10
+    num_epochs = 150
 
     # Learning rate for optimizers
     lr = 0.0005 #0.0002
@@ -446,13 +449,23 @@ if __name__ == '__main__':
     plt.show()
 
     #%%capture
+    for i in img_list:
+        fig = plt.figure(figsize=(8, 8))
+        plt.axis("off")
+        plt.imshow(np.transpose(i, (1, 2, 0)))
+        plt.savefig('generated_img{}.png'.format(i))
+
     fig = plt.figure(figsize=(8,8))
     plt.axis("off")
     ims = [[plt.imshow(np.transpose(i,(1,2,0)), animated=True)] for i in img_list]
     ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-    torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
-    torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')
+    if HPC:
+        torch.save(netD.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial/modelD.pt')
+        torch.save(netG.state_dict(), r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorialt/modelG.pt')
+    else:
+        torch.save(netD.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelD.pt')
+        torch.save(netG.state_dict(), r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\GANModelsfromtut\modelG.pt')
 
     # Grab a batch of real images from the dataloader
     real_batch = next(iter(dataloader))
@@ -467,7 +480,7 @@ if __name__ == '__main__':
     # Plot the fake images from the last epoch
     plt.subplot(1,2,2)
     plt.axis("off")
-    plt.title("Fake Images")
+    plt.title("Fake Images_last epoch")
     plt.imshow(np.transpose(img_list[-1],(1,2,0)))
     plt.show()
 
