@@ -128,7 +128,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model],model_layers='All')
         else:
             grad_check(model_dict[model])
-
+    gamma_three = 1
     ###Load generator semi_super##
     if semi_supervised:
         from semantic_segmentation.semi_supervised.generator import weights_init
@@ -141,7 +141,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_fake_d = []
         loss_fake_g = []
         gamma_one = .2 #Loss weigth for fake
-        gamma_two = 1 # Loss weight for unlabel
+        gamma_two = 5 # Loss weight for unlabel
+        gamma_three = 2
 
         #Load model
         model_g = generator(1,spectral) #arg = number of gpu's
@@ -238,8 +239,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     else:
                         loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                         loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = loss_labeled + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                        loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
@@ -284,7 +285,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         best_scores = best_scores[:5]
                         save_ckpt(model=model_d,model_name=model_name,cur_itrs=cur_itrs, optimizer=optimizer_d, scheduler=scheduler_d, best_score=best_score,lr=lr,save_path=save_path,exp_description=exp_description)
                         if semi_supervised:
-                            torch.save(model_g.state_dict(), model_g_spath)
+                            state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
+                                     'optimizer': optimizer_g.state_dict(), }
+                            torch.save(state, model_g_spath)
                             save_noise_pred(cur_epoch=cur_epochs,model=model_g,b_size=b_size,device=device,save_path=save_path)
                         np.save('metrics',metrics.to_str(val_score))
                         print("[Val] Overall Acc", cur_itrs, val_score['Overall Acc'])
@@ -358,7 +361,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.legend()
             plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
             plt.show()
-            torch.save(model_g.state_dict(), model_g_spath+"last_epoch_generator")
+            state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
+                     'optimizer': optimizer_g.state_dict(), }
+            torch.save(state, model_g_spath+"last_epoch_generator")
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
