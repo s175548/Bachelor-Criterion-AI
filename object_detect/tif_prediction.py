@@ -24,16 +24,6 @@ from object_detect.train_hpc import define_model
 from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
-resize = False
-if resize:
-    transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
-                                        et.ExtEnhanceContrast(),
-                                        et.ExtToTensor()])
-    patch_size = 512
-else:
-    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
-                                        et.ExtToTensor()])
-    patch_size = 256
 
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
@@ -84,18 +74,22 @@ if __name__ == '__main__':
         if model_folder == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
             exp = 'crop_all_classes'
+            resize = False
 
         if model_folder == 'binary':
             pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
             exp = 'crop_3_classes'
+            resize = False
 
         if model_folder == 'three_scale':
             pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
             exp = 'resize_3_classes'
+            resize = True
 
         if model_folder == 'full_scale':
             pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
             exp = 'resize_all_classes'
+            resize = True
 
 
     else:
@@ -108,7 +102,17 @@ if __name__ == '__main__':
         optim = "SGD"
         tif_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\TIF\good_area1.png'
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
+        resize = False
 
+    if resize:
+        transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
+                                            et.ExtEnhanceContrast(),
+                                            et.ExtToTensor()])
+        patch_size = 512
+    else:
+        transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
+                                            et.ExtToTensor()])
+        patch_size = 256
     print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
