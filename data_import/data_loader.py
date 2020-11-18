@@ -411,7 +411,7 @@ class DataLoader():
         patch_dimensions=(patch_size_0,patch_size_1)
 
 
-        return pad_split_imgs, (crop_count_height,crop_count_width),patch_d7imensions
+        return pad_split_imgs, (crop_count_height,crop_count_width),patch_dimensions
 
 def load_idx_to_include():
     idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')
