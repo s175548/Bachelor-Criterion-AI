@@ -155,6 +155,7 @@ if __name__ == '__main__':
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             if isinstance(pred_stack, list):
+                print("pred ",np.shape(pred))
                 pred_stack = pred
             else:
                 print("pred ",np.shape(pred))
