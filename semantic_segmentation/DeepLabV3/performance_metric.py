@@ -44,7 +44,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             mask = np.array(mask).astype(np.uint8)
             if randomcrop:
                     mask = F.crop(PIL.Image.fromarray(mask),*crop_values)
-#            mask=np.array(mask).astype(np.uint8)
+            mask=np.array(mask).astype(np.uint8)
             if np.sum(mask == 1) != 0:
                 row, col = np.where(mask != 0)
                 xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))
