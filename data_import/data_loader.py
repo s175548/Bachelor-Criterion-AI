@@ -404,8 +404,8 @@ class DataLoader():
         return padded_img
 
     def generate_tif_patches(self, img, patch_size=512,sliding_window=256):
-        crop_count_height = img.shape[0] // sliding_window-1
-        crop_count_width = img.shape[1] // sliding_window-1
+        crop_count_height = img.shape[0] // sliding_window
+        crop_count_width = img.shape[1] // sliding_window
         patch_size_0=patch_size
         patch_size_1=patch_size
 
