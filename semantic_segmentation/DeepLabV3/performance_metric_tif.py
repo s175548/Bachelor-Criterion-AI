@@ -8,8 +8,8 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
-villads=True
-HPC=False
+villads=False
+HPC=True
 
 if villads:
     path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_RED_HALF02_grain_01_v.tif.json'
