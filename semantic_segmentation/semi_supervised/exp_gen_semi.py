@@ -17,15 +17,13 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = False
+    HPC = True
     SIZE = 256
     semi_supervised = True
     Villads = False
     DellXPS = False
     binary = True
-    model_name = ''
-    optimizer = ''
-    exp_descrip = ''
+    exp_descrip = optimizer = model_name= reg_GAN_setup = ''
     train_scope = ''
     if HPC:
         save_path = r'/work3/s173934/Bachelorprojekt/exp_results'
@@ -112,7 +110,7 @@ if __name__ == "__main__":
             path_train = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\train'
             path_val = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi_vis_2_and_3\val'
         path2 = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\Bachelor-Criterion-AI\semantic_segmentation\DeepLabV3\outfile.jpg'
-        lr = 0.0002 #
+        lr = 0.003 #
         path_meta_data = r'samples/model_comparison.csv'
 
     # path_img = path_mask = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data'
@@ -186,7 +184,7 @@ if __name__ == "__main__":
 
     print("Train set: %d, Val set: %d" %(len(train_dst), len(val_dst)))
     if model_name == '':
-        model_name = 'MobileNet'
+        model_name = 'DeepLab'
         #model_name =
     if optimizer == '':
         optimizer = 'Adam'
@@ -194,10 +192,13 @@ if __name__ == "__main__":
         exp_descrip = 'no_decrip'
     if train_scope == '':
         train_scope = True
+    if reg_GAN_setup == '':
+        reg_GAN_setup = False
     #training(n_classes=1, model="MobileNet", load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description='tick')
     if semi_supervised:
+        print('GAN_setup (no loss label):',reg_GAN_setup)
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model, train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst, save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict, annotations_dict=annotations_dict, exp_description = exp_descrip, optim=optimizer, default_scope = train_scope, semi_supervised=semi_supervised,
-                 trainloader_nl=trainloader_nl,reg_GAN_setup)
+                 trainloader_nl=trainloader_nl)
 
     else:
         training(n_classes=1, model=model_name, load_models=False, model_path=path_model,train_loader=train_loader, val_loader=val_loader, train_dst=train_dst, val_dst=val_dst,save_path=save_path, lr=lr, train_images=train_img, color_dict=color_dict, target_dict=target_dict,annotations_dict=annotations_dict,exp_description = exp_descrip,optim=optimizer,default_scope = train_scope,semi_supervised=semi_supervised)

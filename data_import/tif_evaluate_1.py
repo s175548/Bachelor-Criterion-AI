@@ -90,6 +90,7 @@ model.eval()
 if resize:
     transform_function = et.ExtCompose(
         [et.ExtResize(scale=0.5),
+        [et.ExtResize(scale=0.5),
          et.ExtEnhanceContrast(),
          et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])

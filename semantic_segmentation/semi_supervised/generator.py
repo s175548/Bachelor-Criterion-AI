@@ -62,7 +62,7 @@ class Generator(nn.Module):
 
 
 class Generator_pytorchTut(nn.Module): #version
-    def __init__(self, ngpu):
+    def __init__(self, ngpu,spectral=False):
         # Number of channels in the training images. For color images this is 3
         nc = 3
         super(Generator_pytorchTut, self).__init__()
@@ -71,34 +71,63 @@ class Generator_pytorchTut(nn.Module): #version
         ngf = 64
         # Size of feature maps in discriminator
         ndf = 64
-        self.ngpu = ngpu
-        self.C1 = nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False)
-        self.B1 = nn.BatchNorm2d(ngf * 8)
-        self.Rel1 = nn.ReLU(True)
+        if not spectral:
+            self.ngpu = ngpu
+            self.C1 = nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False)
+            self.B1 = nn.BatchNorm2d(ngf * 8)
+            self.Rel1 = nn.ReLU(True)
 
-        self.C2 = nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False)
-        self.B2 = nn.BatchNorm2d(ngf * 4)
-        self.Rel2 = nn.ReLU(True)
-            # state size. (ngf*4) x 8 x 8
-        self.C3 = nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False)
-        self.B3 = nn.BatchNorm2d(ngf * 2)
-        self.Rel3 = nn.ReLU(True)
-            # state size. (ngf*2) x 16 x 16
-        self.C4 = nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False)
-        self.B4 = nn.BatchNorm2d(ngf)
-        self.Rel4 = nn.ReLU(True)
-            # state size. (ngf) x 32 x 32
-        self.C5 = nn.ConvTranspose2d(ngf, int(ngf/2), 4, 2, 1, bias=False)
-        self.B5 = nn.BatchNorm2d(int(ngf/2))
-        self.Rel5 = nn.ReLU(True)
+            self.C2 = nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False)
+            self.B2 = nn.BatchNorm2d(ngf * 4)
+            self.Rel2 = nn.ReLU(True)
+                # state size. (ngf*4) x 8 x 8
+            self.C3 = nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False)
+            self.B3 = nn.BatchNorm2d(ngf * 2)
+            self.Rel3 = nn.ReLU(True)
+                # state size. (ngf*2) x 16 x 16
+            self.C4 = nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False)
+            self.B4 = nn.BatchNorm2d(ngf)
+            self.Rel4 = nn.ReLU(True)
+                # state size. (ngf) x 32 x 32
+            self.C5 = nn.ConvTranspose2d(ngf, int(ngf/2), 4, 2, 1, bias=False)
+            self.B5 = nn.BatchNorm2d(int(ngf/2))
+            self.Rel5 = nn.ReLU(True)
 
-        self.C6 = nn.ConvTranspose2d(int(ngf/2), int(ngf/4), 4, 2, 1, bias=False)
-        self.B6 = nn.BatchNorm2d(int(ngf/4))
-        self.Rel6 = nn.ReLU(True)
+            self.C6 = nn.ConvTranspose2d(int(ngf/2), int(ngf/4), 4, 2, 1, bias=False)
+            self.B6 = nn.BatchNorm2d(int(ngf/4))
+            self.Rel6 = nn.ReLU(True)
 
-        self.C7 = nn.ConvTranspose2d(int(ngf/4), nc, 4, 2, 1, bias=False)
-        self.T7 = nn.Tanh()
+            self.C7 = nn.ConvTranspose2d(int(ngf/4), nc, 4, 2, 1, bias=False)
+            self.T7 = nn.Tanh()
             # state size. (nc) x 64 x 64
+        else:
+            self.ngpu = ngpu
+            self.C1 = nn.utils.spectral_norm(nn.ConvTranspose2d(nz, ngf * 8, 4, 1, 0, bias=False))
+            self.B1 = nn.BatchNorm2d(ngf * 8)
+            self.Rel1 = nn.ReLU(True)
+
+            self.C2 = nn.utils.spectral_norm(nn.ConvTranspose2d(ngf * 8, ngf * 4, 4, 2, 1, bias=False))
+            self.B2 = nn.BatchNorm2d(ngf * 4)
+            self.Rel2 = nn.ReLU(True)
+            # state size. (ngf*4) x 8 x 8
+            self.C3 = nn.utils.spectral_norm(nn.ConvTranspose2d(ngf * 4, ngf * 2, 4, 2, 1, bias=False))
+            self.B3 = nn.BatchNorm2d(ngf * 2)
+            self.Rel3 = nn.ReLU(True)
+            # state size. (ngf*2) x 16 x 16
+            self.C4 = nn.utils.spectral_norm(nn.ConvTranspose2d(ngf * 2, ngf, 4, 2, 1, bias=False))
+            self.B4 = nn.BatchNorm2d(ngf)
+            self.Rel4 = nn.ReLU(True)
+            # state size. (ngf) x 32 x 32
+            self.C5 = nn.utils.spectral_norm(nn.ConvTranspose2d(ngf, int(ngf / 2), 4, 2, 1, bias=False))
+            self.B5 = nn.BatchNorm2d(int(ngf / 2))
+            self.Rel5 = nn.ReLU(True)
+
+            self.C6 = nn.utils.spectral_norm(nn.ConvTranspose2d(int(ngf / 2), int(ngf / 4), 4, 2, 1, bias=False))
+            self.B6 = nn.BatchNorm2d(int(ngf / 4))
+            self.Rel6 = nn.ReLU(True)
+
+            self.C7 = nn.utils.spectral_norm(nn.ConvTranspose2d(int(ngf / 4), nc, 4, 2, 1, bias=False))
+            self.T7 = nn.Tanh()
 
         self.main = nn.Sequential(
                         # input is Z, going into a convolution
@@ -154,6 +183,6 @@ def weights_init(m):
     elif classname.find('BatchNorm') != -1:
         nn.init.normal_(m.weight.data, 1.0, 0.02)
         nn.init.constant_(m.bias.data, 0)
-def generator(class_number):
-    model = Generator_pytorchTut(1)
+def generator(class_number,spectral=False):
+    model = Generator_pytorchTut(1,spectral)
     return model
