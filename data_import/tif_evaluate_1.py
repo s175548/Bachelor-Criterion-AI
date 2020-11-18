@@ -105,7 +105,7 @@ if resize:
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(0,split_x_y[0],step_size):
+for i in range(0,split_x_y[0]-1,step_size):
     print(i)
     pred_stack=[]
     for j in range(0,split_x_y[1],step_size):
