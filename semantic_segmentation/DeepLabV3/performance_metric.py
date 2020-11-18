@@ -140,10 +140,10 @@ if Villads:
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val' ###
-    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'    ###
+    path_val = r'/work3/s173934/Bachelorprojekt/data_binary_vis_2_and_3_good_patches/val_new'     ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/all_classes/resize'
-    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
+    save_path = r'/zhome/db/f/128823/Bachelor/model_predictions/3_classes/resize'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/resize/DeepLab_ThreeClass_resize_true0.01.pt'
 else:
     path_original_data = r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\leather_patches'
     path_train = r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\tif_images"

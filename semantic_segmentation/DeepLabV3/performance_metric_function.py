@@ -35,7 +35,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             if resize:
                 resize_shape = (int(mask.shape[0] * scale), int(mask.shape[1] * scale))
                 mask = F.resize(PIL.Image.fromarray(mask), resize_shape, PIL.Image.NEAREST)
-            mask=np.array(mask).astype(np.uint8)
+            mask=np.array(mask).astype(np.uint8)[:pred.shape[0],:pred.shape[1]]
             if np.sum(mask == 1) != 0:
                 row, col = np.where(mask != 0)
                 xdim = (np.maximum(np.min(row) - buffer, 0), np.minimum(np.max(row) + buffer, mask.shape[0]))

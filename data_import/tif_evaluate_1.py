@@ -22,13 +22,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 binary=True
 device=torch.device('cuda')
 model_resize=False
-resize=False
+resize=True
 model_name='DeepLab'
 n_classes=1
-patch_size=256
-overlap=128
+patch_size=1024
+overlap=512
 Villads=False
 HPC=True
+step_size=2
 
 def output_model(img_array):
     image = Image.fromarray(img_array)
@@ -54,10 +55,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    if model_resize:###
-        model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
-    else:
-        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
 
 
 
@@ -90,7 +88,6 @@ model.eval()
 if resize:
     transform_function = et.ExtCompose(
         [et.ExtResize(scale=0.5),
-        [et.ExtResize(scale=0.5),
          et.ExtEnhanceContrast(),
          et.ExtToTensor(),
          et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
@@ -100,13 +97,18 @@ else:
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
+if resize:
+    patch_dim=(int(patch_dim[0]*0.5),int(patch_dim[1]*0.5))
+    overlap=int(0.5*overlap)
+
+
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(0,split_x_y[0],2):
+for i in range(0,split_x_y[0]-1,step_size):
     print(i)
     pred_stack=[]
-    for j in range(0,split_x_y[1],2):
+    for j in range(0,split_x_y[1],step_size):
         print(j)
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
@@ -135,5 +137,5 @@ for i in range(0,split_x_y[0],2):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/vda_04_01_all_classes.png')
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).crop((0,0,(split_x_y[1])*128,(split_x_y[0])*128)).resize((int((split_x_y[0]+1)*128*0.1),int((split_x_y[1]+1)*128*0.1))).save(tif_path+'/vda_04_01_all_classes_resized.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize_model.png')
+
