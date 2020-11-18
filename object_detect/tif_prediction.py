@@ -36,7 +36,7 @@ else:
     patch_size = 256
 
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC = True
+HPC = False
 splitted_data = True
 binary = True
 tif = True
@@ -47,6 +47,7 @@ def output(model,array):
     size = image.size
     image2, _ = transform_function(image, label)
     image2 = image2.unsqueeze(0).to(torch.device('cuda'), dtype=torch.float32)
+    print(np.shape(image2))
     output = model(list(image2))
     return [{k: v.to(torch.device('cuda')) for k, v in t.items()} for t in output], size
 
@@ -140,7 +141,6 @@ if __name__ == '__main__':
     for i in range(split_x_y[0]):
         print("i ", i)
         pred_stack = []
-
         for j in range(split_x_y[1]):
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
             outputs, size = output(model,array=split_imgs[i * split_x_y[1] + j])
@@ -157,7 +157,7 @@ if __name__ == '__main__':
             if isinstance(pred_stack, list):
                 pred_stack = pred
             else:
-                print(np.shape(pred))
+                print("pred ",np.shape(pred))
                 pred_stack = np.hstack((pred_stack, pred))
 
         if isinstance(target_tif, list):
@@ -165,4 +165,7 @@ if __name__ == '__main__':
         else:
             target_tif = np.vstack((target_tif, pred_stack))
     print("Model: ", exp)
-    Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/pred_vda_07.png')
+    if brevetti:
+        Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/brevetti_{}.png'.format(exp))
+    else:
+        Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
