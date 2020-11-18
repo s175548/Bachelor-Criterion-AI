@@ -219,7 +219,6 @@ def create_mask_from_bbox(boxes,size):
     return mask
 
 def adjust_bbox_tif(boxes,adjust,size):
-    print("3 adjust size: ", size)
     mask = np.zeros((size,size))
     num_boxes = 0
     for box in boxes:
