@@ -8,14 +8,16 @@ import numpy as np
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
-villads=False
-HPC=True
+villads=True
+HPC=False
 
 if villads:
     path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_RED_HALF02_grain_01_v.tif.json'
     pred=PIL.Image.open('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/red_half_02_01_all_classes.png')
     target=PIL.Image.open('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/RED_HALF02_grain_01_v_target_1d.png')
     save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/'
+    path_meta_data=r'samples/model_comparison.csv'
+    path_original_data=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
@@ -26,7 +28,11 @@ elif HPC:
 
 pred=np.array(pred)/255
 pred=pred.astype(np.uint8)
-target=np.array(target,dtype=np.uint8)
+target=np.array(target,dtype=np.uint8)[:pred.shape[0],:pred.shape[1]]
+index=target==53
+target[index]=0
+pred[index]=0
+
 data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 color_dict = data_loader.color_dict_binary
@@ -64,6 +70,6 @@ new_list = [
     label + '\n' + '\n'.join([f"{name}, {performance}" for name, performance in metric[i].get_results().items()]) for
     i, label in enumerate(labels)]
 string = '\n\n'.join(
-    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}/{len(train_images)} \nTrue negatives: {true_negatives[1]}/{true_negatives[0]}'
+    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]}'
 f = open(os.path.join(save_path, 'performance'), 'w')
 f.write(string)
