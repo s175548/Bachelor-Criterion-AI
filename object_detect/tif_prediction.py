@@ -45,6 +45,7 @@ brevetti = False
 def output(model,array):
     image = Image.fromarray(array)
     size = image.size
+    print("1 output size: ", size)
     image2, _ = transform_function(image, label)
     image2 = image2.unsqueeze(0).to(torch.device('cuda'), dtype=torch.float32)
     print(np.shape(image2))
@@ -151,14 +152,14 @@ if __name__ == '__main__':
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size)
             pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
-
+            print("5 pred before [50:-50]: ", np.shape(pred))
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             if isinstance(pred_stack, list):
-                print("pred ",np.shape(pred))
+                print("6 pred ",np.shape(pred))
                 pred_stack = pred
             else:
-                print("pred ",np.shape(pred))
+                print("6 pred ",np.shape(pred))
                 pred_stack = np.hstack((pred_stack, pred))
 
         if isinstance(target_tif, list):
