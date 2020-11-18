@@ -3,7 +3,7 @@ from semantic_segmentation.semi_supervised.generator import generator
 import PIL,numpy as np
 from PIL import Image
 model = generator(3)
-model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi_supervised_correct_loss\0001\model_g.pt'))
+model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\DGAN_setup\modelG.pt'))
 model.eval()
 
 for i in range(5):
