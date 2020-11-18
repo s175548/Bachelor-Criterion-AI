@@ -22,14 +22,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 binary=True
 device=torch.device('cuda')
 model_resize=False
-resize=False
+resize=True
 model_name='DeepLab'
 n_classes=1
-patch_size=256
-overlap=256
+patch_size=1024
+overlap=512
 Villads=False
 HPC=True
-step_size=1
+step_size=2
 
 def output_model(img_array):
     image = Image.fromarray(img_array)
@@ -55,10 +55,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    if model_resize:###
-        model_path = r'/work3/s173934/Bachelorprojekt/exp_results/original_res/DeepLab_res_exp0.01.pt'
-    else:
-        model_path=r"/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_true0.01.pt"
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
 
 
 
@@ -100,6 +97,11 @@ else:
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
+if resize:
+    patch_dim=(int(patch_dim[0]*0.5),int(patch_dim[1]*0.5))
+    overlap=int(0.5*overlap)
+
+
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
@@ -135,5 +137,5 @@ for i in range(0,split_x_y[0],step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/red_half_02_01_all_classes.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize_model.png')
 

@@ -2,8 +2,8 @@ from data_import.data_loader import get_background_mask, DataLoader
 import PIL
 import numpy as np
 
-img_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_v.tif'
-mask_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_v_target.png'
+img_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/RED_HALF02_grain_01_v.tif'
+mask_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/red_half_02_01_all_classes.png'
 img_array=np.array(PIL.Image.open(img_path))
 mask_array=np.array(PIL.Image.open(mask_path))
 data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
@@ -20,7 +20,7 @@ color_map = color_map_dict[color_id]
 index = mask == color_id
 mask_3d[index, :] = mask_3d[index, :] / color_id * color_map
 mask_3d=PIL.Image.fromarray(mask_3d.astype(np.uint8)).resize((int(mask.shape[1]*0.1),int(mask.shape[0]*0.1)))
-mask_3d.save('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_v_target_resized.png')
+mask_3d.save('/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/red_half_02_01_all_classes_sliding_window_resized.png')
 
 
 
