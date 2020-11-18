@@ -36,7 +36,7 @@ else:
     patch_size = 256
 
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
-HPC = False
+HPC = True
 splitted_data = True
 binary = True
 tif = True
