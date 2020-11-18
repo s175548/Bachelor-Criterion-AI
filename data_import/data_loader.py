@@ -379,17 +379,7 @@ class DataLoader():
                     xdim=[np.maximum(i * patch_size_0-padding,0),np.minimum((i + 1) * patch_size_0 + padding,img.shape[0])]
                     ydim=[np.maximum(j * patch_size_1-padding,0),np.minimum((j + 1) * patch_size_1 + padding,img.shape[1])]
                     large_img = img[xdim[0]:xdim[1],ydim[0]:ydim[1],:]
-                    large_img=PIL.Image.fromarray(large_img.astype(np.uint8))
-                    if j == 0:
-                        large_img=F.pad(large_img, padding=(0, 0, 50, 0), padding_mode='reflect')
-                    if j == crop_count_width - 1:
-                        large_img = F.pad(large_img, padding=(50, 0, 0, 0), padding_mode='reflect')
-                    if i == 0:
-                        large_img = F.pad(large_img, padding=(0, 50, 0, 0), padding_mode='reflect')
-                    if i == crop_count_height - 1:
-                        large_img = F.pad(large_img, padding=(0, 0, 0, 50), padding_mode='reflect')
-                    large_img=np.array(large_img,dtype=np.uint8)
-                    pad_split_imgs.append(large_img)
+                    pad_split_imgs.append(large_img.astype(np.uint8))
 
         patch_dimensions=(patch_size_0,patch_size_1)
 
@@ -421,7 +411,7 @@ class DataLoader():
         patch_dimensions=(patch_size_0,patch_size_1)
 
 
-        return pad_split_imgs, (crop_count_height,crop_count_width),patch_dimensions
+        return pad_split_imgs, (crop_count_height,crop_count_width),patch_d7imensions
 
 def load_idx_to_include():
     idx=open(os.path.join(os.getcwd(),'idx_to_include.txt'),'r')
