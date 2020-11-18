@@ -20,14 +20,14 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 
 binary=True
-device=torch.device('cuda')
+device=torch.device('cpu')
 model_resize=False
 resize=True
 model_name='DeepLab'
 n_classes=1
 patch_size=1024
 overlap=512
-Villads=False
+Villads=True
 HPC=True
 step_size=2
 
@@ -96,6 +96,11 @@ else:
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
                                         et.ExtToTensor(),
                                         et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+if resize:
+    patch_dim=(int(patch_dim[0]*0.5),int(patch_dim[1]*0.5))
+    overlap=int(0.5*overlap)
+
 
 
 target_tif=[]
