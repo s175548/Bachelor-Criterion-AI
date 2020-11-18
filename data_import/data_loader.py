@@ -366,8 +366,8 @@ class DataLoader():
         crop_count_height = img.shape[0] // patch_size
         crop_count_width = img.shape[1] // patch_size
         n_imgs = crop_count_height * crop_count_width
-        patch_size_0=img.shape[0] // crop_count_height
-        patch_size_1=img.shape[1] // crop_count_width
+        patch_size_0= patch_size
+        patch_size_1= patch_size
 
         split_dimensions = (patch_size_0+2*padding, patch_size_1+2*padding, 3)
         if with_pad:
