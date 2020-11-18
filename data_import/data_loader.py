@@ -382,12 +382,8 @@ class DataLoader():
                     large_img = PIL.Image.fromarray(large_img.astype(np.uint8))
                     if j == 0:
                         large_img = F.pad(large_img, padding=(0, 0, 50, 0), padding_mode='reflect')
-                    if j == crop_count_width - 1:
-                        large_img = F.pad(large_img, padding=(50, 0, 0, 0), padding_mode='reflect')
                     if i == 0:
                         large_img = F.pad(large_img, padding=(0, 50, 0, 0), padding_mode='reflect')
-                    if i == crop_count_height - 1:
-                        large_img = F.pad(large_img, padding=(0, 0, 0, 50), padding_mode='reflect')
                     large_img = np.array(large_img, dtype=np.uint8)
                     pad_split_imgs.append(large_img.astype(np.uint8))
 
