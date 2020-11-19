@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     print("Val set: %d" %(len(val_dst)))
 
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.5)
+    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
 
     if HPC:
         PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
