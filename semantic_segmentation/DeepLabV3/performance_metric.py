@@ -85,7 +85,7 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
 def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
     target_tp = np.zeros(target.shape)
     target_fp = np.zeros(target.shape)
-    fill = 3
+    fill = 6
     if xdim_s != None:
         for xdim, ydim in zip(xdim_s, ydim_s):
             pred_crop = pred[xdim[0]:xdim[1], ydim[0]:ydim[1]]
