@@ -231,6 +231,7 @@ def create_mask_from_bbox(boxes,size):
 def adjust_bbox_tif(boxes,adjust,size):
     mask = np.zeros((size,size))
     num_boxes = 0
+    new_boxes = []
     for box in boxes:
         x1, y1, x2, y2 = box
         if x1 < adjust+1:
@@ -246,7 +247,8 @@ def adjust_bbox_tif(boxes,adjust,size):
         else:
             mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
             num_boxes += 1
-    return mask, num_boxes
+            new_boxes.append([x1,y1,x2,y2])
+    return mask, num_boxes, new_boxes
 
 def find_background(image):
     hsv = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
