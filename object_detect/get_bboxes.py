@@ -31,6 +31,15 @@ def create_boxes(masks,num_objs):
         boxes.append([xmin, ymin, xmax, ymax])
     return boxes
 
+def fill_bbox(boxes,mask):
+    new_mask = np.zeros((np.shape(mask)))
+    for box in boxes:
+        x1, y1, x2, y2 = box
+        for i in range(int(x1),int(x2)):
+            for j in range(int(y1),int(y2)):
+                new_mask[j,i] = 255
+    return new_mask
+
 def check_mask(mask,name):
     j = np.shape(mask)
     np.save(name,j)
