@@ -29,8 +29,8 @@ import torchvision.transforms.functional as F
 HPC = True
 splitted_data = True
 binary = True
-tif = False
-brevetti = True
+tif = True
+brevetti = False
 
 def output(model,array):
     image = Image.fromarray(array)
