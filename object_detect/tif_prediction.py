@@ -165,9 +165,8 @@ if __name__ == '__main__':
             pred = pred[50:-50, 50:-50]
             #if num_boxes > 0:
             #    img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
-            #    Image.fromarray(target_tif
-            #                    .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-            #    Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
+            #    Image.fromarray(img.astype(np.uint8)).save(pred_path + '/vda_{}.png'.format(exp))
+            #    Image.fromarray(pred.astype(np.uint8)).save(pred_path + '/vda_{}_leather.png'.format(exp))
             if isinstance(pred_stack, list):
                 pred_stack = pred
                 img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]

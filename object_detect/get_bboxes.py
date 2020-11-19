@@ -232,7 +232,6 @@ def adjust_bbox_tif(boxes,adjust,size):
     mask = np.zeros((size,size))
     num_boxes = 0
     new_boxes = []
-    print("Before adjust: ", boxes)
     for box in boxes:
         x1, y1, x2, y2 = box
         if x1 < adjust+1:
@@ -249,7 +248,6 @@ def adjust_bbox_tif(boxes,adjust,size):
             mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
             num_boxes += 1
             new_boxes.append([x1,y1,x2,y2])
-    print("After adjust: ", new_boxes)
     return mask, num_boxes, new_boxes
 
 def find_background(image):
