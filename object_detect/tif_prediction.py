@@ -160,6 +160,7 @@ if __name__ == '__main__':
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size[0])
             pred, num_boxes, mod_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
+            pred = fill_bbox(mod_boxes,np.zeros((np.shape(pred))))
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             #if num_boxes > 0:
@@ -167,7 +168,6 @@ if __name__ == '__main__':
             #    Image.fromarray(target_tif
             #                    .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
             #    Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
-            pred = fill_bbox(mod_boxes,np.zeros((np.shape(pred))))
             if isinstance(pred_stack, list):
                 pred_stack = pred
                 img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
