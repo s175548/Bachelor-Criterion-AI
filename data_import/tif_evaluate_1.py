@@ -21,11 +21,11 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 binary=True
 device=torch.device('cuda')
-resize=True
+resize=False
 model_name='DeepLab'
 n_classes=1
-patch_size=1024
-overlap=512
+patch_size=256
+overlap=128
 Villads=False
 HPC=True
 step_size=2
