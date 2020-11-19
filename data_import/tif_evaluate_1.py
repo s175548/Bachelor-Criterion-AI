@@ -122,7 +122,7 @@ for i in range(0,split_x_y[0],step_size):
         if j != split_x_y[1]-1:
             output_r = output_model(img_array=split_imgs[i * split_x_y[1] + j+1])[l_slice]
             output[r_slice] = (output[r_slice] + output_r) / 2
-        if i < split_x_y[0]-2:
+        if i != split_x_y[0]-1:
             output_b = output_model(img_array=split_imgs[(i+1) * split_x_y[1] + j])[t_slice]
             output[b_slice] = (output[b_slice] + output_b) / 2
         pred = np.argmax(output,axis=0)
