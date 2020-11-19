@@ -42,7 +42,7 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
         if brevetti:
-            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+            path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
 
             #target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
             pass
