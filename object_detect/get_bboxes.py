@@ -220,7 +220,7 @@ def get_bbox_mask(mask,bbox):
     return bounding_box_mask
 
 def create_mask_from_bbox(boxes,size):
-    mask = np.zeros(size)
+    mask = np.zeros((size,size))
     for box in boxes:
         x1, y1, x2, y2 = box
         mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
