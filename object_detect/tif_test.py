@@ -19,16 +19,6 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
 
-transform_function_C = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor()])
-
-transform_function_R = et.ExtCompose([et.ExtRandomCrop(scale=0.7,size=None),
-                                      et.ExtResize(scale=0.5),
-                                      et.ExtRandomCrop(size=512),
-                                      et.ExtEnhanceContrast(),
-                                      et.ExtToTensor()])
-
 HPC=True
 splitted_data=True
 binary=True
