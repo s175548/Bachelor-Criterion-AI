@@ -155,7 +155,7 @@ if __name__ == '__main__':
         for j in range(split_x_y[1]):
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
             outputs, size = output(model,array=split_imgs[i * split_x_y[1] + j])
-            print(size)
+            print("size: ", size)
             boxes = outputs[0]['boxes'].cpu()
             scores = outputs[0]['scores'].cpu()
             preds = outputs[0]['labels'].cpu()
@@ -164,11 +164,11 @@ if __name__ == '__main__':
             pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=patch_size)
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
-            if num_boxes > 0:
-                img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
-                Image.fromarray(target_tif
-                                .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-                Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
+            #if num_boxes > 0:
+            #    img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
+            #    Image.fromarray(target_tif
+            #                    .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
+            #    Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
             pred = fill_bbox(new_boxes.detach().cpu().numpy(),np.zeros((np.shape(pred))))
             if isinstance(pred_stack, list):
                 pred_stack = pred
