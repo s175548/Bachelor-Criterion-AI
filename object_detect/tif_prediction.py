@@ -26,6 +26,7 @@ from PIL import Image
 import torchvision.transforms.functional as F
 from object_detect.fill_background import fill_background
 
+resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
 splitted_data = True
@@ -47,7 +48,6 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
-    print("So far")
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         cpu_device = torch.device('cpu')
@@ -161,14 +161,13 @@ if __name__ == '__main__':
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size[0])
             pred, num_boxes, mod_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
+            pred = fill_bbox(mod_boxes,np.zeros((np.shape(pred))))
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
             #if num_boxes > 0:
             #    img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
-            #    Image.fromarray(target_tif
-            #                    .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-            #    Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
-            pred = fill_bbox(mod_boxes,np.zeros((np.shape(pred))))
+            #    Image.fromarray(img.astype(np.uint8)).save(pred_path + '/vda_{}.png'.format(exp))
+            #    Image.fromarray(pred.astype(np.uint8)).save(pred_path + '/vda_{}_leather.png'.format(exp))
             if isinstance(pred_stack, list):
                 pred_stack = pred
                 img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
@@ -185,11 +184,13 @@ if __name__ == '__main__':
     print("Model: ", exp)
     if brevetti:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/brevetti_{}.png'.format(exp))
+        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
+        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')

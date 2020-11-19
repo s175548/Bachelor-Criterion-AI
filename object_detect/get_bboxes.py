@@ -33,8 +33,6 @@ def create_boxes(masks,num_objs):
 
 def fill_bbox(boxes,mask):
     new_mask = np.zeros((np.shape(mask)))
-    print("fill:" ,np.shape(mask))
-    print("box: ", boxes)
     for box in boxes:
         x1, y1, x2, y2 = box
         for i in range(int(x1),int(x2)):
@@ -162,8 +160,7 @@ def new_convert(mask):
 
     labeled_array, num_features = ndimage.label(new_mask)
     obj_ids2 = np.unique(mask)
-    if len(obj_ids2) > 3:
-        yes = 1
+
     s = ndimage.generate_binary_structure(2,2)
     mask, num_features2 = ndimage.label(new_mask, structure=s)
 

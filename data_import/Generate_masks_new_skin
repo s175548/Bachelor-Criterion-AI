@@ -5,7 +5,7 @@ import PIL
 path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_tif_vda4_grain1/annotations_tif_vda4_grain1/VDA4/grain_01'
 data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
-
+data_loader.get_tif_mask()
 target_tif=[]
 for i in range(26):
     mask_stack=[]
@@ -31,3 +31,4 @@ for i in range(26):
         target_tif=np.vstack((target_tif,mask_stack))
 save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images'
 PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(save_path+'/WALKNAPPA_VDA_04_grain_01_v_target.png',format='PNG')
+

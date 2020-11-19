@@ -19,6 +19,8 @@ import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from semantic_segmentation.DeepLabV3.performance_metric_function import error_count
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
+from PIL import Image
+
 
 
 
@@ -40,14 +42,14 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
         if brevetti:
-            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+            path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
 
             #target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
             pass
         else:
             path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-            pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_resize_all_classes.png')
-            target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+            pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_resize_all_classes.png')
+            target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
@@ -91,9 +93,9 @@ if __name__ == '__main__':
                                                                                             scale=None,
                                                                                             centercrop=False, path=path)
 
-    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+    Image.fromarray(pred_color.astype(np.uint8)).save(
         save_path + r'/red_half_01_pred_color.png', format='PNG')
-    PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+    Image.fromarray(target_color.astype(np.uint8)).save(
         save_path + r'/red_half_01_mask_color.png', format='PNG')
 
     labels = ['Insect bite', 'Binary', 'Good Area']
