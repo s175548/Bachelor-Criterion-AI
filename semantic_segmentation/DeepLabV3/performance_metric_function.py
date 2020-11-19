@@ -6,6 +6,7 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 import PIL
 import torchvision.transforms.functional as F
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
+from scipy import ndimage
 
 
 
@@ -65,7 +66,10 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             true_negatives[1]+=1
 
     if np.sum(pred == 1) > 0:
-        false_positives += 1
+        s=ndimage.generate_binary_structure(2,2)
+        _,false_positives=ndimage.label(pred,structure=s)
+
+
     target[target == 2] = 0
     metric[2].update(target, pred)
     target_color[target_color == 2] = 0
@@ -76,31 +80,18 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
 def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
     target_tp = np.zeros(target.shape)
     target_fp = np.zeros(target.shape)
-    fill = 3
     if xdim_s != None:
         for xdim, ydim in zip(xdim_s, ydim_s):
             pred_crop = pred[xdim[0]:xdim[1], ydim[0]:ydim[1]]
             pred[xdim[0]:xdim[1], ydim[0]:ydim[1]][pred_crop == 1] = 255
             if np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0:
-                target_tp[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 255
-                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0
-                target_tp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
-                target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
-                target_tp[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 255
-                target[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 0
-                target_tp[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 255
-                target[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 0
+                target_crop = target[xdim[0]:xdim[1], ydim[0]:ydim[1]]
+                target_tp[xdim[0]:xdim[1], ydim[0]:ydim[1]][target_crop==1] = 255
             else:
-                target_fp[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 255
-                target[xdim[0]:xdim[1], ydim[0]:ydim[0] + fill] = 0
-                target_fp[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 255
-                target[xdim[0]:xdim[1], ydim[1] - fill:ydim[1]] = 0
-                target_fp[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 255
-                target[xdim[0]:xdim[0] + fill, ydim[0]:ydim[1]] = 0
-                target_fp[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 255
-                target[xdim[1] - fill:xdim[1], ydim[0]:ydim[1]] = 0
+                target_crop = target[xdim[0]:xdim[1], ydim[0]:ydim[1]]
+                target_fp[xdim[0]:xdim[1], ydim[0]:ydim[1]][target_crop == 1] = 255
 
     pred_false_pos[pred_false_pos == 1] = 255
     pred_rgb = np.dstack((pred_false_pos, pred, np.zeros(pred.shape)))
-    target_rgb = np.dstack((target_fp, target_tp, target * 255))
+    target_rgb = np.dstack((target_fp, target_tp, np.zeros(target.shape)))
     return target_rgb, pred_rgb
