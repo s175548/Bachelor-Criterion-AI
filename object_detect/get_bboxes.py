@@ -33,6 +33,8 @@ def create_boxes(masks,num_objs):
 
 def fill_bbox(boxes,mask):
     new_mask = np.zeros((np.shape(mask)))
+    print("fill:" ,np.shape(mask))
+    print("box: ", boxes)
     for box in boxes:
         x1, y1, x2, y2 = box
         for i in range(int(x1),int(x2)):
@@ -220,7 +222,7 @@ def get_bbox_mask(mask,bbox):
     return bounding_box_mask
 
 def create_mask_from_bbox(boxes,size):
-    mask = np.zeros(size)
+    mask = np.zeros((size,size))
     for box in boxes:
         x1, y1, x2, y2 = box
         mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)

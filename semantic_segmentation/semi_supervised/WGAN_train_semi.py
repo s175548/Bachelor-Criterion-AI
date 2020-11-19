@@ -107,7 +107,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
     model_dict={}
-    if model=='DeepLab':
+
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
         if default_scope:
             grad_check(model_dict[model])
@@ -115,17 +115,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+
         spectral = True
         print("Spectral:",spectral)
-        if spectral:
-            model_dict[model] = add_spectral(model_dict[model])
+        model_dict[model] = add_spectral(model_dict[model])
 
-    if model=="MobileNet":
-        model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+3,pretrained_backbone=True)
-        if default_scope:
-            grad_check(model_dict[model],model_layers='All')
-        else:
-            grad_check(model_dict[model])
     gamma_three = 1
     ###Load generator semi_super##
     if semi_supervised:
@@ -167,9 +161,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    weights = [0.3, 0.7, 0, 0]
-    class_weight = torch.FloatTensor(weights).cuda()
-    criterion_d = nn.CrossEntropyLoss(weight=class_weight,ignore_index=n_classes+1, reduction='mean')
+    criterion_d = nn.CrossEntropyLoss(weight=[0.3,0.7,0,0],ignore_index=n_classes+1, reduction='mean')
 
 
 

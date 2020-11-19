@@ -71,26 +71,30 @@ if __name__ == '__main__':
             tif_path = os.path.join(tif_path,'RED_HALF02_grain_01_v.tif')
         else:
             tif_path = os.path.join(tif_path,'WALKNAPPA_VDA_04_grain_01_v.tif')
-
+        pred_path = '/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/all_preds'
         if model_folder == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
             exp = 'crop_all_classes'
             resize = False
+            pred_path = os.path.join(pred_path,'EC')
 
         if model_folder == 'binary':
             pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
             exp = 'crop_3_classes'
             resize = False
+            pred_path = os.path.join(pred_path,'3C')
 
         if model_folder == 'three_scale':
             pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
             exp = 'resize_3_classes'
             resize = True
+            pred_path = os.path.join(pred_path,'3R')
 
         if model_folder == 'full_scale':
             pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
             exp = 'resize_all_classes'
             resize = True
+            pred_path = os.path.join(pred_path,'ER')
 
 
     else:
@@ -151,15 +155,20 @@ if __name__ == '__main__':
         for j in range(split_x_y[1]):
             label = Image.fromarray(np.zeros(split_imgs[i * split_x_y[1] + j].size, dtype=np.uint8))
             outputs, size = output(model,array=split_imgs[i * split_x_y[1] + j])
-
+            print("size: ", size)
             boxes = outputs[0]['boxes'].cpu()
             scores = outputs[0]['scores'].cpu()
             preds = outputs[0]['labels'].cpu()
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
-            pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size)
-            pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
+            pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),patch_size)
+            pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=patch_size)
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
+            #if num_boxes > 0:
+            #    img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
+            #    Image.fromarray(target_tif
+            #                    .astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
+            #    Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
             pred = fill_bbox(new_boxes.detach().cpu().numpy(),np.zeros((np.shape(pred))))
             if isinstance(pred_stack, list):
                 pred_stack = pred
