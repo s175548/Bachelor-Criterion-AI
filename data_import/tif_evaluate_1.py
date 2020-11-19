@@ -114,7 +114,7 @@ for i in range(0,split_x_y[0],step_size):
         if j != 0:
             output_l=output_model(img_array=split_imgs[i*split_x_y[1]+j-1])[r_slice]
             output[l_slice]=(output[l_slice]+output_l)/2
-        if i != 0:
+        if (i != 0) and (i< split_x_y[0]-2):
             output_t = output_model(img_array=split_imgs[(i-1) * split_x_y[1] + j])[b_slice]
             output[t_slice] = (output[t_slice]  + output_t) / 2
         if j != split_x_y[1]-1:
