@@ -192,8 +192,7 @@ if __name__ == '__main__':
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         print(np.shape(image_tif))
         image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
-        print(np.shape(image_tif))
-        Image.fromarray(np.array(image_tif).astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
+        image_tif.astype(np.uint8).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 
