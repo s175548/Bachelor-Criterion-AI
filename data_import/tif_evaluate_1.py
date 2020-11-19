@@ -21,12 +21,12 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 binary=True
 device=torch.device('cuda')
-model_resize=False
+model_resize=True
 resize=False
 model_name='DeepLab'
 n_classes=1
-patch_size=256
-overlap=128
+patch_size=1024
+overlap=512
 Villads=False
 HPC=True
 step_size=2
@@ -55,7 +55,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/randomcrop/DeepLab_ThreeClass_resize_false0.01.pt'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
 
 
 
@@ -68,8 +68,6 @@ image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
-#split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(mask, patch_size=patch_size,
-#                                                                         padding=50,with_pad=True)
 
 checkpoint=torch.load(model_path,map_location=device)
 
@@ -105,10 +103,10 @@ if resize:
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(0,split_x_y[0]-1,step_size):
+for i in range(0,split_x_y[0],step_size):
     print(i)
     pred_stack=[]
-    for j in range(0,split_x_y[1]-1,step_size):
+    for j in range(0,split_x_y[1],step_size):
         print(j)
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
@@ -122,7 +120,7 @@ for i in range(0,split_x_y[0]-1,step_size):
         if j != split_x_y[1]-1:
             output_r = output_model(img_array=split_imgs[i * split_x_y[1] + j+1])[l_slice]
             output[r_slice] = (output[r_slice] + output_r) / 2
-        if i != split_x_y[0]-1:
+        if i < split_x_y[0]-2:
             output_b = output_model(img_array=split_imgs[(i+1) * split_x_y[1] + j])[t_slice]
             output[b_slice] = (output[b_slice] + output_b) / 2
         pred = np.argmax(output,axis=0)
@@ -137,5 +135,5 @@ for i in range(0,split_x_y[0]-1,step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_3C_orig_res.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize.png')
 

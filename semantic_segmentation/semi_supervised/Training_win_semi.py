@@ -29,7 +29,7 @@ lr_g = 0.004
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
-val_batch_size= 8 #4
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
@@ -139,8 +139,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_fake_d = []
         loss_fake_g = []
         gamma_one = .5 #Loss weigth for fake
-        gamma_two = 2 # Loss weight for unlabel
-        gamma_three = 2
+        gamma_two = .5 # Loss weight for unlabel
+        gamma_three = 1
 
         #Load model
         model_g = generator(1,spectral) #arg = number of gpu's
@@ -167,7 +167,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
+    criterion_d = nn.CrossEntropyLoss(weight=[0.3,0.7,0,0],ignore_index=n_classes+1, reduction='mean')
 
 
 
