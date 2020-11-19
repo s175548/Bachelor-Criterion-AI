@@ -211,7 +211,6 @@ def get_bbox_mask(mask,bbox):
     return bounding_box_mask
 
 def create_mask_from_bbox(boxes,size):
-    print("2 create mask size ", size)
     mask = np.zeros(size)
     for box in boxes:
         x1, y1, x2, y2 = box
@@ -224,13 +223,13 @@ def adjust_bbox_tif(boxes,adjust,size):
     for box in boxes:
         x1, y1, x2, y2 = box
         if x1 < adjust:
-            x1 = adjust
+            x1 = adjust+1
         if x2 > size-adjust:
-            x2 = size-adjust
+            x2 = size-adjust-1
         if y1 < adjust:
-            y1 = adjust
+            y1 = adjust+1
         if y2 > size-adjust:
-            y2 = size-adjust
+            y2 = size-adjust-1
         if x1 >= x2 or y1 >= y2:
             pass
         else:
