@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J od_tif_walk_3R
-#BSUB -o od_tif_walk_3R_%J.out
+#BSUB -J od_3R_walk
+#BSUB -o od_3R_walk_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"

@@ -65,7 +65,10 @@ def classifier_metric(iou_list,iou_pred,scores,target,labels):
         acc_dict["Defects"] = num_obj
         acc_dict["Detected"] = counter
         fp_count = [fp for fp in iou_pred if fp == 0]
-        acc_dict["FP"] = len(fp_count)
+        if len(fp_count) > 0:
+            acc_dict["FP"] = 1
+        else:
+            acc_dict["FP"] = 0
     return acc_dict
 
 def get_class_iou(iou_list,label_list,scores,target,labels,preds,threshold=0.3,print_state=False):

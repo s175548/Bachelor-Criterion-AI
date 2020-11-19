@@ -32,8 +32,8 @@ transform_function_R = et.ExtCompose([et.ExtRandomCrop(scale=0.7,size=None),
 HPC=True
 splitted_data=True
 binary=True
-tif=False
-brevetti=
+tif=True
+brevetti=False
 
 if __name__ == '__main__':
 
@@ -60,98 +60,67 @@ if __name__ == '__main__':
         path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
         save_fold = 'full_scale/'
         dataset = "all_binary_scale"
-        path_save = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
+        save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
+        path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+        pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_crop_all_classes.png')
+        target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
-        optim = "SGD"
-        exp_name = 'full_scale'
-        if binary:
-            if exp_name == 'all_bin' or exp_name == 'full_scale':
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\extended\val'
-            else:
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\three\val'
 
-        if exp_name == 'all_bin':
-            pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
-            exp = 'crop_all_classes'
-            transform_function = transform_function_C
 
-        if exp_name == 'binary':
-            pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
-            exp = 'crop_3_classes'
-            transform_function = transform_function_C
+    pred = np.array(pred) / 255
+    pred = pred.astype(np.uint8)
+    target = np.array(target, dtype=np.uint8)[:pred.shape[0], :pred.shape[1]]
+    index = target == 53
+    target[index] = 0
+    pred[index] = 0
 
-        if exp_name == 'three_scale':
-            pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
-            exp = 'resize_3_classes'
-            transform_function = transform_function_R
-
-        if exp_name == 'full_scale':
-            pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
-            exp = 'resize_all_classes'
-            transform_function = transform_function_R
-
-    print("Device: %s" % device)
     data_loader = DataLoader(data_path=path_original_data,
-                                 metadata_path=path_meta_data)
-
+                             metadata_path=path_meta_data)
     color_dict = data_loader.color_dict_binary
     target_dict = data_loader.get_target_dict()
     annotations_dict = data_loader.annotations_dict
 
-    batch_size = 8
+    labels = ['02', 'Abassamento', 'Abbassamento', 'Area Punture insetti', 'Area aperta', 'Area vene', 'Buco',
+              'Cicatrice',
+              'Cicatrice aperta', 'Contaminazione', 'Crease', 'Difetto di lavorazione', 'Dirt', 'Fianco',
+              'Fiore marcio',
+              'Insect bite', 'Marchio', 'Microcut', 'Piega', 'Pinza', 'Pinze', 'Poro', "Puntura d'insetto",
+              'Puntura insetto', 'Ruga', 'Rughe', 'Scopertura', 'Scratch', 'Smagliatura', 'Soffiatura', 'Struttura',
+              'Taglio', 'Vena', 'Vene', 'Verruca', 'Wart', 'Zona aperta', 'verruca']
 
-    file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
-    N_files = len(file_names_val)
+    metrics = [StreamSegMetrics(2), StreamSegMetrics(2), StreamSegMetrics(2)]
+    false_positives = 0
+    true_negatives = [0, 0]
+    errors = np.array([[0, 0], [0, 0]])
+    errors, false_positives, metric, target_color, pred_color, true_negatives = error_count(None,
+                                                                                            pred,
+                                                                                            target, data_loader,
+                                                                                            labels, errors,
+                                                                                            false_positives,
+                                                                                            true_negatives,
+                                                                                            metrics, resize=False,
+                                                                                            size=None,
+                                                                                            scale=None,
+                                                                                            centercrop=False, path=path)
 
-    val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
-                          bbox=True, multi=False,
-                          transform=transform_function, color_dict=color_dict, target_dict=target_dict)
+    PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+        save_path + r'/red_half_01_pred_color.png', format='PNG')
+    PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+        save_path + r'/red_half_01_mask_color.png', format='PNG')
 
-    val_loader = data.DataLoader(
-        val_dst, batch_size=batch_size, shuffle=False, num_workers=4, collate_fn=utils.collate_fn)
-
-    print("Val set: %d" %(len(val_dst)))
-
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
-
-    if HPC:
-        base_path = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
-        PATH = os.path.join(base_path, model_folder)
-        PATH = os.path.join(PATH, pt_name)
-    else:
-        PATH = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\faster_rcnn'
-        PATH = os.path.join(PATH, exp_name)
-        PATH = os.path.join(PATH, pt_name)
-        #PATH = os.path.join(PATH, model_folder)
-
-    loaded_model = torch.load(PATH)
-    model.load_state_dict(loaded_model["model_state"])
-    model.to(device)
-    model.eval()
-    print("Model loaded and ready to be evaluated!")
-    if HPC:
-        save_path = path_save
-
-    val_mAP, val_mAP2, cmatrix_val, cmatrix_val2 = validate(model=model, model_name=model_name,
-                                                            data_loader=val_loader,
-                                                            device=device,
-                                                            path_save=save_path, bbox_type='empty',
-                                                            val=True)
-    print("Experiment: ", exp)
-    print("Overall best with nms: ", val_mAP2)
-    print("Stats for nms:")
-    print("Overall best tp: ", cmatrix_val["true_positives"], " out of ", cmatrix_val["total_num_defects"],
-          " with ",
-          cmatrix_val["false_positives"], " false positives, ", cmatrix_val["false_negatives"],
-          " false negatives and ",
-          cmatrix_val["true_negatives"], "true negatives")
-    print("Validation set contained ", cmatrix_val["good_leather"], " images with good leather and ",
-          cmatrix_val["bad_leather"],
-          " with bad leather")
+    labels = ['Insect bite', 'Binary', 'Good Area']
+    new_list = [
+        label + '\n' + '\n'.join([f"{name}, {performance}" for name, performance in metric[i].get_results().items()])
+        for
+        i, label in enumerate(labels)]
+    string = '\n\n'.join(
+        new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]}'
+    f = open(os.path.join(save_path, 'performance'), 'w')
+    f.write(string)
 
 
 
