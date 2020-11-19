@@ -25,7 +25,6 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.004
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -36,7 +35,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 250
+N_epochs= 200
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -105,20 +104,20 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
-             save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
+             save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = False, semi_supervised=True, trainloader_nl=None,lr_g=0.002):
+    spectral = True
+    critic_iteration = 5
     model_dict={}
+    model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
+    if default_scope:
+        grad_check(model_dict[model])
+    else:
+        grad_check(model_dict[model], model_layers='All')
+    model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+    model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
 
-        model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
-        if default_scope:
-            grad_check(model_dict[model])
-        else:
-            grad_check(model_dict[model], model_layers='All')
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-
-        spectral = True
-        print("Spectral:",spectral)
-        model_dict[model] = add_spectral(model_dict[model])
+    print("Spectral:",spectral)
+    model_dict[model] = add_spectral(model_dict[model])
 
     gamma_three = 1
     ###Load generator semi_super##
@@ -128,10 +127,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         G_loss = []
         D_loss = []
-        loss_labels_d =[]
-        loss_unlabelled_d = []
-        loss_fake_d = []
-        loss_fake_g = []
+        loss_label_d =[]
+        loss_WGAN_d = []
+        loss_WGAN_g = []
         gamma_one = .5 #Loss weigth for fake
         gamma_two = .5 # Loss weight for unlabel
         gamma_three = 1
@@ -155,16 +153,16 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     random.seed(random_seed)
 
     # Set up metrics
-    metrics = StreamSegMetrics(n_classes+3)
+    metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer for discriminator
     print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    criterion_d = nn.CrossEntropyLoss(weight=[0.3,0.7,0,0],ignore_index=n_classes+1, reduction='mean')
-
-
-
+    weights = [0.3, 0.7, 0]
+    class_weight = torch.FloatTensor(weights).cuda()
+    criterion_d = nn.CrossEntropyLoss(weight=class_weight, ignore_index=n_classes + 1, reduction='mean')
+    # criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes + 1, reduction='mean')
 
     # ==========   Train Loop   ==========#
     for model_name, model_d in model_dict.items():
@@ -184,80 +182,62 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             running_loss = 0
             for images, labels in tqdm(train_loader): #Fetch labelled data
                 cur_itrs += 1
-
                 images = images.to(device, dtype=torch.float32)
                 labels = labels.to(device, dtype=torch.long)
 
-                #Fetch unlabelled data
-                if semi_supervised:
-                    try:
-                        _, batch_nl = next(trainloader_nl_iter)
-                        del _
-                    except:
-                        trainloader_nl_iter = enumerate(trainloader_nl)
-                        _, batch_nl = next(trainloader_nl_iter)
-                        del _
+                try:
+                    _, batch_nl = next(trainloader_nl_iter) #Fetch unlabelled data
+                    del _
+                except:
+                    trainloader_nl_iter = enumerate(trainloader_nl)
+                    _, batch_nl = next(trainloader_nl_iter)
+                    del _
 
-                    images_nl = batch_nl
-                    images_nl = images_nl[0]
-                    images_nl = Variable(images_nl).cuda()
-                    if images.shape[0] != images_nl.shape[0]:
-                        print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
-                        continue
-                    #noise = torch.rand([images.shape[0], 50 * 50]).uniform_().cuda() #100
-                    b_size = images.to(device).size(0)
-                    noise = torch.randn(b_size, 100, 1, 1, device=device)
-                #### Train discriminator #### #Predict -> calculate loss -> update
+                images_nl = batch_nl
+                images_nl = images_nl[0]
+                images_nl = Variable(images_nl).cuda()
+                if images.shape[0] != images_nl.shape[0]:
+                    print("Images with label {} and without {} is not same size!".format(images.shape[0],images_nl.shape[0]))
+                    continue
+                b_size = images.to(device).size(0)
+                noise = torch.randn(b_size, 100, 1, 1, device=device)
+                #### Train disc on unlabel + fake data
                 optimizer_d.zero_grad()
-                if model_name=='DeepLab':
-                    pred_labeled = model_d(images)['out']
-                else:
-                    pred_labeled = model_d(images)
+                pred_unlabel = model_d(images_nl.float())['out']
+                pred_fake = model_d(model_g(noise))['out']
 
-                if semi_supervised:
-                    if model_name == 'DeepLab':
-                        pred_unlabel = model_d(images_nl.float())['out']
-                        pred_fake = model_d(model_g(noise))['out']
-                    else:
-                        pred_unlabel = model_d(images_nl.float())
-                        pred_fake = model_d(model_g(noise))
-
-                loss_labeled = criterion_d(pred_labeled, labels)
-
-                if semi_supervised:
-                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                    loss_fake = Loss_fake_remade(pred_fake)
-                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
-                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
-                else:
-                    loss_d = loss_labeled
-                loss_d.backward()
+                loss_critic = - (  torch.mean( pred_unlabel.reshape(-1) ) - torch.mean( pred_fake.reshape(-1)) )
+                loss_critic.backward()
                 optimizer_d.step()
-                np_loss = loss_d.detach().cpu().numpy()
-                running_loss = + loss_d.item() * images.size(0)
+                #Train disc on label data
+                optimizer_d.zero_grad()
+                pred_labeled = model_d(images)['out']
+                loss_labeled = criterion_d(pred_labeled, labels)
+                loss_labeled.backward()
+                optimizer_d.step()
+                np_loss = loss_labeled.detach().cpu().numpy()
+                running_loss = + loss_labeled.item() * images.size(0)
                 interval_loss += np_loss
 
-
-                ####### train G ##################
-                if semi_supervised:
+                if cur_itrs%critic_iteration == 0:
+                    ####### train G ##################
                     optimizer_g.zero_grad()
                     # predict
-                    if model_name == 'DeepLab':
-                        pred_fake = model_d(model_g(noise))['out']
-                    else:
-                        pred_fake = model_d(model_g(noise))
-                    loss_g = -Loss_fake_remade(pred_fake)
+                    pred_fake = model_d(model_g(noise))['out'].reshape(-1)
+
+                    #loss_g = -Loss_fake_remade(pred_fake)
+                    loss_g = - torch.mean(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
 
-                if (cur_itrs) % 1 == 0:
-                    interval_loss = interval_loss / images.size(0)
-                    print("Epoch %d, Itrs %d/%d, Loss=%f" %
-                          (cur_epochs, cur_itrs, total_itrs, interval_loss))
-                    interval_loss = 0.0
+
+                interval_loss = interval_loss / images.size(0)
+                print("Epoch %d, Itrs %d/%d, Loss=%f" %
+                      (cur_epochs, cur_itrs, total_itrs, interval_loss))
+                interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1 and cur_epochs%5 ==0:
+                if cur_itrs==5 and cur_epochs%5 ==1:
                     print("validation...")
                     model_d.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
@@ -294,64 +274,55 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 #     scheduler_d.step()
                 #     scheduler_g.step()
 
-                if cur_epochs%10==0:
+                if cur_epochs%10==1:
                     save_noise_pred(cur_epoch=cur_epochs, model=model_g, b_size=b_size, device=device,
                                     save_path=save_path)
 
 
 
-            if semi_supervised:
-                loss_labels_d.append(loss_labeled)
-                loss_unlabelled_d.append(loss_unlabel*gamma_two)
-                loss_fake_d.append(loss_fake*gamma_one)
-                loss_fake_g.append(loss_g)
+        loss_label_d.append(loss_labeled)
+        loss_WGAN_d.append(loss_critic)
+        loss_WGAN_g.append(loss_g)
 
-                D_loss.append(loss_d.item())
-                G_loss.append(-loss_g.item())
+        D_loss.append(loss_g.item())
+        G_loss.append(-loss_g.item())
 
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
-                                  model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
-        if semi_supervised:
-            plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
-            plt.title('Train Loss')
-            plt.xlabel('N_epochs')
-            plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
-            plt.close()
+                              model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
+        plt.plot(range(len(loss_label_d)), loss_label_d, '-o')
+        plt.title('Train Loss')
+        plt.xlabel('N_epochs')
+        plt.ylabel('Loss')
+        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
+        plt.close()
 
-            plt.plot(range(len(loss_unlabelled_d)), loss_unlabelled_d, '-o')
-            plt.title('Train Loss')
-            plt.xlabel('N_epochs')
-            plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_unlabelled_d'), format='png')
-            plt.close()
+        plt.plot(range(len(loss_WGAN_d)), loss_WGAN_d, '-o')
+        plt.title('Train Loss')
+        plt.xlabel('N_epochs')
+        plt.ylabel('Loss')
+        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_unlabelled_d'), format='png')
+        plt.close()
 
-            plt.plot(range(len(loss_fake_d)), loss_fake_d, '-o')
-            plt.title('Train Loss')
-            plt.xlabel('N_epochs')
-            plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_d'), format='png')
-            plt.close()
 
-            plt.plot(range(len(loss_fake_g)), loss_fake_g, '-o')
-            plt.title('Train Loss')
-            plt.xlabel('N_epochs')
-            plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_g'), format='png')
-            plt.close()
+        plt.plot(range(len(loss_WGAN_g)), loss_WGAN_g, '-o')
+        plt.title('Train Loss')
+        plt.xlabel('N_epochs')
+        plt.ylabel('Loss')
+        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_fake_g'), format='png')
+        plt.close()
 
-            plt.figure(figsize=(10, 5))
-            plt.title("Generator and Discriminator Loss During Training")
-            plt.plot(G_loss, label="G")
-            plt.plot(D_loss, label="D")
-            plt.xlabel("iterations")
-            plt.ylabel("Loss")
-            plt.legend()
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
-            plt.show()
-            state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
-                     'optimizer': optimizer_g.state_dict(), }
-            torch.save(state, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
+        plt.figure(figsize=(10, 5))
+        plt.title("Generator and Discriminator Loss During Training")
+        plt.plot(G_loss, label="G")
+        plt.plot(D_loss, label="D")
+        plt.xlabel("iterations")
+        plt.ylabel("Loss")
+        plt.legend()
+        plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_gen_vs_dis'), format='png')
+        plt.show()
+        state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
+                 'optimizer': optimizer_g.state_dict(), }
+        torch.save(state, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
