@@ -23,7 +23,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/vda_04_01_all_classes.png')
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/red_half_02_01_all_classes_sliding_window.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
 
 pred=np.array(pred)/255
@@ -61,9 +61,9 @@ errors, false_positives, metric, target_color, pred_color, true_negatives = erro
 
 
 PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
-    save_path + r'/red_half_01_pred_color.png', format='PNG')
+    save_path + r'/RF_AC_no_resize_pred_color.png', format='PNG')
 PIL.Image.fromarray(target_color.astype(np.uint8)).save(
-    save_path + r'/red_half_01_mask_color.png', format='PNG')
+    save_path + r'/RF_AC_no_resize_mask_color.png', format='PNG')
 
 labels = ['Insect bite', 'Binary', 'Good Area']
 new_list = [
