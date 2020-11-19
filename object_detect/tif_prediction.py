@@ -16,7 +16,7 @@ from object_detect.helper.FastRCNNPredictor import FastRCNNPredictor, FasterRCNN
 from torchvision.models.detection.rpn import AnchorGenerator, RPNHead
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.evaluator import do_nms
-from object_detect.get_bboxes import get_bbox_mask, create_mask_from_bbox, adjust_bbox_tif
+from object_detect.get_bboxes import get_bbox_mask, create_mask_from_bbox, adjust_bbox_tif, fill_bbox
 from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
@@ -24,6 +24,7 @@ from object_detect.train_hpc import define_model
 from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
+from object_detect.fill_background import fill_background
 
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
@@ -159,6 +160,7 @@ if __name__ == '__main__':
             pred, num_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
             pred_counter += num_boxes
             pred = pred[50:-50, 50:-50]
+            pred = fill_bbox(new_boxes.detach().cpu().numpy(),np.zeros((np.shape(pred))))
             if isinstance(pred_stack, list):
                 pred_stack = pred
                 img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
@@ -176,7 +178,11 @@ if __name__ == '__main__':
     if brevetti:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/brevetti_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
+        fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
+                        mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
+        fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
+                        mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 

@@ -22,11 +22,11 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 binary=True
 device=torch.device('cuda')
 model_resize=False
-resize=True
+resize=False
 model_name='DeepLab'
 n_classes=1
-patch_size=1024
-overlap=512
+patch_size=256
+overlap=128
 Villads=False
 HPC=True
 step_size=2
@@ -55,7 +55,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/resize/DeepLab_extended_dataset_resize_true0.01.pt'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/randomcrop/DeepLab_ThreeClass_resize_false0.01.pt'
 
 
 
@@ -105,7 +105,7 @@ if resize:
 
 target_tif=[]
 label=Image.fromarray(np.zeros(patch_dim,dtype=np.uint8))
-for i in range(0,split_x_y[0]-1,step_size):
+for i in range(0,split_x_y[0],step_size):
     print(i)
     pred_stack=[]
     for j in range(0,split_x_y[1],step_size):
@@ -137,5 +137,5 @@ for i in range(0,split_x_y[0]-1,step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize_model.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_3C_orig_res.png')
 
