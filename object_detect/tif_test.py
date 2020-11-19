@@ -17,7 +17,10 @@ from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
-from object_detect.train_hpc import define_model
+from semantic_segmentation.DeepLabV3.performance_metric_function import error_count
+from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
+
+
 
 HPC=True
 splitted_data=True
@@ -33,27 +36,18 @@ if __name__ == '__main__':
     random.seed(random_seed)
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        base_path = '/zhome/dd/4/128822/Bachelorprojekt/'
-        model_folder = 'faster_rcnn/'
-        save_path_model = os.path.join(base_path,model_folder)
         path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
-
-        parser = argparse.ArgumentParser(description='Chooses model')
-        parser.add_argument('model folder', metavar='folder', type=float, nargs='+',
-                            help='model folder (three_scale, full_scale, all_bin, binary')
-        # Example: model_folder = all_bin\resnet50_full_empty_0.01_all_binarySGD.pt
-        model_folder = args['model folder'][0]
-
-        model_name = 'resnet50'
-        path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/train'
-        path_val = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val'
-        save_fold = 'full_scale/'
-        dataset = "all_binary_scale"
         save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
-        path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-        pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_crop_all_classes.png')
-        target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+        if brevetti:
+            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+
+            #target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+            pass
+        else:
+            path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+            pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_resize_all_classes.png')
+            target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
