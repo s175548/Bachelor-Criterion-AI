@@ -184,13 +184,13 @@ if __name__ == '__main__':
     print("Model: ", exp)
     if brevetti:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/brevetti_{}.png'.format(exp))
-        image_tif = resize_function(Image.fromarray(image_tif),Image.fromarray(np.zeros((np.shape(image_tif)))))
+        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-        image_tif = resize_function(Image.fromarray(image_tif),Image.fromarray(np.zeros((np.shape(image_tif)))))
+        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')

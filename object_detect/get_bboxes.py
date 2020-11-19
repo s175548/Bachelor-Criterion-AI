@@ -160,8 +160,7 @@ def new_convert(mask):
 
     labeled_array, num_features = ndimage.label(new_mask)
     obj_ids2 = np.unique(mask)
-    if len(obj_ids2) > 3:
-        yes = 1
+
     s = ndimage.generate_binary_structure(2,2)
     mask, num_features2 = ndimage.label(new_mask, structure=s)
 
