@@ -25,7 +25,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.004
+lr_g = 0.005
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -106,6 +106,8 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
+    reg_GAN_setup = True
+    print("GAN Setup",reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
@@ -233,10 +235,14 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
-                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                    loss_fake = Loss_fake_remade(pred_fake)
-                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
-                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                    if reg_GAN_setup:
+                        loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
+                        print("OBS: Loss_label is disabled.")
+                    else:
+                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                        loss_fake = Loss_fake_remade(pred_fake)
+                        loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
