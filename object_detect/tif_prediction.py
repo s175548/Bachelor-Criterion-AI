@@ -47,7 +47,6 @@ if __name__ == '__main__':
     torch.manual_seed(random_seed)
     np.random.seed(random_seed)
     random.seed(random_seed)
-    print("So far")
     if HPC:
         device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         cpu_device = torch.device('cpu')
