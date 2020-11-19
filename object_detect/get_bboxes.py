@@ -231,13 +231,13 @@ def adjust_bbox_tif(boxes,adjust,size):
     num_boxes = 0
     for box in boxes:
         x1, y1, x2, y2 = box
-        if x1 < adjust:
+        if x1 < adjust+1:
             x1 = adjust+1
-        if x2 > size-adjust:
+        if x2 > size-adjust-1:
             x2 = size-adjust-1
-        if y1 < adjust:
+        if y1 < adjust+1:
             y1 = adjust+1
-        if y2 > size-adjust:
+        if y2 > size-adjust-1:
             y2 = size-adjust-1
         if x1 >= x2 or y1 >= y2:
             pass

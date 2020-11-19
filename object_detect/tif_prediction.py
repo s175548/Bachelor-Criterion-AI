@@ -123,7 +123,7 @@ if __name__ == '__main__':
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
-    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.5)
+    model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
 
     if HPC:
         base_path = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'

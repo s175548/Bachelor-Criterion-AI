@@ -94,9 +94,6 @@ def validate(model, model_name, data_loader, device, path_save, bbox_type, val=T
 
                 #new_boxes, new_scores, new_labels = get_non_maximum_supression(boxes, scores, preds, iou_threshold=0.2)
                 new_boxes, new_scores, new_preds = do_nms(boxes,scores,preds,threshold=0.2)
-                Image._show(Image.fromarray(masks[j]))
-                bbox_mask = fill_bbox(new_boxes.numpy(), masks[j])
-                Image._show(Image.fromarray(bbox_mask))
                 iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(), preds=new_preds,
                                                        labels=targets[j]['labels'].cpu(), image=images[j], expand=16)
                 iou_target2, iou_pred2 = get_iou_targets(boxes=boxes, targets=targets[j]['boxes'].cpu(), preds=preds,

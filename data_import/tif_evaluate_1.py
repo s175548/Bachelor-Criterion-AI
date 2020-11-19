@@ -68,8 +68,6 @@ image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
-#split_imgs, split_x_y,patch_dimensions = data_loader.generate_tif_patches(mask, patch_size=patch_size,
-#                                                                         padding=50,with_pad=True)
 
 checkpoint=torch.load(model_path,map_location=device)
 
@@ -122,7 +120,7 @@ for i in range(0,split_x_y[0],step_size):
         if j != split_x_y[1]-1:
             output_r = output_model(img_array=split_imgs[i * split_x_y[1] + j+1])[l_slice]
             output[r_slice] = (output[r_slice] + output_r) / 2
-        if i != split_x_y[0]-1:
+        if i < split_x_y[0]-2:
             output_b = output_model(img_array=split_imgs[(i+1) * split_x_y[1] + j])[t_slice]
             output[b_slice] = (output[b_slice] + output_b) / 2
         pred = np.argmax(output,axis=0)

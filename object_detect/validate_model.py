@@ -66,7 +66,7 @@ if __name__ == '__main__':
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
-        exp_name = 'full_scale'
+        exp_name = 'all_bin'
         if binary:
             if exp_name == 'all_bin' or exp_name == 'full_scale':
                 path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\extended\val'
