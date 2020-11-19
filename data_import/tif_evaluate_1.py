@@ -135,5 +135,5 @@ for i in range(0,split_x_y[0],step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize_new.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RF_AC_resize_.png')
 
