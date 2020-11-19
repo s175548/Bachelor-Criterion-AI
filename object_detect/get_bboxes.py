@@ -33,8 +33,6 @@ def create_boxes(masks,num_objs):
 
 def fill_bbox(boxes,mask):
     new_mask = np.zeros((np.shape(mask)))
-    print("fill:" ,np.shape(mask))
-    print("box: ", boxes)
     for box in boxes:
         x1, y1, x2, y2 = box
         for i in range(int(x1),int(x2)):
