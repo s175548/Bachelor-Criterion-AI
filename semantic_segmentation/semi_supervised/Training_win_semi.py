@@ -25,7 +25,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.002
+lr_g = 0.004
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -36,7 +36,7 @@ random_seed=1
 val_interval= 55
 vis_num_samples= 2 #2
 enable_vis=True
-N_epochs= 200
+N_epochs= 250
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
@@ -106,8 +106,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
-    reg_GAN_setup = False
-    print("GAN Setup",reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
@@ -140,8 +138,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = .2 #Loss weigth for fake
-        gamma_two = 5 # Loss weight for unlabel
+        gamma_one = .5 #Loss weigth for fake
+        gamma_two = 2 # Loss weight for unlabel
         gamma_three = 2
 
         #Load model
@@ -233,14 +231,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
-                    if reg_GAN_setup:
-                        loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("OBS: Loss_label is disabled.")
-                    else:
-                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                        loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    loss_fake = Loss_fake_remade(pred_fake)
+                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
@@ -363,7 +357,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             plt.show()
             state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
                      'optimizer': optimizer_g.state_dict(), }
-            torch.save(state, model_g_spath+"last_epoch_generator")
+            torch.save(state, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,

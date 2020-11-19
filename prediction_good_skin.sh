@@ -14,6 +14,6 @@
 echo "Running script..."
 cd ..
 source test-env/bin/activate
-cd Bachelor-Criterion-AI
+cd new_repo/Bachelor-Criterion-AI
 python3 data_import/tif_evaluate_1.py
 echo "Done"
