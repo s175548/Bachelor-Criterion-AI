@@ -17,7 +17,10 @@ from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
-from object_detect.train_hpc import define_model
+from semantic_segmentation.DeepLabV3.performance_metric_function import error_count
+from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
+
+
 
 HPC=True
 splitted_data=True
@@ -51,9 +54,15 @@ if __name__ == '__main__':
         save_fold = 'full_scale/'
         dataset = "all_binary_scale"
         save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
-        path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-        pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_crop_all_classes.png')
-        target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+        if brevetti:
+            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+
+            #target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+            pass
+        else:
+            path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+            pred = PIL.Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_crop_all_classes.png')
+            target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
