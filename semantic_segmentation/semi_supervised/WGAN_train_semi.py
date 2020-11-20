@@ -108,7 +108,6 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     spectral = True
     critic_iteration = 5
     model_dict={}
-    
     model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
     if default_scope:
         grad_check(model_dict[model])
