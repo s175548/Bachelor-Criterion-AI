@@ -110,7 +110,7 @@ for i in range(0,split_x_y[0],step_size):
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
         print(output.shape)
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
-        t_slice,b_slice=(slice(0,None),slice(patch_dim[0]-overlap,patch_dim[0]),slice(0,None)),(slice(0,None),slice(0,overlap),slice(0,None))
+        b_slice,t_slice=(slice(0,None),slice(patch_dim[0]-overlap,patch_dim[0]),slice(0,None)),(slice(0,None),slice(0,overlap),slice(0,None))
         if j != 0:
             output_l=output_model(img_array=split_imgs[i*split_x_y[1]+j-1])[r_slice]
             output[l_slice]=(output[l_slice]+output_l)/2
