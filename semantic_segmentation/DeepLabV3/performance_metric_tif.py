@@ -23,9 +23,9 @@ if villads:
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/RF_AC_no_resize_pred'
+    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/RF_3C_no_resize_pred'
     path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/red_half_02_01_all_classes_sliding_window.png')
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RF_3C_orig_res.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
 
 pred=np.array(pred)/255
@@ -67,9 +67,9 @@ errors, false_positives, metric, target_color, pred_color, true_negatives = erro
 
 
 PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
-    save_path + r'/RF_AC_no_resize_pred_color.png', format='PNG')
+    save_path + r'/RF_3C_no_resize_pred_color.png', format='PNG')
 PIL.Image.fromarray(target_color.astype(np.uint8)).save(
-    save_path + r'/RF_AC_no_resize_mask_color.png', format='PNG')
+    save_path + r'/RF_3C_no_resize_mask_color.png', format='PNG')
 
 labels = ['Insect bite', 'Binary', 'Good Area']
 new_list = [
@@ -77,5 +77,5 @@ new_list = [
     i, label in enumerate(labels)]
 string = '\n\n'.join(
     new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}'
-f = open(os.path.join(save_path, 'performance_RF_AC_no_resize'), 'w')
+f = open(os.path.join(save_path, 'performance_RF_3C_no_resize'), 'w')
 f.write(string)
