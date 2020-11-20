@@ -31,8 +31,8 @@ resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()
 HPC = True
 splitted_data = True
 binary = True
-tif = False
-brevetti = True
+tif = True
+brevetti = False
 
 def output(model,array,device=torch.device('cuda')):
     image = Image.fromarray(array)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-        Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
-        fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
+        #Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
+        fill_background(img_path=save_path + '/vda_crop_all_classes_leather.png',
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 
