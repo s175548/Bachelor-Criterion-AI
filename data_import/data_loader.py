@@ -95,8 +95,8 @@ class DataLoader():
                 images.append(image)
             return (images,segmentation_masks)
 
-    def get_tif_mask(self,img_name='RED_HALF02_grain_01_v.tif',
-                     mask_name='annotations_RED_HALF02_grain_01_v.tif.json',
+    def get_tif_mask(self,img_name='WALKNAPPA_VDA_04_grain_01_v.tif',
+                     mask_name='VDA4_grain_01_whole_tif.json',
                      tif_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images',
                                  labels="All", make_binary=True):
         """     input: give index/indices of the wanted images in the dataset
@@ -139,8 +139,8 @@ class DataLoader():
         seg = self.get_json_file_content(filepath)
         if labels=='All':
             labels=list(label_dict.keys())
-        label_space = {kk['label'][1:-1]: [label_dict[kk["label"][1:-1]]] for kk in seg["annotations"] if
-                       (kk["label"][1:-1] in labels)}
+        label_space = {kk['label']: [label_dict[kk["label"]]]for kk in seg["annotations"] if
+                       (kk["label"] in labels)}
 
         if not label_space:
             print('Image with provided idx does not contain any of the wanted labels')
@@ -516,7 +516,9 @@ if __name__ == '__main__':
                              metadata_path=r'samples/model_comparison.csv')
     img, mask_1d,mask_3d=data_loader.get_tif_mask()
     PIL.Image.fromarray(mask_1d.astype(np.uint8)).save(
-        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/RED_HALF02_grain_01_v_target_1d.png')
+        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_1d.png')
+    PIL.Image.fromarray(mask_3d.astype(np.uint8)).save(
+        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_3d.png')
     #train,val=data_loader.test_training_split()
     #for data in [train,val] :
     #    idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))

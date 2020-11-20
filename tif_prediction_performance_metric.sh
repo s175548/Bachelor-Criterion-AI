@@ -4,9 +4,9 @@
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
-#BSUB -R "rusage[mem=10G]"
+#BSUB -R "rusage[mem=64G]"
 #BSUB -R "select[gpu32gb]"
-#BSUB -W 00:30
+#BSUB -W 01:00
 #BSUB -u s175548@win.dtu.dk
 #BSUB -N
 # end of BSUB options
