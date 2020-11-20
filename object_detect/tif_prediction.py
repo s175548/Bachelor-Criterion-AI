@@ -113,17 +113,29 @@ if __name__ == '__main__':
         transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
                                             et.ExtEnhanceContrast(),
                                             et.ExtToTensor()])
-        patch_size = 512
+        patch_size = 256
     else:
         transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
                                             et.ExtToTensor()])
         patch_size = 256
     print("Device: %s" % device)
+    print("Exp: ", exp)
+    if brevetti:
+        print("REDHALF")
+    else:
+        print("WALKNAPPA")
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 
     array = load_tif_as_numpy_array(tif_path)
     print("Shape array: ", np.shape(array))
+
+    if resize:
+        lbl2 = np.zeros((np.shape(array))).astype(np.uint8)
+        array2, _ = transform_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
+        array = np.array(array2)
+        print("Shape array after resize: ", np.shape(array))
+
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
