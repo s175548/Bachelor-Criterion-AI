@@ -118,8 +118,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        spectral = True
-        print("Spectral:",False)
+        spectral = False
+        print("Spectral:",spectral)
         if spectral:
             model_dict[model] = add_spectral(model_dict[model])
 
