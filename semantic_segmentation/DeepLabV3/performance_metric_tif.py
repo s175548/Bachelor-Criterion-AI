@@ -61,8 +61,8 @@ errors, false_positives, metric, target_color, pred_color, true_negatives = erro
                                                                                         target, data_loader,
                                                                                         labels, errors,
                                                                                         false_positives, true_negatives,
-                                                                                        metrics, resize=False, size=None,
-                                                                                        scale=None, centercrop=False,path=path)
+                                                                                        metrics, resize=resize, size=None,
+                                                                                        scale=0.5, centercrop=False,path=path)
 
 
 
