@@ -31,8 +31,8 @@ resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()
 HPC = True
 splitted_data = True
 binary = True
-tif = True
-brevetti = False
+tif = False
+brevetti = True
 
 def output(model,array,device=torch.device('cuda')):
     image = Image.fromarray(array)
