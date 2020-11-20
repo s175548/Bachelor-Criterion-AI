@@ -76,6 +76,6 @@ new_list = [
     label + '\n' + '\n'.join([f"{name}, {performance}" for name, performance in metric[i].get_results().items()]) for
     i, label in enumerate(labels)]
 string = '\n\n'.join(
-    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]}'
-f = open(os.path.join(save_path, 'performance'), 'w')
+    new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}'
+f = open(os.path.join(save_path, 'performance_RF_AC_resize'), 'w')
 f.write(string)
