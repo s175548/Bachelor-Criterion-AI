@@ -68,7 +68,7 @@ def draw_contours2(segmentation, label_space, draw_buffer=None, drawContoursArgs
         contours = []
         for anno in segmentation["annotations"]:
             if lbl in anno["label"] or (isinstance(lbl, tuple) and np.any([lbl_ii in anno["label"] for lbl_ii in lbl])):
-                contour = make_contour(anno["points"], 'polygon', **kwargs)
+                contour = make_contour(anno["points"], anno['type'], **kwargs)
                 if contour is not None:
                     contours.extend(contour)
         if drawContoursArgs is None:
