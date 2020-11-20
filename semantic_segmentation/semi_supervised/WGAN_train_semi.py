@@ -100,8 +100,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
         print(score)
     return score, ret_samples,running_loss
 
-
-
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = False, semi_supervised=True, trainloader_nl=None,lr_g=0.002):
     spectral = True
     critic_iteration = 5
