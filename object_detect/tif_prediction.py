@@ -109,15 +109,10 @@ if __name__ == '__main__':
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
         resize = False
 
-    if resize == True:
-        transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
-                                            et.ExtEnhanceContrast(),
-                                            et.ExtToTensor()])
-        patch_size = 256
-    else:
-        transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
-                                            et.ExtToTensor()])
-        patch_size = 256
+    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
+                                        et.ExtToTensor()])
+    patch_size = 256
+
     print("Device: %s" % device)
     print("Exp: ", exp)
     if brevetti:
@@ -131,8 +126,9 @@ if __name__ == '__main__':
     print("Shape array: ", np.shape(array))
 
     if resize == True:
+        resize_function = et.ExtCompose([et.ExtResize(scale=0.5)])
         lbl2 = np.zeros((np.shape(array))).astype(np.uint8)
-        array2, _ = transform_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
+        array2, _ = resize_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
         array = np.array(array2)
         print("Shape array after resize: ", np.shape(array))
 
