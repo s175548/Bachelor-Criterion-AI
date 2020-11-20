@@ -31,8 +31,8 @@ from object_detect.fill_background import fill_background
 HPC = True
 splitted_data = True
 binary = True
-tif = True
-brevetti = False
+tif = False
+brevetti = True
 
 def output(model,array,device=torch.device('cuda')):
     image = Image.fromarray(array)
@@ -198,6 +198,6 @@ if __name__ == '__main__':
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
-        fill_background(img_path=save_path + '/vda_resize_3_classes_leather.png_leather.png',
+        fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 
