@@ -14,6 +14,6 @@
 echo "Running script..."
 cd ..
 source /zhome/db/f/128823/Bachelor/test-env/bin/activate
-cd /zhome/db/f/128823/Bachelor/new_repo/Bachelor-Criterion-AI
+cd /zhome/db/f/128823/Bachelor/Bachelor-Criterion-AI
 python3 data_import/tif_evaluate_1.py
 echo "Done"
