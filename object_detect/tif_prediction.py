@@ -26,13 +26,13 @@ from PIL import Image
 import torchvision.transforms.functional as F
 from object_detect.fill_background import fill_background
 
-resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
+#resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
 splitted_data = True
 binary = True
-tif = True
-brevetti = False
+tif = False
+brevetti = True
 
 def output(model,array,device=torch.device('cuda')):
     image = Image.fromarray(array)
@@ -109,21 +109,29 @@ if __name__ == '__main__':
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
         resize = False
 
-    if resize:
-        transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
-                                            et.ExtEnhanceContrast(),
-                                            et.ExtToTensor()])
-        patch_size = 512
-    else:
-        transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
-                                            et.ExtToTensor()])
-        patch_size = 256
+    transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
+                                        et.ExtToTensor()])
+    patch_size = 256
+
     print("Device: %s" % device)
+    print("Exp: ", exp)
+    if brevetti:
+        print("REDHALF")
+    else:
+        print("WALKNAPPA")
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 
     array = load_tif_as_numpy_array(tif_path)
     print("Shape array: ", np.shape(array))
+
+    if resize == True:
+        resize_function = et.ExtCompose([et.ExtResize(scale=0.5)])
+        lbl2 = np.zeros((np.shape(array))).astype(np.uint8)
+        array2, _ = resize_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
+        array = np.array(array2)
+        print("Shape array after resize: ", np.shape(array))
+
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
@@ -184,14 +192,12 @@ if __name__ == '__main__':
     print("Model: ", exp)
     if brevetti:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/brevetti_{}.png'.format(exp))
-        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-        image_tif = resize_function(Image.fromarray(image_tif.astype(np.uint8)),Image.fromarray(np.zeros((np.shape(image_tif))).astype(np.uint8)))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
-        fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
+        fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 

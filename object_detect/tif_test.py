@@ -28,7 +28,8 @@ HPC=True
 splitted_data=True
 binary=True
 tif=True
-brevetti=False
+brevetti=True
+resize=False
 
 if __name__ == '__main__':
 
@@ -43,13 +44,13 @@ if __name__ == '__main__':
         save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
         if brevetti:
             path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-
-            #target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
-            pass
-        else:
-            path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-            pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/vda_resize_all_classes.png')
+            pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_crop_all_classes_back.png')
             target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+        else:
+            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+            #pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_resize_3_classes.png')
+            #target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+            pass
     else:
         device = torch.device('cpu')
         model_name = 'resnet50'
@@ -59,6 +60,9 @@ if __name__ == '__main__':
 
     pred = np.array(pred) / 255
     pred = pred.astype(np.uint8)
+    if resize:
+        target.resize((int(0.5 * target.size[0]), int(0.5 * target.size[1])))
+
     target = np.array(target, dtype=np.uint8)[:pred.shape[0], :pred.shape[1]]
     index = target == 53
     target[index] = 0
@@ -92,11 +96,12 @@ if __name__ == '__main__':
                                                                                             size=None,
                                                                                             scale=None,
                                                                                             centercrop=False, path=path)
+    exp = 'crop_all_classes'
 
     Image.fromarray(pred_color.astype(np.uint8)).save(
-        save_path + r'/red_half_01_pred_color.png', format='PNG')
+        save_path + r'/rh_{}_pred_color.png'.format(exp), format='PNG')
     Image.fromarray(target_color.astype(np.uint8)).save(
-        save_path + r'/red_half_01_mask_color.png', format='PNG')
+        save_path + r'/rh_{}_mask_color.png'.format(exp), format='PNG')
 
     labels = ['Insect bite', 'Binary', 'Good Area']
     new_list = [
@@ -105,7 +110,7 @@ if __name__ == '__main__':
         i, label in enumerate(labels)]
     string = '\n\n'.join(
         new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]}'
-    f = open(os.path.join(save_path, 'performance'), 'w')
+    f = open(os.path.join(save_path, 'rh_{}_performance'.format(exp)), 'w')
     f.write(string)
 
 
