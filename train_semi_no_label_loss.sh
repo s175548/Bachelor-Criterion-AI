@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionSemiSupervised01_softmax_onelayer
-#BSUB -o versionSemiSupervised01_softmax_onelayer%J.out
+#BSUB -J versionSemiSupervised01_Semi_GAN
+#BSUB -o versionSemiSupervised01_Semi_GAN%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
