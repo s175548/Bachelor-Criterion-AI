@@ -113,17 +113,29 @@ if __name__ == '__main__':
         transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
                                             et.ExtEnhanceContrast(),
                                             et.ExtToTensor()])
-        patch_size = 512
+        patch_size = 256
     else:
         transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
                                             et.ExtToTensor()])
         patch_size = 256
     print("Device: %s" % device)
+    print("Exp: ", exp)
+    if brevetti:
+        print("REDHALF")
+    else:
+        print("WALKNAPPA")
     data_loader = DataLoader(data_path=path_original_data,
                              metadata_path=path_meta_data)
 
     array = load_tif_as_numpy_array(tif_path)
     print("Shape array: ", np.shape(array))
+
+    if resize:
+        lbl2 = np.zeros((np.shape(array))).astype(np.uint8)
+        array2, _ = transform_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
+        array = np.array(array2)
+        print("Shape array after resize: ", np.shape(array))
+
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
                                                                                padding=50, with_pad=True)
 
@@ -189,7 +201,7 @@ if __name__ == '__main__':
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
-        #Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
-        fill_background(img_path=save_path + '/vda_crop_all_classes_leather.png',
+        Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
+        fill_background(img_path=save_path + '/vda_{}_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
 
