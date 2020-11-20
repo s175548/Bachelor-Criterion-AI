@@ -106,8 +106,6 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
-    reg_GAN_setup = True
-    print('GAN_setup (no loss label):', reg_GAN_setup)
 
     model_dict={}
     if model=='DeepLab':
@@ -118,7 +116,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        spectral = False
+        spectral = True
         print("Spectral:",spectral)
         if spectral:
             model_dict[model] = add_spectral(model_dict[model])
@@ -141,9 +139,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = .5 #Loss weigth for fake
+        gamma_one = .25 #Loss weigth for fake
         gamma_two = 1 # Loss weight for unlabel
-        gamma_three = 1
+        gamma_three = 2
 
         #Load model
         model_g = generator(1,spectral) #arg = number of gpu's
@@ -233,17 +231,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
-                    if reg_GAN_setup:
-                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                        loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
-
-                    else:
-                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                        loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    loss_fake = Loss_fake_remade(pred_fake)
+                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
