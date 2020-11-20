@@ -26,7 +26,7 @@ from PIL import Image
 import torchvision.transforms.functional as F
 from object_detect.fill_background import fill_background
 
-resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
+#resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
 splitted_data = True
@@ -109,7 +109,7 @@ if __name__ == '__main__':
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
         resize = False
 
-    if resize:
+    if resize == True:
         transform_function = et.ExtCompose([et.ExtResize(scale=0.5),
                                             et.ExtEnhanceContrast(),
                                             et.ExtToTensor()])
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     array = load_tif_as_numpy_array(tif_path)
     print("Shape array: ", np.shape(array))
 
-    if resize:
+    if resize == True:
         lbl2 = np.zeros((np.shape(array))).astype(np.uint8)
         array2, _ = transform_function(Image.fromarray(array.astype(np.uint8)), Image.fromarray(lbl2))
         array = np.array(array2)
