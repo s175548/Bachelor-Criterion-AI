@@ -63,7 +63,6 @@ def Loss_unlabel_remade(pred):
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''
-    only_one_conf_layer = True
     criterion_ul = torch.nn.BCELoss()
     real_label = 0.
     shape = pred.detach().cpu().numpy().shape
@@ -83,15 +82,10 @@ def Loss_unlabel_remade(pred):
     label.fill_(real_label)
     #pred_fake_confidence_map = (pred[:,shape[1]-1,:,:] - torch.min(pred[:,shape[1]-1,:,:]) ) / (torch.max(pred[:,shape[1]-1,:,:]) -torch.min(pred[:,shape[1]-1,:,:]) )
     loss_unl = criterion_ul(fake_confidence_map, label)
-    if only_one_conf_layer:
-        fake_layer = output_before_softmax_unl[:,3]
-        std_fake_layer = (fake_layer-torch.min(fake_layer)) / (torch.max(fake_layer)-torch.min(fake_layer))
-        loss_gen = criterion_ul(std_fake_layer, label)
     return loss_unl
 
 
 def Loss_fake_remade(pred):
-    only_one_conf_layer = True
     fake_label = 1.
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
@@ -112,10 +106,5 @@ def Loss_fake_remade(pred):
     #pred_fake_confidence_map = (pred[:,shape[1]-1,:,:] - torch.min(pred[:,shape[1]-1,:,:]) ) / (torch.max(pred[:,shape[1]-1,:,:]) -torch.min(pred[:,shape[1]-1,:,:]) )
     label = label.reshape([-1])
     loss_gen = criterion_fake(fake_confidence_map, label)
-    if only_one_conf_layer:
-        print("ONLY SOFTMAX ON")
-        fake_layer = output_before_softmax_gen[:,3]
-        std_fake_layer = (fake_layer-torch.min(fake_layer)) / (torch.max(fake_layer)-torch.min(fake_layer))
-        loss_gen = criterion_fake(std_fake_layer, label)
 
     return loss_gen
