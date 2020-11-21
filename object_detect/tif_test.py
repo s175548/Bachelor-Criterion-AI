@@ -31,7 +31,7 @@ def test_tif(pred,exp,brevetti=False,resize=False):
         pred = Image.open(pred)
         target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
     else:
-        path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+        path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
         pred = PIL.Image.open(pred)
         target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
     pred = np.array(pred) / 255
@@ -73,14 +73,14 @@ def test_tif(pred,exp,brevetti=False,resize=False):
                                                                                             scale=0.5, centercrop=False,
                                                                                             path=path)
     if brevetti:
-        PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+        Image.fromarray(pred_color.astype(np.uint8)).save(
             save_path + r'/RH_{}_pred_color.png'.format(exp), format='PNG')
-        PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+        Image.fromarray(target_color.astype(np.uint8)).save(
             save_path + r'/RH_{}_mask_color.png'.format(exp), format='PNG')
     else:
-        PIL.Image.fromarray(pred_color.astype(np.uint8)).save(
+        Image.fromarray(pred_color.astype(np.uint8)).save(
             save_path + r'/VDA_{}_pred_color.png'.format(exp), format='PNG')
-        PIL.Image.fromarray(target_color.astype(np.uint8)).save(
+        Image.fromarray(target_color.astype(np.uint8)).save(
             save_path + r'/VDA_{}_mask_color.png'.format(exp), format='PNG')
 
     labels = ['Insect bite', 'Binary', 'Good Area']
@@ -140,9 +140,9 @@ if __name__ == '__main__':
             pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_crop_all_classes_back.png')
             target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
         else:
-            #path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-            #pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_resize_3_classes.png')
-            #target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+            path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
+            pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_resize_3_classes.png')
+            target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
             pass
     else:
         device = torch.device('cpu')
