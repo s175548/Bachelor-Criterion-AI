@@ -9,9 +9,9 @@ import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 
-villads=False
-HPC=True
-resize=False
+villads=True
+HPC=False
+resize=True
 
 if villads:
     path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_RED_HALF02_grain_01_v.tif.json'
@@ -28,12 +28,12 @@ elif HPC:
     pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_no_resize.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
 
+if resize:
+    target=target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
+
+
 pred=np.array(pred)/255
 pred=pred.astype(np.uint8)
-
-if resize:
-    target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
-
 target=np.array(target,dtype=np.uint8)[:pred.shape[0],:pred.shape[1]]
 index=target==53
 target[index]=0

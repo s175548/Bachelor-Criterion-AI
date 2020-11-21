@@ -26,6 +26,8 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
         ydim_s = []
         for i,mask in enumerate(masks):
             print(i)
+            if i>15:
+                break
             label, mask = mask[0], np.squeeze(np.array(mask[1]).astype(np.uint8))
             if centercrop:
                 if size > np.min(mask.shape):
