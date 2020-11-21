@@ -232,10 +232,10 @@ if __name__ == '__main__':
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
-        test_tif(pred=save_path + '/brevetti_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
+        test_tif(pred=save_path + '/brevetti_{}.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
-        test_tif(pred=save_path + '/vda_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
+        test_tif(pred=save_path + '/vda_{}.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)

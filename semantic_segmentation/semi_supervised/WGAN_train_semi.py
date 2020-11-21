@@ -3,8 +3,7 @@ Made with heavy inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
 
 from tqdm import tqdm
 from PIL import ImageFile,Image
@@ -100,8 +99,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
         print(score)
     return score, ret_samples,running_loss
 
-def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',train_loader=None, val_loader=None, train_dst=None, val_dst=None,
-             save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None,lr_g=0.002):
+def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',train_loader=None, val_loader=None, train_dst=None, val_dst=None,save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None,lr_g=0.002):
     spectral = True
     critic_iteration = 5
     model_dict, model_dict[model] = {},deeplabv3_resnet101(pretrained=True,progress=True,num_classes=21,aux_loss=None)

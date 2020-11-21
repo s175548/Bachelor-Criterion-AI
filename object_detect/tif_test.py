@@ -37,7 +37,7 @@ def test_tif(pred,exp,brevetti=False,resize=False):
     pred = np.array(pred) / 255
     pred = pred.astype(np.uint8)
     if resize:
-        target.resize((int(0.5 * target.size[0]), int(0.5 * target.size[1])))
+        target = target.resize((int(0.5 * target.size[0]), int(0.5 * target.size[1])))
 
     target = np.array(target, dtype=np.uint8)[:pred.shape[0], :pred.shape[1]]
     index = target == 53
