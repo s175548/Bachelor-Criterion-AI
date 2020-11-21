@@ -13,7 +13,6 @@ back_mask=back_mask[:mask_array.shape[0],:mask_array.shape[1]]
 back_mask = np.dstack((back_mask, back_mask, back_mask))
 mask_array[(np.array(back_mask)!=0) & (mask_array!=0)]=0
 mask = mask_array + np.array(back_mask) / 255 * data_loader.annotations_dict["Background"]
-#mask_3d = np.dstack((mask, mask, mask))
 mask_3d=mask
 label='Background'
 color_map_dict = data_loader.color_dict_binary
