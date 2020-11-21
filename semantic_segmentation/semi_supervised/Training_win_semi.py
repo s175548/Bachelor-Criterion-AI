@@ -40,8 +40,9 @@ N_epochs= 250
 
 def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None,best_score=None,save_path = os.getcwd(),lr=0.01,exp_description=''):
     """ save current model"""
-    torch.save({"cur_itrs": cur_itrs,"model_state": model ,"model_state_dict": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
+    torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
     }, os.path.join(save_path,"{}_{}".format(model_name,exp_description)+str(lr)+'.pt'))
+    torch.save(model ,os.path.join(save_path,"{}_{}".format(model_name,exp_description)+'only_model'+'.pt'))
     print("Model saved as "+model_name+'.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
