@@ -25,6 +25,7 @@ from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
 from object_detect.fill_background import fill_background
+from object_detect.tif_test import test_tif
 
 #resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
@@ -230,9 +231,10 @@ if __name__ == '__main__':
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
+        test_tif(pred=save_path + '/brevetti_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
-
+        test_tif(pred=save_path + '/vda_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)    
