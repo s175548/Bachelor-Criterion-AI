@@ -24,11 +24,11 @@ if villads:
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_AC_no_resize_pred'
+    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_no_resize_pred'
     path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_AC_no_resize_new.png')
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_no_resize_new.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
-    save_name='/VDA_AC_no_resize'
+    save_name='/VDA_3C_no_resize'
 
 if resize:
     target=target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
@@ -83,7 +83,7 @@ f = open(os.path.join(save_path, 'performance_VDA_3C_no_resize'), 'w')
 f.write(string)
 
 img_list=[target_color.astype(np.uint8),pred_color.astype(np.uint8)]
-img_name_list=['_mask_color_resized.png','_pred_color_resized.png']
+img_name_list=[r'_mask_color_resized.png',r'_pred_color_resized.png']
 
 for i,mask in enumerate(img_list):
     mask_3d=mask
@@ -93,5 +93,5 @@ for i,mask in enumerate(img_list):
     color_map = color_map_dict[color_id]
     mask_3d[index, :] = (mask_3d[index, :]+1) * color_map
     mask_3d=PIL.Image.fromarray(mask_3d.astype(np.uint8)).resize((int(mask.shape[1]*0.1),int(mask.shape[0]*0.1)))
-    mask_3d.save(save_path + save_name+img_name_list[i])
+    mask_3d.save(save_path + save_name+img_name_list[i],format='PNG')
 
