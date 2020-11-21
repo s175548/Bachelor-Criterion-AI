@@ -1,6 +1,6 @@
 import sys,os
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
+
 
 from semantic_segmentation.semi_supervised.WGAN_train_semi import training, batch_size,val_batch_size
 from torch.utils import data
