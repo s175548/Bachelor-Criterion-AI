@@ -124,7 +124,7 @@ if __name__ == '__main__':
             if resize:
                 patch_size = 1024
             else:
-                patch_size = 512
+                patch_size = 1024
 
 
     else:
