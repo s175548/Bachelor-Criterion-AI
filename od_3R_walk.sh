@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/tif_prediction.py three_scale
+python3 object_detect/tif_prediction.py three_scale vda no_pad original
 echo "Done"
