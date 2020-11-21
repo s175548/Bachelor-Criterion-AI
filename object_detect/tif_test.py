@@ -97,7 +97,7 @@ def test_tif(pred,exp,brevetti=False,resize=False):
     f.write(string)
 
     img_list = [target_color.astype(np.uint8), pred_color.astype(np.uint8)]
-    img_name_list = ['_mask_color_back.png', '_pred_color_back.png']
+    img_name_list = [r'_mask_color_back.png', r'_pred_color_back.png']
 
     for i, mask in enumerate(img_list):
         mask_3d = mask
@@ -106,12 +106,12 @@ def test_tif(pred,exp,brevetti=False,resize=False):
         color_id = data_loader.annotations_dict[label]
         color_map = color_map_dict[color_id]
         mask_3d[index, :] = (mask_3d[index, :] + 1) * color_map
-        mask_3d = PIL.Image.fromarray(mask_3d.astype(np.uint8)).resize(
+        mask_3d = Image.fromarray(mask_3d.astype(np.uint8)).resize(
             (int(mask.shape[1] * 0.1), int(mask.shape[0] * 0.1)))
         if brevetti:
-            mask_3d.save(save_path + '/RH_{}'.format(exp) + img_name_list[i])
+            mask_3d.save(save_path + r'/RH_{}'.format(exp) + img_name_list[i])
         else:
-            mask_3d.save(save_path + '/VDA_{}'.format(exp) + img_name_list[i])
+            mask_3d.save(save_path + r'/VDA_{}'.format(exp) + img_name_list[i])
 
 # path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
 # pred = Image.open(r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti/brevetti_resize_3_classes.png')
