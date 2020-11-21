@@ -54,7 +54,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/randomcrop/DeepLab_ThreeClass_resize_false0.01.pt'
+    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/all_class_dataset/randomcrop/DeepLab_extended_dataset_resize_false0.01.pt'
 
 
 
@@ -108,7 +108,7 @@ for i in range(0,split_x_y[0],step_size):
     for j in range(0,split_x_y[1],step_size):
         print(j)
         output = output_model(img_array=split_imgs[i * split_x_y[1] + j])
-        print(output.shape)
+        print(output.shaxxpe)
         l_slice,r_slice=(slice(0,None),slice(0,None),slice(0,overlap)),(slice(0,None),slice(0,None),slice(patch_dim[1]-overlap,patch_dim[1]))
         b_slice,t_slice=(slice(0,None),slice(patch_dim[0]-overlap,patch_dim[0]),slice(0,None)),(slice(0,None),slice(0,overlap),slice(0,None))
         if j != 0:
@@ -135,5 +135,5 @@ for i in range(0,split_x_y[0],step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/VDA_3C_no_resize_new.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/VDA_AC_no_resize_new.png')
 
