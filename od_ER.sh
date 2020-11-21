@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J od_ER_walk
-#BSUB -o od_ER_walk_%J.out
+#BSUB -J od_ER_rh
+#BSUB -o od_ER_rh_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/tif_prediction.py full_scale vda no_pad original
+python3 object_detect/tif_prediction.py full_scale brevetti no_pad original
 echo "Done"

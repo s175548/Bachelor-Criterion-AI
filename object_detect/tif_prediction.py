@@ -67,16 +67,6 @@ if __name__ == '__main__':
         tif = args['tif'][0]
         pad = args['pad'][0]
         size_patch = args['size_patch'][0]
-        if size_patch == 'original':
-            if resize:
-                patch_size = 512
-            else:
-                path_size = 256
-        else:
-            if resize:
-                patch_size = 1024
-            else:
-                path_size = 512
         if pad == 'pad':
             do_pad = True
             padding = 50
@@ -124,6 +114,17 @@ if __name__ == '__main__':
             exp = 'resize_all_classes' + pad + size_patch
             resize = True
             pred_path = os.path.join(pred_path,'ER')
+
+        if size_patch == 'original':
+            if resize:
+                patch_size = 512
+            else:
+                path_size = 256
+        else:
+            if resize:
+                patch_size = 1024
+            else:
+                path_size = 512
 
 
     else:
@@ -237,4 +238,4 @@ if __name__ == '__main__':
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
-        test_tif(pred=save_path + '/vda_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)    
+        test_tif(pred=save_path + '/vda_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
