@@ -106,7 +106,7 @@ def test_tif(pred,exp,brevetti=False,resize=False):
         color_id = data_loader.annotations_dict[label]
         color_map = color_map_dict[color_id]
         mask_3d[index, :] = (mask_3d[index, :] + 1) * color_map
-        mask_3d = PIL.Image.fromarray(mask_3d.astype(np.uint8)).resize(
+        mask_3d = Image.fromarray(mask_3d.astype(np.uint8)).resize(
             (int(mask.shape[1] * 0.1), int(mask.shape[0] * 0.1)))
         if brevetti:
             mask_3d.save(save_path + '/RH_{}'.format(exp) + img_name_list[i])
