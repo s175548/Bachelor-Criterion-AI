@@ -11,7 +11,7 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 
 villads=True
 HPC=False
-resize=False
+resize=True
 
 if villads:
     path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/annotations_RED_HALF02_grain_01_v.tif.json'
@@ -29,8 +29,7 @@ elif HPC:
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
 
 if resize:
-    target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
-    pred.resize((int(0.5*pred.size[0]),int(0.5*pred.size[1])))
+    target=target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
 
 
 pred=np.array(pred)/255
