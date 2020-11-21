@@ -93,25 +93,25 @@ if __name__ == '__main__':
         pred_path = '/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/all_preds'
         if model_folder == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
-            exp = 'crop_all_classes' + pad + size_patch
+            exp = 'crop_all_classes_' + pad + '_' + size_patch
             resize = False
             pred_path = os.path.join(pred_path,'EC')
 
         if model_folder == 'binary':
             pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
-            exp = 'crop_3_classes' + pad + size_patch
+            exp = 'crop_3_classes_' + pad + '_' + size_patch
             resize = False
             pred_path = os.path.join(pred_path,'3C')
 
         if model_folder == 'three_scale':
             pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
-            exp = 'resize_3_classes' + pad + size_patch
+            exp = 'resize_3_classes_' + pad + '_' + size_patch
             resize = True
             pred_path = os.path.join(pred_path,'3R')
 
         if model_folder == 'full_scale':
             pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
-            exp = 'resize_all_classes' + pad + size_patch
+            exp = 'resize_all_classes_' + pad + '_' + size_patch
             resize = True
             pred_path = os.path.join(pred_path,'ER')
 
@@ -119,12 +119,12 @@ if __name__ == '__main__':
             if resize:
                 patch_size = 512
             else:
-                path_size = 256
+                patch_size = 256
         else:
             if resize:
                 patch_size = 1024
             else:
-                path_size = 512
+                patch_size = 512
 
 
     else:
