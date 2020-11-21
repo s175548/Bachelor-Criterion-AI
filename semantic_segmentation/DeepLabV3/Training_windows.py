@@ -130,9 +130,18 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
             grad_check(model_dict[model])
         else:
             grad_check(model_dict[model], model_layers='All')
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+    device = torch.device('cuda')
+    model_dict[model].to(device)
 
+    # PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
+    PATH = r'E:\downloads_hpc_bachelor\exp_results\semi\GAN_regular_no_loss_label'
+    PATH = os.path.join(PATH, 'DeepLab_semi_GAN_setup0.006.pt')
+    checkpoint = torch.load(PATH,map_location='cuda')
+    model_dict[model].load_state_dict(checkpoint["model_state"])
+    model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
+    model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
