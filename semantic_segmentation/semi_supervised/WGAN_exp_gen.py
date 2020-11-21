@@ -2,13 +2,13 @@ import sys,os
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
 
-from semantic_segmentation.semi_supervised.WGAN_train_semi import *
+from semantic_segmentation.semi_supervised.WGAN_train_semi import training, batch_size,val_batch_size
 from torch.utils import data
 from semantic_segmentation.DeepLabV3.utils import ext_transforms as et
 from semantic_segmentation.DeepLabV3.dataset_class import LeatherData
 from semantic_segmentation.semi_supervised.helpful_functions import get_data_loaders_unlabelled
 from data_import.data_loader import DataLoader
-import argparse,json,ast
+import argparse,json,ast,numpy as np
 from PIL import Image
 from torchvision import transforms
 def boolean_string(s):

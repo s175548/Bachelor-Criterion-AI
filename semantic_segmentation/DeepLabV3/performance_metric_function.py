@@ -87,10 +87,11 @@ def color_target_pred(target, pred, pred_false_pos, xdim_s, ydim_s):
             if np.sum(pred[xdim[0]:xdim[1], ydim[0]:ydim[1]] != 0) > 0:
                 target_crop = target[xdim[0]:xdim[1], ydim[0]:ydim[1]]
                 target_tp[xdim[0]:xdim[1], ydim[0]:ydim[1]][target_crop==1] = 255
+
             else:
                 target_crop = target[xdim[0]:xdim[1], ydim[0]:ydim[1]]
                 target_fp[xdim[0]:xdim[1], ydim[0]:ydim[1]][target_crop == 1] = 255
-
+    target_tp[(target_fp==255)&(target_tp==255)]=0
     pred_false_pos[pred_false_pos == 1] = 255
     pred_rgb = np.dstack((pred_false_pos, pred, np.zeros(pred.shape)))
     target_rgb = np.dstack((target_fp, target_tp, np.zeros(target.shape)))

@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J versionSemiSupervised01_softmax_onelayer
-#BSUB -o versionSemiSupervised01_softmax_onelayer%J.out
+#BSUB -J versionSemiSupervised01_Semi_GAN
+#BSUB -o versionSemiSupervised01_Semi_GAN%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -15,5 +15,5 @@ echo "Running script..."
 cd /zhome/87/9/127623/BachelorProject
 source test-env/bin/activate
 cd /zhome/87/9/127623/BachelorProject/cropped_data/semi/Bachelor-Criterion-AI
-python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.006 DeepLab SGD False softmax_onelayer semi_super/softmax_only_one/D006G004 True True False
+python3 semantic_segmentation/semi_supervised/exp_gen_semi.py 0.006 DeepLab SGD False semi_GAN_setup semi_super/GAN_regular_no_loss_label True True True
 echo "Done"
