@@ -25,14 +25,13 @@ from data_import.tif_import import load_tif_as_numpy_array
 from PIL import Image
 import torchvision.transforms.functional as F
 from object_detect.fill_background import fill_background
+from object_detect.tif_test import test_tif
 
 #resize_function = et.ExtCompose([et.ExtResize(scale=0.5),et.ExtEnhanceContrast()])
 # et.ExtRandomCrop((256,256)), et.ExtRandomHorizontalFlip(),et.ExtRandomVerticalFlip(),
 HPC = True
 splitted_data = True
 binary = True
-tif = False
-brevetti = True
 
 def output(model,array,device=torch.device('cuda')):
     image = Image.fromarray(array)
@@ -58,8 +57,28 @@ if __name__ == '__main__':
         parser = argparse.ArgumentParser(description='Chooses model')
         parser.add_argument('model folder', metavar='folder', type=str, nargs='+',
                             help='model folder (three_scale, full_scale, all_bin, binary')
+        parser.add_argument('tif', metavar='tif', type=str, nargs='+',
+                            help='tif: vda or brevetti')
+        parser.add_argument('pad', metavar='pad', type=str, nargs='+',
+                            help='pad: pad or no_pad')
+        parser.add_argument('size_patch', metavar='size_patch', type=str, nargs='+',
+                            help='size: original or extend')
         args = vars(parser.parse_args())
-
+        tif = args['tif'][0]
+        pad = args['pad'][0]
+        size_patch = args['size_patch'][0]
+        if pad == 'pad':
+            do_pad = True
+            padding = 50
+        else:
+            do_pad = False
+            padding = 0
+        if tif == 'vda':
+            vda = True
+            brevetti = False
+        else:
+            vda = False
+            brevetti = True
         model_folder = args['model folder'][0]
         if brevetti:
             save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/tif_brevetti'
@@ -74,27 +93,38 @@ if __name__ == '__main__':
         pred_path = '/zhome/dd/4/128822/Bachelorprojekt/predictions/vda4/all_preds'
         if model_folder == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
-            exp = 'crop_all_classes'
+            exp = 'crop_all_classes' + pad + size_patch
             resize = False
             pred_path = os.path.join(pred_path,'EC')
 
         if model_folder == 'binary':
             pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
-            exp = 'crop_3_classes'
+            exp = 'crop_3_classes' + pad + size_patch
             resize = False
             pred_path = os.path.join(pred_path,'3C')
 
         if model_folder == 'three_scale':
             pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
-            exp = 'resize_3_classes'
+            exp = 'resize_3_classes' + pad + size_patch
             resize = True
             pred_path = os.path.join(pred_path,'3R')
 
         if model_folder == 'full_scale':
             pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
-            exp = 'resize_all_classes'
+            exp = 'resize_all_classes' + pad + size_patch
             resize = True
             pred_path = os.path.join(pred_path,'ER')
+
+        if size_patch == 'original':
+            if resize:
+                patch_size = 512
+            else:
+                path_size = 256
+        else:
+            if resize:
+                patch_size = 1024
+            else:
+                path_size = 512
 
 
     else:
@@ -108,10 +138,13 @@ if __name__ == '__main__':
         tif_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\TIF\good_area1.png'
         save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\last_round\predictions\vda4'
         resize = False
+        if resize:
+            patch_size = 512
+        else:
+            path_size = 256
 
     transform_function = et.ExtCompose([et.ExtEnhanceContrast(),
                                         et.ExtToTensor()])
-    patch_size = 256
 
     print("Device: %s" % device)
     print("Exp: ", exp)
@@ -133,7 +166,7 @@ if __name__ == '__main__':
         print("Shape array after resize: ", np.shape(array))
 
     split_imgs, split_x_y, patch_dimensions = data_loader.generate_tif_patches2(array, patch_size=patch_size,
-                                                                               padding=50, with_pad=True)
+                                                                               padding=padding, with_pad=do_pad)
 
     model = define_model(num_classes=2, net=model_name, anchors=((16,), (32,), (64,), (128,), (256,)),box_score=0.6)
 
@@ -168,20 +201,24 @@ if __name__ == '__main__':
             preds = outputs[0]['labels'].cpu()
             new_boxes, new_scores, _ = do_nms(boxes.detach(), scores.detach(), preds.detach(), threshold=0.2)
             pred = create_mask_from_bbox(new_boxes.detach().cpu().numpy(),size[0])
-            pred, num_boxes, mod_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=50,size=size[0])
+            pred, num_boxes, mod_boxes = adjust_bbox_tif(new_boxes.detach().cpu().numpy(),adjust=padding,size=size[0])
             pred = fill_bbox(mod_boxes,np.zeros((np.shape(pred))))
             pred_counter += num_boxes
-            pred = pred[50:-50, 50:-50]
-            #if num_boxes > 0:
-            #    img = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
-            #    Image.fromarray(img.astype(np.uint8)).save(pred_path + '/vda_{}.png'.format(exp))
-            #    Image.fromarray(pred.astype(np.uint8)).save(pred_path + '/vda_{}_leather.png'.format(exp))
+            if do_pad:
+                pred = pred[50:-50, 50:-50]
             if isinstance(pred_stack, list):
                 pred_stack = pred
-                img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
+                if do_pad:
+                    img_stack = split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]
+                else:
+                    img_stack = split_imgs[i * split_x_y[1] + j]
             else:
                 pred_stack = np.hstack((pred_stack, pred))
-                img_stack = np.hstack((img_stack, split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]))
+                if do_pad:
+                    img_stack = np.hstack((img_stack, split_imgs[i * split_x_y[1] + j][50:-50,50:-50,:]))
+                else:
+                    img_stack = np.hstack((img_stack, split_imgs[i * split_x_y[1] + j]))
+
 
         if isinstance(target_tif, list):
             target_tif = pred_stack
@@ -195,9 +232,10 @@ if __name__ == '__main__':
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/brevetti_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/brevetti_{}_leather.png'.format(exp),
                         mask_path=save_path + '/brevetti_{}.png'.format(exp),name=exp,tif_type='brevetti')
+        test_tif(pred=save_path + '/brevetti_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
     else:
         Image.fromarray(target_tif.astype(np.uint8)).save(save_path + '/vda_{}.png'.format(exp))
         Image.fromarray(image_tif.astype(np.uint8)).save(save_path + '/vda_{}_leather.png'.format(exp))
         fill_background(img_path=save_path + '/vda_{}_leather.png_leather.png'.format(exp),
                         mask_path=save_path + '/vda_{}.png'.format(exp),name=exp,tif_type='tif')
-
+        test_tif(pred=save_path + '/vda_{}_back.png'.format(exp),exp=exp,brevetti=brevetti,resize=resize)
