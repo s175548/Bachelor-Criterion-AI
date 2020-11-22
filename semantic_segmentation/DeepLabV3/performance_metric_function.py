@@ -22,6 +22,8 @@ def error_count(idx, pred_color, target_color, data_loader, labels, errors, fals
             masks = data_loader.get_separate_segmentations(
                 os.path.join(data_loader.data_path, data_loader.metadata_csv[idx, 3][1:]), labels=labels,)
         buffer = 84
+        if resize:
+            buffer = int(0.5*buffer)
         xdim_s = []
         ydim_s = []
         for i,mask in enumerate(masks):

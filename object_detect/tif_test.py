@@ -25,15 +25,17 @@ from PIL import Image
 def test_tif(pred,exp,brevetti=False,resize=False):
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test'
     if brevetti:
         path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
         pred = Image.open(pred)
         target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+        save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test/rh'
     else:
         path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
-        pred = PIL.Image.open(pred)
-        target = PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
+        pred = Image.open(pred)
+        target = Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
+        save_path = r'/zhome/dd/4/128822/Bachelorprojekt/predictions/test/vda'
+
     pred = np.array(pred) / 255
     pred = pred.astype(np.uint8)
     if resize:
