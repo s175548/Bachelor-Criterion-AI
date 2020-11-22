@@ -1,10 +1,9 @@
 """
-Made with heavy inspiration from
+Made with inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI/semantic_segmentation')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/semi/Bachelor-Criterion-AI')
 
 from tqdm import tqdm
 from PIL import ImageFile,Image
