@@ -43,7 +43,7 @@ def save_ckpt(model,model_name=None,cur_itrs=None, optimizer=None,scheduler=None
     torch.save({"cur_itrs": cur_itrs,"model_state": model.state_dict(),"optimizer_state": optimizer.state_dict(),"scheduler_state": scheduler.state_dict(),"best_score": best_score,
     }, os.path.join(save_path,"{}_{}".format(model_name,exp_description)+str(lr)+'.pt'))
     torch.save(model ,os.path.join(save_path,"{}_{}".format(model_name,exp_description)+'only_model'+'.pt'))
-    print("Model saved as "+model_name+'.pt')
+    print("Model saved as "+model_name+     '.pt')
 
 def validate(model,model_name, loader, device, metrics,N,criterion,
              ret_samples_ids=None,save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/',
@@ -365,6 +365,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
                      'optimizer': optimizer_g.state_dict(), }
             torch.save(state, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
+            torch.save(model_d, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
+
             save_ckpt(model=model_d, model_name=model_name, cur_itrs=cur_itrs, optimizer=optimizer_d,
                       scheduler=scheduler_d, best_score=best_score, lr=lr, save_path=save_path,
                       exp_description=exp_description+'last_epoch')
