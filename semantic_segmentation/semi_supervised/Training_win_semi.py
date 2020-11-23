@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.002
+lr_g = 0.005
 lr_policy='step'
 step_size=1
 batch_size= 16# 16
@@ -269,7 +269,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1 and cur_epochs%5 ==0:
+                if cur_itrs==1:
                     print("validation...")
                     model_d.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
