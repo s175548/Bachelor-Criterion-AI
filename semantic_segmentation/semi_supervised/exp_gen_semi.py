@@ -167,8 +167,8 @@ if __name__ == "__main__":
     val_dst = LeatherData(path_mask=path_val, path_img=path_val,list_of_filenames=file_names_val,
                           transform=transform_function,color_dict=color_dict,target_dict=target_dict)
 
-    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=0)
-    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=0)
+    train_loader = data.DataLoader(train_dst, batch_size=batch_size, shuffle=True, num_workers=4)
+    val_loader = data.DataLoader(val_dst, batch_size=val_batch_size, shuffle=False, num_workers=4)
     # Load dataloader for unlabelled data:
     if semi_supervised:
         trainloader_nl, _ = get_data_loaders_unlabelled(binary, path_original_data, path_meta_data, dataset_path_ul,batch_size,size = SIZE)
