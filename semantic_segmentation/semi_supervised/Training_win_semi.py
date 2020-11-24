@@ -248,6 +248,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 np_loss = loss_d.detach().cpu().numpy()
                 running_loss = + loss_d.item() * images.size(0)
                 interval_loss += np_loss
+                del pred_unlabel
+                del pred_fake
+                del pred_labeled
 
 
                 ####### train G ##################
@@ -261,6 +264,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     loss_g = -Loss_fake_remade(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
+                    del pred_fake
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
