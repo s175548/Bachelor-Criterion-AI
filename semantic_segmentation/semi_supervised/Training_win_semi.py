@@ -219,10 +219,11 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 optimizer_d.zero_grad()
                 if model_name=='DeepLab':
                     # pred_labeled = model_d(images)['out']
+                    pass
 
                 else:
                     pred_labeled = model_d(images)
-
+                    pass
                 if semi_supervised:
                     if model_name == 'DeepLab':
                         pred_unlabel = model_d(images_nl.float())['out']
