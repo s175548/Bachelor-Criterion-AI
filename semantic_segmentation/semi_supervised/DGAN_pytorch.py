@@ -20,6 +20,27 @@ from torchvision.models.segmentation import deeplabv3_resnet101
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+
+class MyResNet(nn.Module):
+    def __init__(self, my_pretrained_model,n_classes):
+        super(MyResNet, self).__init__()
+        self.pretrained = my_pretrained_model
+        self.my_new_layers = nn.Sequential(
+            torch.nn.Conv2d(n_classes, n_classes, kernel_size=(5, 5), stride=(3, 3)).requires_grad_(),
+            torch.nn.LeakyReLU(),
+            torch.nn.Conv2d(n_classes, n_classes, kernel_size=(5, 5), stride=(3, 3)).requires_grad_(),
+            torch.nn.LeakyReLU(),
+            torch.nn.Conv2d(n_classes, n_classes, kernel_size=(5, 5), stride=(3, 3)).requires_grad_(),
+            torch.nn.LeakyReLU(),
+            torch.nn.Conv2d(n_classes, n_classes, kernel_size=(4, 4), stride=(2, 2)).requires_grad_(),
+            torch.nn.LeakyReLU(),
+            torch.nn.Conv2d(n_classes, n_classes, kernel_size=(3, 3), stride=(1, 1)).requires_grad_(),
+            torch.nn.LeakyReLU())
+
+    def forward(self, x):
+        x = self.pretrained(x)['out']
+        x = self.my_new_layers(x)
+        return x
 def grad_check(model, model_layers='Classifier'):
     if model_layers == 'Classifier':
         print('Classifier only')
@@ -306,26 +327,16 @@ if __name__ == '__main__':
     my_pretrained_model.classifier[-1] = torch.nn.Conv2d(256, n_classes , kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    class MyResNet(nn.Module):
-        def __init__(self, my_pretrained_model):
-            super(MyResNet, self).__init__()
-            self.pretrained = my_pretrained_model
-            self.my_new_layers = nn.Sequential(torch.nn.Conv2d(n_classes, n_classes , kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
-                                               torch.nn.LeakyReLU(),
-                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
-                                               torch.nn.LeakyReLU(),
-                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(5, 5),stride=(3, 3)).requires_grad_(),
-                                               torch.nn.LeakyReLU(),
-                                               torch.nn.Conv2d(n_classes, n_classes ,  kernel_size=(4, 4),stride=(2, 2)).requires_grad_(),
-                                               torch.nn.LeakyReLU(),
-                                               torch.nn.Conv2d(n_classes, n_classes, kernel_size=(3, 3),stride=(1, 1)).requires_grad_(),
-                                                torch.nn.LeakyReLU() )
 
-        def forward(self, x):
-            x = self.pretrained(x)['out']
-            x = self.my_new_layers(x)
-            return x
-    netD = MyResNet(my_pretrained_model)
+    netD = MyResNet(my_pretrained_model,n_classes)
+
+    # PATH = r'E:\downloads_hpc_bachelor\DGAN_setup\Decent_results_100epochs'
+    # PATH = os.path.join(PATH, 'modelD.pt')
+    # checkpoint = torch.load(PATH,map_location='cuda')
+    # # model_dict[model].load_state_dict(checkpoint["model_state"])
+    # netD.load_state_dict(checkpoint)
+    # modelD = netD.pretrained
+
     netD.to(device)
     #netD = Discriminator(ngpu).to(device)
 
