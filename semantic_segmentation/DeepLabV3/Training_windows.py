@@ -130,25 +130,25 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
             grad_check(model_dict[model])
         else:
             grad_check(model_dict[model], model_layers='All')
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
-        # model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
     device = torch.device('cuda')
     model_dict[model].to(device)
 
     #import a pretrained discriminator
-    HPC = True
-    if HPC:
-        from semantic_segmentation.semi_supervised.DGAN_pytorch import MyResNet
-        netD = MyResNet(model_dict[model],n_classes)
-        PATH = r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial'
-    else:
-        PATH = r'E:\downloads_hpc_bachelor\DGAN_setup\Decent_results_100epochs'
-    PATH = os.path.join(PATH, 'modelD.pt')
-    checkpoint = torch.load(PATH,map_location='cuda')
-    # model_dict[model].load_state_dict(checkpoint["model_state"])
-    netD.load_state_dict(checkpoint)
-    model_dict[model] = netD.pretrained
-    model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
+    # HPC = True
+    # if HPC:
+    #     from semantic_segmentation.semi_supervised.DGAN_pytorch import MyResNet
+    #     netD = MyResNet(model_dict[model],n_classes)
+    #     PATH = r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial'
+    # else:
+    #     PATH = r'E:\downloads_hpc_bachelor\DGAN_setup\Decent_results_100epochs'
+    # PATH = os.path.join(PATH, 'modelD.pt')
+    # checkpoint = torch.load(PATH,map_location='cuda')
+    # # model_dict[model].load_state_dict(checkpoint["model_state"])
+    # netD.load_state_dict(checkpoint)
+    # model_dict[model] = netD.pretrained
+    # model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
