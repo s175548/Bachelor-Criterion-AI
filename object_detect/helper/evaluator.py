@@ -48,7 +48,10 @@ def classifier_metric(iou_list,iou_pred,scores,target,labels):
     if len(target) == 0 or labels[0] == torch.zeros(1):
         acc_dict["Defects"] = 0
         acc_dict["Detected"] = 0
-        acc_dict["FP"] = len(scores)
+        if len(scores) > 0:
+            acc_dict["FP"] = 1
+        else:
+            acc_dict["FP"] = 0
     elif len(scores) == 0:
         acc_dict["Defects"] = len(target)
         acc_dict["Detected"] = 0

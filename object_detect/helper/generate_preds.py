@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from semantic_segmentation.DeepLabV3.utils.utils import Denormalize
 
 
-def get_predictions(samples,model_name,ids,path_save,val=False):
+def get_predictions(samples,model_name,ids,path_save,file_names,val=False):
     for (img, m, t, p), id in zip(samples, ids):
         for i in range(len(ids)):
             image = (img[i].detach().cpu().numpy() * 255).transpose(1, 2, 0).astype(np.uint8)
@@ -31,11 +31,11 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
             bmask3 = get_bbox_mask(mask=m[i], bbox=new_boxes.detach().cpu().numpy())
             if val == True:
                 Image.fromarray(image.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_img.png'.format(model_name,ids[i].numpy()[0]),format='PNG')
+                    path_save + '/{}_val_{}_img.png'.format(model_name,file_names[ids[i].numpy()[0]]),format='PNG')
                 Image.fromarray(bmask3.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_prediction.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
+                    path_save + '/{}_val_{}_prediction.png'.format(model_name, file_names[ids[i].numpy()[0]]), format='PNG')
                 Image.fromarray(bmask2.astype(np.uint8)).save(
-                    path_save + '/{}_val_{}_target.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
+                    path_save + '/{}_val_{}_target.png'.format(model_name, file_names[ids[i].numpy()[0]]), format='PNG')
             else:
                 Image.fromarray(image.astype(np.uint8)).save(
                     path_save + '/{}_train_{}_img.png'.format(model_name,ids[i].numpy()[0]),format='PNG')
@@ -45,7 +45,7 @@ def get_predictions(samples,model_name,ids,path_save,val=False):
                     path_save + '/{}_train_{}_target.png'.format(model_name, ids[i].numpy()[0]), format='PNG')
 
 
-def validate(model, model_name, data_loader, device, path_save, bbox_type, val=True, bbox=False, threshold=0.3):
+def validate(model, model_name, data_loader, device, path_save, bbox_type, file_names, resize=True, val=True, bbox=False, threshold=0.3):
     if bbox == False:
         if val == True:
             path_save = os.path.join(path_save, 'val')
@@ -54,6 +54,10 @@ def validate(model, model_name, data_loader, device, path_save, bbox_type, val=T
     else:
         path_save = os.path.join(path_save, bbox_type)
     i = 0
+    if resize:
+        expand = 42
+    else:
+        expand = 84
     conf_matrix = {}
     conf_matrix["true_positives"] = 0
     conf_matrix["false_positives"] = 0
@@ -95,9 +99,9 @@ def validate(model, model_name, data_loader, device, path_save, bbox_type, val=T
                 #new_boxes, new_scores, new_labels = get_non_maximum_supression(boxes, scores, preds, iou_threshold=0.2)
                 new_boxes, new_scores, new_preds = do_nms(boxes,scores,preds,threshold=0.2)
                 iou_target, iou_pred = get_iou_targets(boxes=new_boxes, targets=targets[j]['boxes'].cpu(), preds=new_preds,
-                                                       labels=targets[j]['labels'].cpu(), image=images[j], expand=16)
+                                                       labels=targets[j]['labels'].cpu(), image=images[j], expand=expand)
                 iou_target2, iou_pred2 = get_iou_targets(boxes=boxes, targets=targets[j]['boxes'].cpu(), preds=preds,
-                                                       labels=targets[j]['labels'].cpu(), image=images[j], expand=16)
+                                                       labels=targets[j]['labels'].cpu(), image=images[j], expand=expand)
                 acc_dict = classifier_metric(iou_target, iou_pred, new_scores, targets[j]['boxes'].cpu(), targets[j]['labels'].cpu())
 
                 conf_matrix["true_positives"] += acc_dict["Detected"]
@@ -138,7 +142,7 @@ def validate(model, model_name, data_loader, device, path_save, bbox_type, val=T
 
             samples = []
             samples.append((images, masks, targets, outputs))
-            get_predictions(samples, model_name, ids, path_save=path_save, val=val)
+            get_predictions(samples, model_name, ids, path_save=path_save, file_names=file_names,val=val)
             i+=1
 
     return np.mean(mAP),np.mean(mAP2), conf_matrix, conf_matrix2
