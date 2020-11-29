@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J od_3R_vda
-#BSUB -o od_3R_vda_%J.out
+#BSUB -J 3R_final_vda
+#BSUB -o 3R_final_vda_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"

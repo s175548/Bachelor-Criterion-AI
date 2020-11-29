@@ -1,6 +1,6 @@
 #!/bin/sh
-#BSUB -J od_3R_rh_ex
-#BSUB -o od_3R_rh_ex_%J.out
+#BSUB -J 3R_final_rh
+#BSUB -o 3R_final_rh_%J.out
 #BSUB -q gpuv100
 #BSUB -n 1
 #BSUB -gpu "num=1:mode=exclusive_process"
@@ -16,5 +16,5 @@ echo "Running script..."
 cd ..
 source test-env/bin/activate
 cd Bachelor-Criterion-AI
-python3 object_detect/tif_prediction.py three_scale brevetti no_pad extend
+python3 object_detect/tif_prediction.py three_scale brevetti no_pad original
 echo "Done"

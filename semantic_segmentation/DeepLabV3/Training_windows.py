@@ -130,18 +130,25 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
             grad_check(model_dict[model])
         else:
             grad_check(model_dict[model], model_layers='All')
-        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
-        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+        model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
+        model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_() #SKAL VÆRE n_classes + 2
     device = torch.device('cuda')
     model_dict[model].to(device)
 
-    # PATH = r'/zhome/dd/4/128822/Bachelorprojekt/faster_rcnn'
-    PATH = r'E:\downloads_hpc_bachelor\exp_results\semi\GAN_regular_no_loss_label'
-    PATH = os.path.join(PATH, 'DeepLab_semi_GAN_setup0.006.pt')
-    checkpoint = torch.load(PATH,map_location='cuda')
-    model_dict[model].load_state_dict(checkpoint["model_state"])
-    model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
-    model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
+    #import a pretrained discriminator
+    # HPC = True
+    # if HPC:
+    #     from semantic_segmentation.semi_supervised.DGAN_pytorch import MyResNet
+    #     netD = MyResNet(model_dict[model],n_classes)
+    #     PATH = r'/work3/s173934/Bachelorprojekt/exp_results/semi_super/GANtutorial'
+    # else:
+    #     PATH = r'E:\downloads_hpc_bachelor\DGAN_setup\Decent_results_100epochs'
+    # PATH = os.path.join(PATH, 'modelD.pt')
+    # checkpoint = torch.load(PATH,map_location='cuda')
+    # # model_dict[model].load_state_dict(checkpoint["model_state"])
+    # netD.load_state_dict(checkpoint)
+    # model_dict[model] = netD.pretrained
+    # model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes + 2, kernel_size=(1, 1),stride=(1, 1)).requires_grad_()
 
     if model=="MobileNet":
         model_dict[model] = _segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
@@ -149,8 +156,6 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
             grad_check(model_dict[model],model_layers='All')
         else:
             grad_check(model_dict[model])
-
-
 
     # Setup visualization
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -250,9 +255,9 @@ def training(n_classes=3,model='DeepLab',load_models=False,model_path='/Users/vi
                     break
             validation_loss_values.append(validation_loss /len(val_dst))
             train_loss_values.append(running_loss / len(train_dst))
-
-        save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
-                                  model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
+            if cur_epochs == 50:
+                save_ckpt(model=model, model_name=model_name, cur_itrs=cur_itrs, optimizer=optimizer, scheduler=scheduler,best_score=best_score, lr=lr, save_path=save_path, exp_description=exp_description+'50_epoch')
+        save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
 
 
 def save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model,
