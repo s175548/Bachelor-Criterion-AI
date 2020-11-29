@@ -229,11 +229,11 @@ class DataLoader():
     def test_training_split_skin(self):
         train_idx = []
         val_idx = []
-        idx_to_include = load_idx_to_include()
-        idx_to_include = np.intersect1d(idx_to_include, self.valid_annotations)
-        for idx in idx_to_include[1:]:
-            split = self.metadata_csv[idx, 1].split('/')[2]
-            if split[0]=='W':
+#        idx_to_include = load_idx_to_include()
+#       idx_to_include = np.intersect1d(idx_to_include, self.valid_annotations)
+        for idx in self.valid_annotations:
+            split = self.metadata_csv[idx, 1].split('/')[0]
+            if split[:2] == 'RE':
                 val_idx.append(idx)
             else:
                 train_idx.append(idx)
@@ -510,11 +510,17 @@ def get_background_mask(image):
 if __name__ == '__main__':
     data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',
                              metadata_path=r'samples/model_comparison.csv')
-    img, mask_1d,mask_3d=data_loader.get_tif_mask()
-    PIL.Image.fromarray(mask_1d.astype(np.uint8)).save(
-        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_1d.png')
-    PIL.Image.fromarray(mask_3d.astype(np.uint8)).save(
-        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_3d.png')
+    train, val = data_loader.test_training_split(villads_dataset=True)
+    print(len(train),len(val))
+  #  visibility_idx=data_loader.get_visibility_score([2,3])
+ #   val=np.intersect1d(val,visibility_idx)
+    labels={name:len(np.intersect1d(list(annotations),val)) for name,annotations in data_loader.annotations_index.items()}
+    labels
+#    img, mask_1d,mask_3d=data_loader.get_tif_mask()
+#    PIL.Image.fromarray(mask_1d.astype(np.uint8)).save(
+#        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_1d.png')
+#    PIL.Image.fromarray(mask_3d.astype(np.uint8)).save(
+#        '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /tif_images/WALKNAPPA_VDA_04_grain_01_target_3d.png')
     #train,val=data_loader.test_training_split()
     #for data in [train,val] :
     #    idx_dict=np.intersect1d(data,data_loader.get_visibility_score([2,3]))

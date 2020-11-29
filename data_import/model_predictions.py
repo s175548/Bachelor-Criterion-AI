@@ -20,7 +20,7 @@ Villads=True
 if Villads:
     path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
     path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
-    path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/val"
+    path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /val"
     path_meta_data = r'samples/model_comparison.csv'
     save_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions'
     model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /models/binær_several_classes/DeepLab_backbone_exp0.01.pt'
@@ -61,16 +61,11 @@ file_names_val = file_names_val[file_names_val != ".DS_S"]
 #transform_function = et.ExtCompose([et.ExtEnhanceContrast(), et.ExtRandomCrop((1000, 1000)), et.ExtToTensor(),
 #                                   et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-transform_function_train = transform_function = et.ExtCompose([et.ExtRandomCrop(size=2048),
-                                    et.ExtRandomCrop(scale=0.7),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtRandomCrop(size=2048,pad_if_needed=True),
-                                    et.ExtResize(scale=0.5),
-                                    et.ExtRandomHorizontalFlip(p=0.5),
-                                    et.ExtRandomCrop(size=512),
-                                    et.ExtRandomVerticalFlip(p=0.5),
-                                    et.ExtToTensor(),
-                                    et.ExtNormalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+
+transform_function = et.ExtCompose([
+                                           et.ExtResize(scale=0.5),
+                                           et.ExtRandomCrop(size=512,semantic_evaluation_resize=True,scale=0.7),
+                                           et.ExtEnhanceContrast()])
 
 
 denorm = Denormalize(mean=[0.485, 0.456, 0.406],
@@ -105,15 +100,14 @@ elif data_set=='val':
     for i in range(len(val_dst)):
         train_images.append(val_dst.__getitem__(i))
 
+data_set='val_all_class_resize'
 for i in range(len(train_images)):
     print(i)
-    image = train_images[i][0].unsqueeze(0)
-    image = image.to(device, dtype=torch.float32)
-    image = (denorm(train_images[i][0].detach().cpu().numpy()) * 255).transpose(1, 2, 0).astype(np.uint8)
-    PIL.Image.fromarray(image.astype(np.uint8)).save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(i)),format='PNG' )
-    target = train_images[i][1].cpu().squeeze().numpy()
-    target = convert_to_image(target.squeeze(), color_dict, target_dict)
-    PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(i)),format='PNG' )
+    image = train_images[i][0]
+    image.save(os.path.join(save_path,r'multi',model_name,data_set,r'{}_img.png'.format(file_names_val[i])),format='PNG' )
+    target = np.array(train_images[i][1])
+    target = convert_to_image(target, color_dict, target_dict)
+    PIL.Image.fromarray(target.astype(np.uint8)).save( os.path.join(save_path,r'multi',model_name,data_set,r'{}_mask.png'.format(file_names_val[i])),format='PNG' )
 
 
 

@@ -26,7 +26,7 @@ else:
 train,val=data_loader.test_training_split(villads_dataset=True)
 
 """if you want to split by the skin"""
-#train,val=data_loader.test_training_split_skin()
+train,val=data_loader.test_training_split_skin()
 
 labels=['Good','Good Area','Good Area_grain01','Good Area_grain04','Good Area_grain05',
  'Good Area_grain06',
