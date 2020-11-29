@@ -18,16 +18,13 @@ from object_detect.helper.generate_preds import validate
 import object_detect.helper.utils as utils
 import matplotlib.pyplot as plt
 from object_detect.train_hpc import define_model
+from torchvision.models.segmentation import deeplabv3_resnet101
 
-transform_function_C = et.ExtCompose([et.ExtRandomCrop(size=256),
-                                    et.ExtEnhanceContrast(),
-                                    et.ExtToTensor()])
 
-transform_function_R = et.ExtCompose([et.ExtRandomCrop(scale=0.7,size=None),
-                                      et.ExtResize(scale=0.5),
-                                      et.ExtRandomCrop(size=512),
-                                      et.ExtEnhanceContrast(),
-                                      et.ExtToTensor()])
+#transform_function_C = et.ExtCompose([et.ExtRandomCrop(size=256),
+#                                    et.ExtEnhanceContrast(),
+#                                    et.ExtToTensor()])
+transform_function = et.ExtCompose([et.ExtToTensor()])
 
 HPC=False
 splitted_data=True
@@ -67,37 +64,41 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
         exp_name = 'three_scale'
-        if binary:
-            if exp_name == 'all_bin' or exp_name == 'full_scale':
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\extended\val'
-            else:
-                path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\eval\three\val'
 
         if exp_name == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
             exp = 'crop_all_classes'
-            transform_function = transform_function_C
             save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\all_bin'
+            resize = False
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_all_class_crop'
 
         if exp_name == 'binary':
             pt_name = 'resnet50_full_empty_0.01_binarySGD.pt'
             exp = 'crop_3_classes'
-            transform_function = transform_function_C
             save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\binary'
+            resize = False
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_3_class_crop'
+
 
         if exp_name == 'three_scale':
             pt_name = 'resnet50_full_empty_0.01_binary_scaleSGD.pt'
             exp = 'resize_3_classes'
-            transform_function = transform_function_R
             save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\three_scale'
+            resize = True
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_3_class_resize'
+
 
         if exp_name == 'full_scale':
             pt_name = 'resnet50_all_binary_scale_part2SGD.pt'
             exp = 'resize_all_classes'
-            transform_function = transform_function_R
             save_path = r'C:\Users\johan\iCloudDrive\DTU\KID\BA\HPC\Predictions\full_scale'
+            resize = True
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_all_class_resize'
+
+
 
     print("Device: %s" % device)
+    print("Exp: ", exp_name)
     data_loader = DataLoader(data_path=path_original_data,
                                  metadata_path=path_meta_data)
 
@@ -135,6 +136,7 @@ if __name__ == '__main__':
     model.load_state_dict(loaded_model["model_state"])
     model.to(device)
     model.eval()
+
     print("Model loaded and ready to be evaluated!")
     if HPC:
         save_path = path_save
@@ -143,6 +145,8 @@ if __name__ == '__main__':
                                                             data_loader=val_loader,
                                                             device=device,
                                                             path_save=save_path, bbox_type='empty',
+                                                            file_names=file_names_val,
+                                                            resize=resize,
                                                             val=True)
     print("Experiment: ", exp)
     print("Overall best with nms: ", val_mAP2)
