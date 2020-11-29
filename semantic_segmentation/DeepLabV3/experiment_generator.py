@@ -18,7 +18,7 @@ def boolean_string(s):
     return s == 'True'
 
 trans_func = True
-HPC =False
+HPC =True
 Villads=False
 binary=True
 batchsize= 8 # 16

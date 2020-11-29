@@ -24,11 +24,11 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.002
+lr_g = 0.005
 lr_policy='step'
 step_size=1
-batch_size= 16# 16
-val_batch_size= 8 #4
+batch_size= 8# 16
+val_batch_size= 4 #4
 loss_type="cross_entropy"
 weight_decay=1e-4
 random_seed=1
@@ -136,7 +136,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         G_loss = []
         D_loss = []
-        loss_labels_d =[]
+        # loss_labels_d =[]
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
@@ -169,9 +169,10 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     print(optim)
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
-    weights = [0.3, 0.7, 0, 0]
-    class_weight = torch.FloatTensor(weights).cuda()
-    criterion_d = nn.CrossEntropyLoss(weight=class_weight,ignore_index=n_classes+1, reduction='mean')
+    criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
+    # weights = [0.3, 0.7, 0, 0]
+    # class_weight = torch.FloatTensor(weights).cuda()
+    # criterion_d = nn.CrossEntropyLoss(weight=class_weight,ignore_index=n_classes+1, reduction='mean')
 
     # ==========   Train Loop   ==========#
     for model_name, model_d in model_dict.items():
@@ -217,10 +218,12 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
                 if model_name=='DeepLab':
-                    pred_labeled = model_d(images)['out']
+                    # pred_labeled = model_d(images)['out']
+                    pass
+
                 else:
                     pred_labeled = model_d(images)
-
+                    pass
                 if semi_supervised:
                     if model_name == 'DeepLab':
                         pred_unlabel = model_d(images_nl.float())['out']
@@ -229,7 +232,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         pred_unlabel = model_d(images_nl.float())
                         pred_fake = model_d(model_g(noise))
 
-                loss_labeled = criterion_d(pred_labeled, labels)
+                # loss_labeled = criterion_d(pred_labeled, labels)
 
                 if semi_supervised:
                     if reg_GAN_setup:
@@ -248,6 +251,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 np_loss = loss_d.detach().cpu().numpy()
                 running_loss = + loss_d.item() * images.size(0)
                 interval_loss += np_loss
+                del pred_unlabel
+                del pred_fake
 
 
                 ####### train G ##################
@@ -261,6 +266,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     loss_g = -Loss_fake_remade(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
+                    del pred_fake
 
                 if (cur_itrs) % 1 == 0:
                     interval_loss = interval_loss / images.size(0)
@@ -269,7 +275,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     interval_loss = 0.0
 
                 # if (cur_itrs) % np.floor(len(train_dst)/batch_size) == 0:
-                if cur_itrs==1 and cur_epochs%5 ==0:
+                if cur_itrs==1:
                     print("validation...")
                     model_d.eval()
                     val_score, ret_samples,validation_loss = validate(ret_samples_ids=range(2),
@@ -313,7 +319,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
 
             if semi_supervised:
-                loss_labels_d.append(loss_labeled)
+                # loss_labels_d.append(loss_labeled)
                 loss_unlabelled_d.append(loss_unlabel*gamma_two)
                 loss_fake_d.append(loss_fake*gamma_one)
                 loss_fake_g.append(loss_g)
@@ -324,12 +330,12 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
         if semi_supervised:
-            plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
-            plt.title('Train Loss')
-            plt.xlabel('N_epochs')
-            plt.ylabel('Loss')
-            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
-            plt.close()
+            # plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
+            # plt.title('Train Loss')
+            # plt.xlabel('N_epochs')
+            # plt.ylabel('Loss')
+            # plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
+            # plt.close()
 
             plt.plot(range(len(loss_unlabelled_d)), loss_unlabelled_d, '-o')
             plt.title('Train Loss')
