@@ -26,7 +26,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_resize_pred'
     path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_resize')
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_resize.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
     save_name='/VDA_3C_resize'
 
