@@ -122,8 +122,8 @@ Villads = True
 HPC = False
 model_name = 'DeepLab'
 n_classes = 1
-resize = True
-size = 512
+resize = False
+size = 256
 scale = 0.5
 binary = True
 device = torch.device('cpu')
@@ -132,11 +132,11 @@ data_set = 'val'
 if Villads:
     path_original_data = r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches'
     path_train = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/train"
-    path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/multi/DeepLab/val_all_class_crop"
+    path_val = r"/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/multi/DeepLab/val_3_class_crop"
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/crop_all_classes'
-    model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /DeepLab_extended_dataset_resize_false0.01.pt'
-    params_list=open('params_list_crop_all_class.json','r')
+    save_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /model_predictions/crop_3_classes'
+    model_path = '/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /DeepLab_ThreeClass_resize_false0.01.pt'
+    params_list=open('params_list_crop_3_class.json','r')
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches'
     path_train = r'/work3/s173934/Bachelorprojekt/data_binary_all_classes/data_binary_all_classes/val' ###
