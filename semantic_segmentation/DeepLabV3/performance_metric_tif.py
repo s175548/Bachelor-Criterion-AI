@@ -24,11 +24,11 @@ if villads:
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_resize_pred'
-    path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_3C_resize.png')
-    target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
-    save_name='/VDA_3C_resize'
+    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/RF_3C_resize_pred'
+    path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RF_3C_resize.png')
+    target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
+    save_name='/RF_3C_resize'
 
 if resize:
     target=target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
@@ -79,7 +79,7 @@ new_list = [
     i, label in enumerate(labels)]
 string = '\n\n'.join(
     new_list) + f'\n\nBinary: {errors[0]} \nInsect Bite: {errors[1]} \nFalse positives: {false_positives}'
-f = open(os.path.join(save_path, 'performance_VDA_3C_resize'), 'w')
+f = open(os.path.join(save_path, 'performance_RF_3C_resize'), 'w')
 f.write(string)
 
 img_list=[target_color.astype(np.uint8),pred_color.astype(np.uint8)]
