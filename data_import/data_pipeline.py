@@ -29,13 +29,13 @@ def import_data_and_mask(data_loader,idx_to_consider='All',labels="All",path=Non
     if idx_to_consider != 'All' and visibility_scores!= "All":
         idx = np.intersect1d(idx_to_consider,visibility_idx)
 
-
+    idx=label_idx
 
 
 
     for i in idx:
         i = int(i)
-        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary,ignore_good=ignore_good)
+        img,mask = data_loader.get_image_and_labels([i],labels=labels,make_binary=make_binary)
         img_crops, mask_crops= data_loader.generate_patches(img[0],mask[0],img_index=i,patch_size=1024)
         if crop==True:
             for k in range(len(img_crops)):
@@ -66,14 +66,13 @@ Extract good areas, that does not have any segmentations.
 Fix border area in background mask (The border is now flawless)
 """
 if __name__ == "__main__":
-     # data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
-    data_loader = DataLoader()
+    data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
+    #data_loader = DataLoader()
     #data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
 
 #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[2,3],labels=['Puntura insetto'])
     #import_data_and_mask(data_loader,path=r'C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\cropped_data_multi',labels=['Piega','Verruca','Puntura insetto','Background'],make_binary=False)
-    #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",make_binary=True)
-    import_data_and_mask(data_loader,path=r"C:\Users\Mads-_uop20qq\Documents\5. Semester\BachelorProj\Bachelorprojekt\trained_models",make_binary=True,crop=True)
+    import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",make_binary=True,labels=['Cicatrice','Rughe','Scopertura'])
 
 #   data_loader = DataLoader(data_path=r'/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /leather_patches',metadata_path=r'samples/model_comparison.csv')
      #import_data_and_mask(data_loader,path="/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /data_folder/cropped_data/",visibility_scores=[1,2,3],labels=['Puntura insetto','Background'],make_binary=True)

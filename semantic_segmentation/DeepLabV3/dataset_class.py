@@ -14,6 +14,7 @@ import torch
 
 
 
+
 class LeatherData(data.Dataset):
 
     def __init__(self,
@@ -35,7 +36,7 @@ class LeatherData(data.Dataset):
         file_names_img=os.listdir(self.path_img)
         file_names=list_of_filenames
 
-        self.images = [os.path.join(self.path_img, x + '.png') for x in file_names]
+        self.images = [os.path.join(self.path_img, x + '_img.png') for x in file_names]
         self.masks = [os.path.join(self.path_mask, x + '_mask.png') for x in file_names]
         assert (len(self.images) == len(self.masks))
 
