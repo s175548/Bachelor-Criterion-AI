@@ -3,7 +3,7 @@ Made with inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/semi/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
 
 from tqdm import tqdm
 from PIL import ImageFile,Image
@@ -60,7 +60,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                 outputs = model(images)['out']
             else:
                 outputs = model(images)
-
+            outputs = outputs[:,:3]
             loss = criterion(outputs, labels)
             running_loss = + loss.item() * images.size(0)
 
@@ -88,7 +88,7 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
                     output = model(image)['out']
                 else:
                     output = model(image)
-
+                outputs = outputs[:, :3]
                 pred = output.detach().max(dim=1)[1].cpu().squeeze().numpy()
                 target=train_images[i][1].cpu().squeeze().numpy()
                 target=convert_to_image(target.squeeze(),color_dict,target_dict)
@@ -106,8 +106,8 @@ def validate(model,model_name, loader, device, metrics,N,criterion,
 def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users/villadsstokbro/Dokumenter/DTU/KID/5. Semester/Bachelor /',
              train_loader=None, val_loader=None, train_dst=None, val_dst=None,
              save_path = os.getcwd(), lr=0.01, train_images = None, color_dict=None, target_dict=None, annotations_dict=None, exp_description = '', optim='SGD', default_scope = True, semi_supervised=False, trainloader_nl=None):
-    reg_GAN_setup = True
-    print('Reg Gan setup:', reg_GAN_setup)
+    # reg_GAN_setup = False
+    # print('Reg Gan setup:', reg_GAN_setup)
     model_dict={}
     if model=='DeepLab':
         model_dict[model]=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
@@ -117,7 +117,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             grad_check(model_dict[model], model_layers='All')
         model_dict[model].classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
         model_dict[model].aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+3, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-        spectral = False
+        spectral = True
         print("Spectral:",spectral)
         if spectral:
             model_dict[model] = add_spectral(model_dict[model])
@@ -136,7 +136,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         model_g_spath = os.path.join(save_path, r'model_g.pt')
         G_loss = []
         D_loss = []
-        # loss_labels_d =[]
+        loss_labels_d =[]
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
@@ -218,7 +218,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 #### Train discriminator #### #Predict -> calculate loss -> update
                 optimizer_d.zero_grad()
                 if model_name=='DeepLab':
-                    # pred_labeled = model_d(images)['out']
+                    pred_labeled = model_d(images)['out']
                     pass
 
                 else:
@@ -232,18 +232,18 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         pred_unlabel = model_d(images_nl.float())
                         pred_fake = model_d(model_g(noise))
 
-                # loss_labeled = criterion_d(pred_labeled, labels)
+                loss_labeled = criterion_d(pred_labeled[:,0:3], labels) # only 0,1,2 confidence map
 
                 if semi_supervised:
-                    if reg_GAN_setup:
-                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                        loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
-                    else:
-                        loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                        loss_fake = Loss_fake_remade(pred_fake)
-                        loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
-                        print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                    # if reg_GAN_setup:
+                    #     loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    #     loss_fake = Loss_fake_remade(pred_fake)
+                    #     loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
+                    # else:
+                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
+                    loss_fake = Loss_fake_remade(pred_fake)
+                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                    print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
                 else:
                     loss_d = loss_labeled
                 loss_d.backward()
@@ -263,7 +263,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         pred_fake = model_d(model_g(noise))['out']
                     else:
                         pred_fake = model_d(model_g(noise))
-                    loss_g = -Loss_fake_remade(pred_fake)
+                    loss_g = -Loss_fake_remade(pred_fake)*gamma_one
                     loss_g.backward()
                     optimizer_g.step()
                     del pred_fake
@@ -319,7 +319,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
 
             if semi_supervised:
-                # loss_labels_d.append(loss_labeled)
+                loss_labels_d.append(loss_labeled)
                 loss_unlabelled_d.append(loss_unlabel*gamma_two)
                 loss_fake_d.append(loss_fake*gamma_one)
                 loss_fake_g.append(loss_g)
@@ -330,12 +330,12 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
         if semi_supervised:
-            # plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
-            # plt.title('Train Loss')
-            # plt.xlabel('N_epochs')
-            # plt.ylabel('Loss')
-            # plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
-            # plt.close()
+            plt.plot(range(len(loss_labels_d)), loss_labels_d, '-o')
+            plt.title('Train Loss')
+            plt.xlabel('N_epochs')
+            plt.ylabel('Loss')
+            plt.savefig(os.path.join(save_path, exp_description + (str(lr)) + '_loss_labels_d'), format='png')
+            plt.close()
 
             plt.plot(range(len(loss_unlabelled_d)), loss_unlabelled_d, '-o')
             plt.title('Train Loss')
@@ -370,7 +370,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
             state = {'epoch': cur_epochs + 1, 'state_dict': model_g.state_dict(),
                      'optimizer': optimizer_g.state_dict(), }
             torch.save(state, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
-            torch.save(model_d, os.path.join(save_path, r'model_g_last_epoch_generator.pt'))
+            torch.save(model_d, os.path.join(save_path, r'model_d_last_epoch_generator.pt'))
 
             save_ckpt(model=model_d, model_name=model_name, cur_itrs=cur_itrs, optimizer=optimizer_d,
                       scheduler=scheduler_d, best_score=best_score, lr=lr, save_path=save_path,
