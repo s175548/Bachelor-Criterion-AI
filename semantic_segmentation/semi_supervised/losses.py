@@ -86,7 +86,7 @@ def Loss_unlabel_remade(pred):
 
 
 def Loss_fake_remade(pred):
-    fake_label = 1.
+    fake_label = 0.9
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''

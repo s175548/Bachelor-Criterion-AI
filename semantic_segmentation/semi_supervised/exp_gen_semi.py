@@ -16,8 +16,8 @@ def boolean_string(s):
     return s == 'True'
 
 if __name__ == "__main__":
-    HPC = True
-    SIZE = 256
+    HPC = False
+    SIZE = 25
     semi_supervised = True
     Villads = False
     DellXPS = False

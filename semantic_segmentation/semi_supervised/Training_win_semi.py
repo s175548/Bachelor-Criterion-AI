@@ -170,7 +170,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
     # criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
-    weights = [0.4, 0.6, 0, 0]
+    weights = [0.4, 0.6, 0]
     class_weight = torch.FloatTensor(weights).cuda()
     criterion_d = nn.CrossEntropyLoss(weight=class_weight,ignore_index=n_classes+1, reduction='mean')
 
