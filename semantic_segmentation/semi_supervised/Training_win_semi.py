@@ -3,7 +3,7 @@ Made with inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/semi/Bachelor-Criterion-AI')
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
 
 from tqdm import tqdm
 from PIL import ImageFile,Image
@@ -24,7 +24,7 @@ num_classes=2
 output_stride=16
 save_val_results=False
 total_itrs=1000
-lr_g = 0.002
+lr_g = 0.004
 lr_policy='step'
 step_size=1
 batch_size= 8# 16
@@ -142,7 +142,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_fake_g = []
         gamma_one = .2 #Loss weigth for fake
         gamma_two = 1 # Loss weight for unlabel
-        gamma_three = 2
+        gamma_three = 2.5
 
         #Load model
         model_g = generator(1,spectral) #arg = number of gpu's
@@ -170,7 +170,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     optimizer_d = choose_optimizer(lr, model, model_dict, optim)
     scheduler_d = torch.optim.lr_scheduler.StepLR(optimizer_d, step_size=step_size, gamma=0.95)
     # criterion_d = nn.CrossEntropyLoss(ignore_index=n_classes+1, reduction='mean')
-    weights = [0.4, 0.6, 0]
+    weights = [0.3, 0.7, 0]
     class_weight = torch.FloatTensor(weights).cuda()
     criterion_d = nn.CrossEntropyLoss(weight=class_weight,ignore_index=n_classes+1, reduction='mean')
 
