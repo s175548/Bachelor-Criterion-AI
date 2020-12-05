@@ -163,7 +163,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
     random.seed(random_seed)
 
     # Set up metrics
-    metrics = StreamSegMetrics(n_classes+3)
+    metrics = StreamSegMetrics(n_classes+2)
 
     # Set up optimizer for discriminator
     print(optim)
@@ -220,50 +220,53 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                 if model_name=='DeepLab':
                     pred_labeled = model_d(images)['out']
                     pass
-
                 else:
                     pred_labeled = model_d(images)
-                    pass
-                if semi_supervised:
-                    if model_name == 'DeepLab':
-                        pred_unlabel = model_d(images_nl.float())['out']
-                        pred_fake = model_d(model_g(noise))['out']
-                    else:
-                        pred_unlabel = model_d(images_nl.float())
-                        pred_fake = model_d(model_g(noise))
+                # if semi_supervised:
+                #     if model_name == 'DeepLab':
+                #         pred_unlabel = model_d(images_nl.float())['out']
+                #         pred_fake = model_d(model_g(noise))['out']
+                #     else:
+                #         pred_unlabel = model_d(images_nl.float())
+                #         pred_fake = model_d(model_g(noise))
 
                 loss_labeled = criterion_d(pred_labeled[:,0:3], labels) # only 0,1,2 confidence map
 
-                if semi_supervised:
-                    # if reg_GAN_setup:
-                    #     loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                    #     loss_fake = Loss_fake_remade(pred_fake)
-                    #     loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
-                    # else:
+                if semi_supervised and cur_epochs%2==0:
+                    loss_d = loss_labeled
+                    loss_d.backward()
+                    optimizer_d.step()
+
+                    optimizer_d.zero_grad()
+                    pred_unlabel = model_d(images_nl.float())['out']
+                    pred_fake = model_d(model_g(noise))['out']
                     loss_unlabel = Loss_unlabel_remade(pred_unlabel)
                     loss_fake = Loss_fake_remade(pred_fake)
-                    loss_d = loss_labeled * gamma_three + gamma_one * loss_fake + gamma_two * loss_unlabel
+                    loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
+                    loss_d.backward()
+                    optimizer_d.step()
                     print("loss_unlabel: ",gamma_two*loss_unlabel.detach().cpu().numpy() / loss_d.detach().cpu().numpy(),"loss_fake: ",gamma_one*loss_fake.detach().cpu().numpy()/ loss_d.detach().cpu().numpy(),"loss_label: ",gamma_three*loss_labeled.detach().cpu().numpy()/ loss_d.detach().cpu().numpy())
+                    del pred_unlabel
+                    del pred_fake
                 else:
                     loss_d = loss_labeled
-                loss_d.backward()
-                optimizer_d.step()
+                    loss_d.backward()
+                    optimizer_d.step()
                 np_loss = loss_d.detach().cpu().numpy()
                 running_loss = + loss_d.item() * images.size(0)
                 interval_loss += np_loss
-                del pred_unlabel
-                del pred_fake
+
 
 
                 ####### train G ##################
-                if semi_supervised:
+                if semi_supervised and cur_epochs%4==0:
                     optimizer_g.zero_grad()
                     # predict
                     if model_name == 'DeepLab':
                         pred_fake = model_d(model_g(noise))['out']
                     else:
                         pred_fake = model_d(model_g(noise))
-                    loss_g = -Loss_fake_remade(pred_fake)*gamma_one
+                    loss_g = -Loss_fake_remade(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
                     del pred_fake
@@ -320,12 +323,14 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
 
             if semi_supervised:
                 loss_labels_d.append(loss_labeled)
-                loss_unlabelled_d.append(loss_unlabel*gamma_two)
-                loss_fake_d.append(loss_fake*gamma_one)
-                loss_fake_g.append(loss_g)
+                if cur_epochs%2==0:
+                    loss_unlabelled_d.append(loss_unlabel*gamma_two)
+                    loss_fake_d.append(loss_fake*gamma_one)
+                if cur_epochs%4==0:
+                    loss_fake_g.append(loss_g)
 
-                D_loss.append(loss_d.item())
-                G_loss.append(-loss_g.item())
+                    D_loss.append(loss_d.item())
+                    G_loss.append(-loss_g.item())
 
         save_plots_and_parameters(best_classIoU, best_scores, default_scope, exp_description, lr, metrics, model_d,
                                   model_name, optim, save_path, train_loss_values, val_score, validation_loss_values)
