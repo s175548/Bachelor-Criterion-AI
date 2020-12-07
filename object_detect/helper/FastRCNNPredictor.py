@@ -10,7 +10,7 @@ from torchvision.ops import MultiScaleRoIAlign
 
 from torch.hub import load_state_dict_from_url
 from object_detect.helper.generalized_rcnn import GeneralizedRCNN
-from torchvision.models.detection.rpn import AnchorGenerator, RPNHead, RegionProposalNetwork
+from object_detect.helper.rpn import AnchorGenerator, RPNHead, RegionProposalNetwork
 from object_detect.helper.roi_heads import RoIHeads
 from object_detect.helper.transform import GeneralizedRCNNTransform
 from torchvision.models.detection.backbone_utils import resnet_fpn_backbone
@@ -156,8 +156,8 @@ class FasterRCNN(GeneralizedRCNN):
                 "specifying the number of output channels (assumed to be the "
                 "same for all the levels)")
 
-        assert isinstance(rpn_anchor_generator, (AnchorGenerator, type(None)))
-        assert isinstance(box_roi_pool, (MultiScaleRoIAlign, type(None)))
+        #assert isinstance(rpn_anchor_generator, (AnchorGenerator, type(None)))
+        #assert isinstance(box_roi_pool, (MultiScaleRoIAlign, type(None)))
 
         if num_classes is not None:
             if box_predictor is not None:
@@ -295,6 +295,7 @@ def fasterrcnn_resnet50_fpn(pretrained=False, progress=True,
     During inference, the model requires only the input tensors, and returns the post-processed
     predictions as a ``List[Dict[Tensor]]``, one for each input image. The fields of the ``Dict`` are as
     follows:
+
         - boxes (``FloatTensor[N, 4]``): the predicted boxes in ``[x1, y1, x2, y2]`` format, with values of ``x``
           between ``0`` and ``W`` and values of ``y`` between ``0`` and ``H``
         - labels (``Int64Tensor[N]``): the predicted labels for each image

@@ -77,7 +77,7 @@ def define_model(num_classes, net, anchors,up_thres=0.5,low_thres=0.2,box_score=
         rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
 
         rpn_head = RPNHead(
-                resnet50.backbone.out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
+                resnet50.backbone.out_channels, 3)
 
         roi_pooler = torchvision.ops.MultiScaleRoIAlign(featmap_names='0',
                                                         output_size=7,
@@ -155,7 +155,7 @@ def get_transform_fun(resized=False):
                                             et.ExtRandomVerticalFlip(p=0.5),
                                             et.ExtToTensor()])
     else:
-        transform_function = et.ExtCompose([et.ExtRandomCrop(size=100),
+        transform_function = et.ExtCompose([et.ExtRandomCrop(size=256),
                                             et.ExtRandomHorizontalFlip(p=0.5),
                                             et.ExtRandomVerticalFlip(p=0.5),
                                             et.ExtEnhanceContrast(),
@@ -243,7 +243,7 @@ if __name__ == '__main__':
         layers_to_train = args['trained layers'][0]
         num_epoch = 100
     else:
-        device = torch.device('cpu')
+        device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
         lr = 0.01
         layers_to_train = 'classifier'
         num_epoch = 1
@@ -251,8 +251,8 @@ if __name__ == '__main__':
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
         if binary:
-            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\train'
-            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\binary\test'
+            path_train= r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_all_class_crop'
+            path_val = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\validation\val_all_class_crop'
             dataset = "binary_scale"
         elif tick_bite:
             path_img = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches\cropped_data\tick_bite'
@@ -293,23 +293,23 @@ if __name__ == '__main__':
                 batch_size = 16
             val_batch_size = 4
         else:
-            batch_size = 8
-            val_batch_size = 4
+            batch_size = 1
+            val_batch_size = 1
 
     if splitted_data:
-        file_names_train = np.array([image_name[:-4] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
+        file_names_train = np.array([image_name[:-8] for image_name in os.listdir(path_train) if image_name[-5] != "k"])
         N_files = len(file_names_train)
         shuffled_index = np.random.permutation(len(file_names_train))
         file_names_train = file_names_train[shuffled_index]
         file_names_train = file_names_train[file_names_train != ".DS_S"]
 
-        file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+        file_names_val = np.array([image_name[:-8] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
         N_files = len(file_names_val)
 
         transform_function = get_transform_fun(resized=scale)
 
         if bbox_type == 'empty':
-            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[:10],
+            train_dst = LeatherData(path_mask=path_train, path_img=path_train, list_of_filenames=file_names_train[2:10],
                                     bbox=True, multi=multi,
                                     transform=transform_function, color_dict=color_dict, target_dict=target_dict)
             val_dst = LeatherData(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,
@@ -323,7 +323,7 @@ if __name__ == '__main__':
                                   bbox=True, multi=multi,
                                   transform=transform_function, color_dict=color_dict, target_dict=target_dict)
     else:
-        file_names = np.array([image_name[:-4] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
+        file_names = np.array([image_name[:-8] for image_name in os.listdir(path_img) if image_name[-5] != 'k'])
         N_files = len(file_names)
         shuffled_index = np.random.permutation(len(file_names))
         file_names_img = file_names[shuffled_index]
@@ -357,8 +357,8 @@ if __name__ == '__main__':
                                  data=dataset, anchors=((16,), (32,), (64,), (128,), (256,)))
     else:
         model_names = ['mobilenet', 'resnet50']
-        model_name = model_names[0]
-        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((8,), (16,), (32,), (64,), (128,)))
+        model_name = model_names[1]
+        model = define_model(num_classes=2, net=model_name, data=dataset,anchors=((32,), (64,), (128,)))
     model.to(device)
     print("Model: ", model_name)
     print("Learning rate: ", lr)

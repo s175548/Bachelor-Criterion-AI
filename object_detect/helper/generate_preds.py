@@ -5,7 +5,7 @@ import torch
 import numpy as np
 import torchvision.models.detection.mask_rcnn
 from PIL import Image
-from object_detect.get_bboxes import get_bbox_mask, fill_bbox
+from object_detect.get_bboxes import get_bbox_mask, fill_bbox, expand_targets
 import object_detect.helper.utils as utils
 from object_detect.helper.evaluator import check_iou, get_iou2, get_iou_targets, get_map2, classifier_metric, do_nms
 import matplotlib.pyplot as plt
@@ -141,7 +141,7 @@ def validate(model, model_name, data_loader, device, path_save, bbox_type, file_
                 mAP2.append(AP2)
 
             samples = []
-            samples.append((images, masks, targets, outputs))
+            samples.append((images, expanded_targets, targets, outputs))
             get_predictions(samples, model_name, ids, path_save=path_save, file_names=file_names,val=val)
             i+=1
 
