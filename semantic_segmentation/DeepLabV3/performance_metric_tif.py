@@ -25,7 +25,7 @@ elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_semi_supervised_pred'
-    path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json '
+    path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
     pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_semi_supervised.png')
     target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
     save_name='/VDA_semi_supervised'
