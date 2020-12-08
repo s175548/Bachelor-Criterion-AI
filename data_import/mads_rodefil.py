@@ -1,26 +1,32 @@
 import torch
-from semantic_segmentation.semi_supervised.generator import generator
+from semantic_segmentation.semi_supervised.generator import generator,generator1
 import PIL,numpy as np
 from PIL import Image
-model = generator(3)
-model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi\spectral\model_g.pt'))
-model.eval()
-
-for i in range(5):
-    noise = torch.randn(3, 100, 1, 1)
-    output = model(noise)
-    test_noise = Image.fromarray( (noise[0].reshape(10,10).numpy()*255).astype(np.uint8) )
-    Image._show(test_noise)
-    test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
-    Image._show(test)
-# for i in range(4):
-#     noise = torch.rand([3,50*50]).uniform_()
+# model = generator(3)
+# # model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\semi\spectral\model_g.pt'))
+# model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\DGAN_setup\Decent_results_100epochs\modelG.pt'))
+# model.eval()
+#
+# for i in range(5):
+#     noise = torch.randn(3, 100, 1, 1)
 #     output = model(noise)
-#     test_noise = Image.fromarray( (noise[0].reshape(50,50).numpy()*255).astype(np.uint8) )
+#     test_noise = Image.fromarray( (noise[0].reshape(10,10).numpy()*255).astype(np.uint8) )
 #     Image._show(test_noise)
 #     test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
 #     Image._show(test)
-#     print(torch.sum(output))
+
+
+model = generator1(3)
+model.load_state_dict(torch.load(r'E:\downloads_hpc_bachelor\exp_results\old_experiments\semi_supervised_correct_loss\lr_exp\lr\001\model_g.pt'))
+model.eval()
+for i in range(4):
+    noise = torch.rand([3,50*50]).uniform_()
+    output = model(noise)
+    test_noise = Image.fromarray( (noise[0].reshape(50,50).numpy()*255).astype(np.uint8) )
+    Image._show(test_noise)
+    test = Image.fromarray( np.transpose((output[0].detach().numpy()*255).astype(np.uint8),(1,2,0)) )
+    Image._show(test)
+    print(torch.sum(output))
 
 ### LINE 220 Training_win_semi
 # loss_labeled_test1 = criterion_d_test1(pred_labeled, labels)

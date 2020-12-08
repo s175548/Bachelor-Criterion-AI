@@ -64,7 +64,7 @@ def Loss_unlabel_remade(pred):
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''
     criterion_ul = torch.nn.BCELoss()
-    real_label = 0.
+    real_label = 0.1
     shape = pred.detach().cpu().numpy().shape
     #shape = pred.shape  # n c h w  [2, 4 , 256 , 256]
     # # predict before softmax
@@ -86,7 +86,7 @@ def Loss_unlabel_remade(pred):
 
 
 def Loss_fake_remade(pred):
-    fake_label = 1.
+    fake_label = 0.9
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''

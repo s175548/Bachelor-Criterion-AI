@@ -63,7 +63,7 @@ if __name__ == '__main__':
         path_original_data = r'C:\Users\johan\OneDrive\Skrivebord\leather_patches'
         path_meta_data = r'samples/model_comparison.csv'
         optim = "SGD"
-        exp_name = 'three_scale'
+        exp_name = 'full_scale'
 
         if exp_name == 'all_bin':
             pt_name = 'resnet50_full_empty_0.01_all_binarySGD.pt'
@@ -108,7 +108,8 @@ if __name__ == '__main__':
 
     batch_size = 8
 
-    file_names_val = np.array([image_name[:-4] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+    file_names_val = np.array([image_name[:-8] for image_name in os.listdir(path_val) if image_name[-5] != "k"])
+    file_names_val = file_names_val[file_names_val != ".DS_S"]
     N_files = len(file_names_val)
 
     val_dst = LeatherDataZ(path_mask=path_val, path_img=path_val, list_of_filenames=file_names_val,

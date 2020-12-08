@@ -186,3 +186,4 @@ def weights_init(m):
 def generator(class_number,spectral=False):
     model = Generator_pytorchTut(1,spectral)
     return model
+
