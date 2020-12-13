@@ -63,7 +63,7 @@ def Loss_unlabel_remade(pred):
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''
-    criterion_ul = torch.nn.BCELoss()
+    criterion_ul = torch.nn.CrossEntropyLoss()
     real_label = 0.1
     shape = pred.detach().cpu().numpy().shape
     #shape = pred.shape  # n c h w  [2, 4 , 256 , 256]
@@ -72,12 +72,14 @@ def Loss_unlabel_remade(pred):
     soft = torch.nn.Softmax(dim=1)
     confidence_map_prob = soft(output_before_softmax_unl)
     #
-    fake_confidence_map = confidence_map_prob[:,3] #[131072] pixels from both images in batch
+    # fake_confidence_map = confidence_map_prob[:,3] #[131072] pixels from both images in batch
+    fake_confidence_map = confidence_map_prob
     #
     # #Convert to probabilities :
     # loss_unl = torch.sum(torch.mean(torch.log(1-fake_confidence_map)))
 
-    label = torch.full((shape[0],shape[2],shape[3]), real_label, dtype=torch.float).to('cuda')
+    # label = torch.full((shape[0],shape[2],shape[3]), real_label, dtype=torch.float).to('cuda')
+    label = torch.full((shape[0],shape[2],shape[3]), real_label, dtype=torch.long).to('cuda')
     label = label.reshape([-1])
     label.fill_(real_label)
     #pred_fake_confidence_map = (pred[:,shape[1]-1,:,:] - torch.min(pred[:,shape[1]-1,:,:]) ) / (torch.max(pred[:,shape[1]-1,:,:]) -torch.min(pred[:,shape[1]-1,:,:]) )
@@ -90,18 +92,20 @@ def Loss_fake_remade(pred):
     '''
     pred: [n,c,h,w],need to transpose [n,h,w,c],then reshape [n*h*w,c]
     '''
-    criterion_fake = torch.nn.BCELoss()
+    criterion_fake = torch.nn.CrossEntropyLoss()
     shape = pred.detach().cpu().numpy().shape
     #shape = pred.shape  # n c h w
     # predict before softmax
     output_before_softmax_gen = pred.transpose(1, 2).transpose(2, 3).reshape([-1, shape[1]])  # [n*h*w, c]
     soft = torch.nn.Softmax(dim=1)
     confidence_map_prob = soft(output_before_softmax_gen)
-    fake_confidence_map = confidence_map_prob[:, 3]  # [131072] pixels from both images in batch
+    # fake_confidence_map = confidence_map_prob[:, 3]  # [131072] pixels from both images in batch
+    fake_confidence_map = confidence_map_prob
     #
     #
     # loss_gen = torch.sum( torch.mean(torch.log(1-(1-fake_confidence_map))) )
-    label = torch.full((shape[0],shape[2],shape[3]), fake_label, dtype=torch.float).to('cuda')
+    # label = torch.full((shape[0],shape[2],shape[3]), fake_label, dtype=torch.float).to('cuda')
+    label = torch.full((shape[0],shape[2],shape[3]), fake_label, dtype=torch.long).to('cuda')
     label.fill_(fake_label)
     #pred_fake_confidence_map = (pred[:,shape[1]-1,:,:] - torch.min(pred[:,shape[1]-1,:,:]) ) / (torch.max(pred[:,shape[1]-1,:,:]) -torch.min(pred[:,shape[1]-1,:,:]) )
     label = label.reshape([-1])
