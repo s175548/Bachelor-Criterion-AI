@@ -225,6 +225,36 @@ def create_mask_from_bbox(boxes,size):
         mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (255, 255, 255), 3)
     return mask
 
+def expand_targets(targets,mask,labels,expand=48):
+    indicies = [i for i in range(len(labels)) if labels[i] != 0]
+    boxes = []
+    for target in targets[indicies]:
+        xmin, ymin, xmax, ymax = target.unbind(0)
+        if xmin >= expand:
+            xmin -= expand
+       # else:
+       #     xmin = torch.tensor(0)
+        if ymin >= expand:
+            ymin -= expand
+        #else:
+        #    ymin = torch.tensor(0)
+        if xmax <= image.shape[2] - expand:
+            xmax += expand
+        #else:
+        #    xmax = torch.tensor(image.shape[2])
+        if ymax <= image.shape[1] - expand:
+            ymax += expand
+        #else:
+        #    ymax = torch.tensor(image.shape[1])
+
+        boxes.append([xmin, ymin, xmax, ymax])
+
+    for box in boxes:
+        x1, y1, x2, y2 = box
+        mask = cv2.rectangle(mask.copy(), (x1, y1), (x2, y2), (155, 255, 255), 3)
+
+    return mask
+
 def adjust_bbox_tif(boxes,adjust,size):
     mask = np.zeros((size,size))
     num_boxes = 0

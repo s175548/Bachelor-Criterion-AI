@@ -21,11 +21,11 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 binary=True
 device=torch.device('cuda')
-resize=True
+resize=False
 model_name='DeepLab'
 n_classes=1
-patch_size=1024
-overlap=512
+patch_size=256
+overlap=128
 Villads=False
 HPC=True
 step_size=2
@@ -54,7 +54,7 @@ elif HPC:
     path_meta_data = r'samples/model_comparison.csv'
     save_path = r'/work3/s173934/Bachelorprojekt/tif_img'
     tif_path= r'/work3/s173934/Bachelorprojekt/tif_img'
-    model_path=r'/work3/s173934/Bachelorprojekt/exp_results/resize_vs_randomcrop/3_class_dataset/resize/DeepLab_ThreeClass_resize_true0.01.pt'
+    model_path='/work3/s173934/Bachelorprojekt/exp_results/semi_super/spectral/model/DeepLab_semi_spectralonly_model.pt'
 
 
 
@@ -63,21 +63,21 @@ elif HPC:
 #'/RED_HALF02_grain_01_v.tif'
 
 data_loader = DataLoader(data_path=path_original_data, metadata_path=path_meta_data)
-image=load_tif_as_numpy_array(tif_path+'/RED_HALF02_grain_01_v.tif')
+image=load_tif_as_numpy_array(tif_path+'/WALKNAPPA_VDA_04_grain_01_v.tif')
 split_imgs, split_x_y,patch_dim = data_loader.generate_tif_patches(image, patch_size=patch_size,
                                                                          sliding_window=overlap)
 
 
-checkpoint=torch.load(model_path,map_location=device)
+model=torch.load(model_path,map_location=device)
 
-if model_name=='DeepLab':
-    model=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
-    model.classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-    model.aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
-else:
-    model=_segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
+#if model_name=='DeepLab':
+#    model=deeplabv3_resnet101(pretrained=True, progress=True,num_classes=21, aux_loss=None)
+#    model.classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+#    model.aux_classifier[-1] = torch.nn.Conv2d(256, n_classes+2, kernel_size=(1, 1), stride=(1, 1)).requires_grad_()
+#else:
+#    model=_segm_mobilenet('deeplabv3', 'mobile_net', output_stride=8, num_classes=n_classes+2,pretrained_backbone=True)
 
-model.load_state_dict(checkpoint['model_state'])
+#model.load_state_dict(checkpoint['model_state'])
 model.to(device)
 model.eval()
 
@@ -135,5 +135,5 @@ for i in range(0,split_x_y[0],step_size):
     else:
         target_tif=np.vstack((target_tif,pred_stack))
 
-PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/RL_3C_resize.png')
+PIL.Image.fromarray(target_tif.astype(np.uint8)*255).save(tif_path+'/VDA_semi_supervised.png')
 

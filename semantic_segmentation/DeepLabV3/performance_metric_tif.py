@@ -11,7 +11,7 @@ from semantic_segmentation.DeepLabV3.metrics import StreamSegMetrics
 
 villads=False
 HPC=True
-resize=True
+resize=False
 
 
 if villads:
@@ -24,11 +24,11 @@ if villads:
 elif HPC:
     path_original_data = r'/work3/s173934/Bachelorprojekt/leather_patches' ###
     path_meta_data = r'samples/model_comparison.csv'
-    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/RF_3C_resize_pred'
-    path = r'/work3/s173934/Bachelorprojekt/tif_img/annotations_RED_HALF02_grain_01_v.tif.json'
-    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RL_3C_resize.png')
-    target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/RED_HALF02_grain_01_v_target_1d.png')
-    save_name='/RF_3C_resize'
+    save_path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA_semi_supervised_pred'
+    path = r'/work3/s173934/Bachelorprojekt/tif_img/VDA4_grain_01_whole_tif.json'
+    pred=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/VDA_semi_supervised.png')
+    target=PIL.Image.open('/work3/s173934/Bachelorprojekt/tif_img/WALKNAPPA_VDA_04_grain_01_target_1d.png')
+    save_name='/VDA_semi_supervised'
 
 if resize:
     target=target.resize((int(0.5*target.size[0]),int(0.5*target.size[1])))
