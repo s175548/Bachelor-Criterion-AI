@@ -139,9 +139,9 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
         loss_unlabelled_d = []
         loss_fake_d = []
         loss_fake_g = []
-        gamma_one = .2 #Loss weigth for fake
-        gamma_two = 1 # Loss weight for unlabel
-        gamma_three = 2.5
+        gamma_one = 0.5 #Loss weigth for fake
+        gamma_two = 0.5 # Loss weight for unlabel
+        gamma_three = 1
 
         #Load model
         model_g = generator(1,spectral) #arg = number of gpu's
