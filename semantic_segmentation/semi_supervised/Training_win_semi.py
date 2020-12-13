@@ -3,8 +3,7 @@ Made with inspiration from
 https://github.com/VainF/DeepLabV3Plus-Pytorch/blob/af50e37932732a2c06e331c54cc8c64820c307f4/main.py
 """
 import sys
-sys.path.append('/zhome/87/9/127623/BachelorProject/Bachelor-Criterion-AI')
-
+sys.path.append('/zhome/87/9/127623/BachelorProject/cropped_data/Bachelor-Criterion-AI')
 from tqdm import tqdm
 from PIL import ImageFile,Image
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -240,8 +239,8 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                     optimizer_d.zero_grad()
                     pred_unlabel = model_d(images_nl.float())['out']
                     pred_fake = model_d(model_g(noise))['out']
-                    loss_unlabel = Loss_unlabel_remade(pred_unlabel)
-                    loss_fake = Loss_fake_remade(pred_fake)
+                    loss_unlabel = Loss_unlabel(pred_unlabel)
+                    loss_fake = Loss_fake(pred_fake)
                     loss_d = gamma_one * loss_fake + gamma_two * loss_unlabel
                     loss_d.backward()
                     optimizer_d.step()
@@ -266,7 +265,7 @@ def training(n_classes=3, model='DeepLab', load_models=False, model_path='/Users
                         pred_fake = model_d(model_g(noise))['out']
                     else:
                         pred_fake = model_d(model_g(noise))
-                    loss_g = -Loss_fake_remade(pred_fake)
+                    loss_g = -Loss_fake(pred_fake)
                     loss_g.backward()
                     optimizer_g.step()
                     del pred_fake
